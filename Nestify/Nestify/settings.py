@@ -27,11 +27,16 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-AUTH_USER_MODEL = 'APP_Profile.CustomUser'
+AUTH_USER_MODEL = 'Profile.CustomUser'
 # Application definition
 
 INSTALLED_APPS = [
-    'APP_Profile',
+    'Profile',
+    'Family',
+    'Finance',
+    'Inventory',
+    'List',
+    'Plan',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
