@@ -1,6 +1,5 @@
 from django.contrib import admin
 from django.urls import path, include
-from cprofile import views as cviews
 
 urlpatterns = [
     path('family/', include('Family.urls')),
