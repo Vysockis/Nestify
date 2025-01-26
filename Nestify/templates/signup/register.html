@@ -1,0 +1,92 @@
+{% extends 'master.html' %}
+
+{% load static %}
+
+{% block title %}
+Register | SkinBot
+{% endblock %}
+
+{% block css %}
+  <link rel="stylesheet" href="{% static 'css/settings/fonts.css' %}">
+  <link rel="stylesheet" href="{% static 'css/settings/colors.css' %}">
+  <link rel="stylesheet" href="{% static 'css/components/buttons.css' %}">
+  <link rel="stylesheet" href="{% static 'css/components/text.css' %}">
+  <link rel="stylesheet" href="{% static 'css/components/forms.css' %}">
+  <link rel="stylesheet" href="{% static 'css/pages/login-register.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="main-container">
+
+  <div class="register-container">
+    <div class="header-text-container">
+      <h1>Welcome to Skinbot</h1>
+      <p>To get started, please create an account</p>
+    </div>
+    <form method="post" action="{% url 'register' %}">
+      {% csrf_token %}
+      <div class="input-fields">
+
+        <div class="form-group">
+          <label for="{{ form.username.id_for_label }}">Username</label>
+          {{ form.username }}
+          {% if form.username.errors %}
+            {% for error in form.username.errors %}
+              <div class="error">{{ error }}</div>
+            {% endfor %}
+          {% endif %}
+        </div>
+
+        <div class="form-group">
+          <label for="{{ form.email.id_for_label }}">Email</label>
+          {{ form.email }}
+          {% if form.email.errors %}
+            {% for error in form.email.errors %}
+              <div class="error">{{ error }}</div>
+            {% endfor %}
+          {% endif %}
+        </div>
+
+        <div class="form-group">
+          <label for="{{ form.password1.id_for_label }}">Password:</label>
+          {{ form.password1 }}
+          {% if form.password1.errors %}
+            {% for error in form.password1.errors %}
+                <div class="error">{{ error }}</div>
+            {% endfor %}
+          {% endif %}
+        </div>
+
+        <div class="form-group">
+          <label for="{{ form.password2.id_for_label }}">Confirm Password:</label>
+          {{ form.password2 }}
+          {% if form.password2.errors %}
+            {% for error in form.password2.errors %}
+                <div class="error">{{ error }}</div>
+            {% endfor %}
+          {% endif %}
+        </div>
+
+        <!-- Registration Code Field -->
+        <div class="form-group">
+          <label for="{{ form.registration_code.id_for_label }}">Registration Code</label>
+          {{ form.registration_code }}
+          {% if form.registration_code.errors %}
+              {% for error in form.registration_code.errors %}
+                  <div class="error">{{ error }}</div>
+              {% endfor %}
+          {% endif %}
+      </div>
+      </div>
+      <div class="form-group">
+        <button class="btn-main btn-green" type="submit">Register</button>
+      </div>
+    </form>
+    <div class="change-signup">
+      <p>Already have an account? <a class="text-link" href="{% url 'login' %}">Log in</a></p>
+    </div>
+  </div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,43 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>
+    {% block title %}
+    {% endblock %}
+  </title>
+  {% block css %}
+  {% endblock %}
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+  <!--<link rel="stylesheet" href="{% static 'css/styles.css' %}">-->
+  <!--<link rel="icon" href="https://www.skinbot.gg/static/img/logoicon.ico">-->
+
+  <!--<link rel="stylesheet" href="{% static 'css/settings/colors.css' %}">-->
+ 
+  {% block header %}
+  {% endblock %} 
+</head>
+<body>
+
+<div class="page-container">
+  {% include 'components/navbar.html' %}
+
+  <div class="content-wrapper">
+    {% block content %}
+    {% endblock %}
+  </div>
+
+  {% include 'components/footer.html' %}
+</div>
+
+<script>const csrfToken = '{{ csrf_token }}';</script>
+{% block javascript %}
+{% endblock %}
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<!--<script src="{% static 'js/roll/navbar.js' %}"></script>-->
+</body>
+</html>

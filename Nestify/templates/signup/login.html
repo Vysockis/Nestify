@@ -1,0 +1,46 @@
+{% extends 'master.html' %}
+
+{% load static %}
+
+{% block title %}
+Login | SkinBot
+{% endblock %}
+
+{% block css %}
+{% endblock %}
+
+{% block content %}
+<div class="main-container">
+
+  <div class="login-container">
+    <div class="header-text-container">
+      <h1>Welcome Back!</h1>
+      <p>Fill in your details to log in</p>
+    </div>
+    <form method="post" action="{% url 'login' %}">
+      <p class="error"> {{error}} </p>
+      {% csrf_token %}
+      {% if request.GET.next %}
+        <input type="hidden" name="next" value="{{ request.GET.next }}">
+      {% endif %}
+      <div class="input-fields">
+        <div class="form-group">
+          <label for="email">Username</label>
+          <input type="text" id="username" name="username" required>
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <button class="btn-main btn-green" type="submit">Log in</button>
+      </div>
+    </form>
+    <!--<div class="change-signup">
+      <p>Don't have an account? <a class="text-link" href="{% url 'register' %}">Sign up</a></p>
+    </div>-->
+  </div>
+
+</div>
+{% endblock %}
