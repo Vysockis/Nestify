@@ -1,0 +1,109 @@
+.dashboard-container {
+    display: grid;
+    grid-template-columns: 2fr 1fr; /* Left (Lists) takes more space */
+    gap: 3%; /* Dynamic spacing */
+    padding: 10%; /* Adjust padding dynamically */
+}
+
+/* Lists Styling */
+.main-box {
+    background-color: white;
+    border-radius: 0.8rem;
+    padding: 2rem;
+    box-shadow: 0 0.2rem 0.8rem rgba(0, 0, 0, 0.1);
+    display: none;
+}
+
+.main-box.selected {
+    display: block;
+}
+
+/* Dashboard Box Layout */
+.dashboard-boxes {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem; /* Adjusts automatically */
+}
+
+/* Dashboard Boxes */
+.dashboard-box {
+    border-radius: 0.8rem;
+    padding: 1.5rem;
+    text-align: center;
+    font-weight: bold;
+    background-color: white;
+    box-shadow: 0 0.2rem 0.8rem rgba(0, 0, 0, 0.1);
+    height: 10vh; /* Scales based on screen height */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Notifications Box */
+.notifications-box {
+    border-radius: 0.8rem;
+    padding: 1.2rem;
+    background-color: white;
+    box-shadow: 0 0.2rem 0.8rem rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.notifications-box h5 {
+    font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.badge-notification {
+    background-color: red;
+    font-size: 1rem;
+    padding: 0.3rem 0.8rem;
+    border-radius: 0.5rem;
+    color: white;
+    margin-left: 0.5rem;
+}
+
+.dashboard-box.selected {
+    display: none;
+}
+
+/* Responsive Design */
+@media (max-width: 992px) {
+    .dashboard-container {
+        grid-template-columns: 1fr;
+        gap: 5%;
+    }
+
+    .dashboard-boxes {
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard-boxes {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-box {
+        height: 12vh; /* Slightly taller on small screens */
+    }
+
+    .dashboard-container {
+        padding: 5%;
+    }
+}
+
+@media (max-width: 480px) {
+    .dashboard-box {
+        height: auto;
+        padding: 2rem;
+    }
+
+    .notifications-box {
+        padding: 1rem;
+    }
+}

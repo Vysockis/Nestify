@@ -1,0 +1,40 @@
+{% extends "master.html" %}
+
+{% load static %}
+
+{% block title %}
+Dashboard | Nestify
+{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+{% endblock %}
+
+{% block content %}
+<main class="container dashboard-container">
+    <!-- Left Side: Lists -->
+    
+    {% include "dashboard/main_boxes/list.html"  %}
+    {% include "dashboard/main_boxes/plans.html"  %}
+    {% include "dashboard/main_boxes/finance.html"  %}
+    {% include "dashboard/main_boxes/inventory.html"  %}
+    {% include "dashboard/main_boxes/smart.html"  %}
+
+    <!-- Right Side: Dashboard Boxes -->
+    <div>
+        <div class="dashboard-boxes">
+            {% include "dashboard/mini_boxes/list.html"  %}
+            {% include "dashboard/mini_boxes/plans.html"  %}
+            {% include "dashboard/mini_boxes/finance.html"  %}
+            {% include "dashboard/mini_boxes/inventory.html"  %}
+            {% include "dashboard/mini_boxes/smart.html"  %}
+        </div>
+
+        {% include "dashboard/notification.html"  %}
+    </div>
+</main>
+{% endblock %}
+
+{% block javascript %}
+<script src="{% static 'js/dashboard/main.js' %}"></script>
+{% endblock %}

@@ -7,6 +7,8 @@ from Profile.forms import CustomUserCreationForm
 
 # Create your views here.
 def landing(request):
+    if request.user.is_authenticated:
+        return render(request, 'dashboard/main.html')  # Redirect authenticated users to a dashboard or home page
     return render(request, 'home.html')
 
 @login_required
