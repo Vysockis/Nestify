@@ -29,6 +29,10 @@ class List(models.Model):
     def get_absolute_url(self):
         return reverse("FamilyList_detail", kwargs={"pk": self.pk})
 
+    @staticmethod
+    def get_family_list(family):
+        return List.objects.filter(family=family)
+
 
 class ListItem(models.Model):
     list = models.ForeignKey("List.List", on_delete=models.CASCADE)
@@ -46,3 +50,7 @@ class ListItem(models.Model):
 
     def get_absolute_url(self):
         return reverse("ListItem_detail", kwargs={"pk": self.pk})
+
+    @staticmethod
+    def get_list_items(list):
+        return ListItem.objects.filter(list=list)

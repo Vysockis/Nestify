@@ -31,6 +31,8 @@ ALLOWED_HOSTS = []
 AUTH_USER_MODEL = 'Profile.CustomUser'
 # Application definition
 
+LOGIN_URL  = '/login/'  # Redirect users to the dashboard after login
+
 INSTALLED_APPS = [
     'Profile',
     'Family',

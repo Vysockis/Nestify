@@ -5,18 +5,20 @@
             <h2>Lists</h2>
         </div>
         <!-- Button added to the right -->
-        <button id="list" class="circle-btn">+</button>
+        <button id="addListBtn" class="circle-btn">+</button>
     </div>
 
     <ul class="list-group mt-3">
-        <li class="list-group-item d-flex justify-content-between align-items-center">
-            <span>✅ Groceries</span>
-            <span class="text-muted">In 2 days</span>
+        {% for list in family_list %}
+        <li class="list-group-item d-flex justify-content-between align-items-center toggle-list" data-toggle="list-{{ forloop.counter }}">
+            <span>{{ list.name }}</span>
+            <span class="text-muted">{{ list.date }}</span>
         </li>
-        <li class="list-group-item">✅ Namų ruoša</li>
-        <li class="list-group-item">✅ Namų ruoša</li>
-        <li class="list-group-item">✅ Namų ruoša</li>
-        <li class="list-group-item">⚪ Namų ruoša</li>
-        <li class="list-group-item">⚪ Namų ruoša</li>
+        <ul id="list-{{ forloop.counter }}" class="nested-list">
+            {% for item in list.items %}
+            <li>{{item.qty}}x {{item.name}}</li>
+            {% endfor %}
+        </ul>
+        {% endfor %}
     </ul>
 </div>

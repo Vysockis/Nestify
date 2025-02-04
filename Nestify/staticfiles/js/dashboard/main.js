@@ -49,3 +49,25 @@ document.addEventListener("DOMContentLoaded", function () {
         overlay.style.display = "none";
     });
 });
+
+document.addEventListener("DOMContentLoaded", function () {
+    const listItems = document.querySelectorAll(".toggle-list");
+
+    listItems.forEach(item => {
+        item.addEventListener("click", function () {
+            const targetId = this.getAttribute("data-toggle");
+            const nestedList = document.getElementById(targetId);
+
+            if (nestedList) {
+                // Toggle active class
+                if (nestedList.classList.contains("active")) {
+                    nestedList.style.maxHeight = "0px"; // Collapse smoothly
+                    setTimeout(() => nestedList.classList.remove("active"), 300);
+                } else {
+                    nestedList.classList.add("active");
+                    nestedList.style.maxHeight = nestedList.scrollHeight + "px"; // Expand smoothly
+                }
+            }
+        });
+    });
+});

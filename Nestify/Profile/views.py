@@ -2,14 +2,20 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout
 from django.contrib.auth import authenticate, login as auth_login
+from django.core.exceptions import ObjectDoesNotExist
 
 from Profile.forms import CustomUserCreationForm
+from Family import models as fModels
 
 # Create your views here.
+@login_required
 def landing(request):
-    if request.user.is_authenticated:
-        return render(request, 'dashboard/main.html')  # Redirect authenticated users to a dashboard or home page
-    return render(request, 'home.html')
+    try:
+        # Check if user exists in FamilyMember model
+        fModels.FamilyMember.objects.get(user=request.user, accepted=True)
+        return redirect('/dashboard')
+    except ObjectDoesNotExist:
+        return render(request, 'home.html')
 
 @login_required
 def logout_view(request):

@@ -123,3 +123,69 @@
     }
 }
 
+/* ✅ Style the main list item (Father) */
+.list-group-item {
+    background: #fff; /* White background */
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 6px;
+    cursor: pointer; /* Change cursor to pointer */
+    transition: background 0.3s ease, transform 0.2s ease;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid #ddd;
+}
+
+/* ✅ Hover effect for main list item */
+.list-group-item:hover {
+    background: #f5f5f5;
+    transform: translateY(-2px); /* Slight lift effect */
+}
+
+/* ✅ Style the nested list */
+.nested-list {
+    margin-top: 6px;
+    padding-left: 20px;
+    border-left: 3px solid #ddd; /* Nice vertical separator */
+    display: none;
+    transition: all 0.3s ease-in-out;
+    border-radius: 6px;
+}
+
+/* ✅ Make the nested list visible when expanded */
+.nested-list.active {
+    display: block;
+    padding: 8px;
+    background: #fafafa;
+}
+
+/* ✅ Style the child list items */
+.nested-list li {
+    background: #fff;
+    padding: 8px 12px;
+    border-radius: 6px;
+    margin-bottom: 4px;
+    border: 1px solid #ddd;
+    transition: background 0.3s ease, transform 0.2s ease;
+}
+
+/* ✅ Hover effect for child list items */
+.nested-list li:hover {
+    background: #f0f0f0;
+    transform: translateX(5px); /* Slight slide-in effect */
+}
+
+/* ✅ Optional: Make the expand/collapse animation smoother */
+.nested-list {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease-in-out, opacity 0.3s ease-in-out;
+    opacity: 0;
+}
+
+/* ✅ Show nested list when active */
+.nested-list.active {
+    max-height: 500px; /* Large enough to accommodate content */
+    opacity: 1;
+}
