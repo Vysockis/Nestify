@@ -1,0 +1,30 @@
+/* Styling for the add button */
+.circle-btn {
+    background-color: #ECECEC;
+    color: black;
+    font-size: 4vh;
+    font-weight: lighter;
+    border: none;
+    border-radius: 50%;
+    width: 5vh;
+    height: 5vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-bottom: 1vh;
+    cursor: pointer;
+    transition: background-color 0.3s ease-in-out, transform 0.2s ease-in-out;
+}
+
+/* Hover effect */
+.circle-btn:hover {
+    background-color: #a5a5a5;
+    transform: scale(1.1);
+}
+
+/* Align button in side-box */
+.d-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}

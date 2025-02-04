@@ -24,3 +24,28 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 });
+
+document.addEventListener("DOMContentLoaded", function () {
+    const addButton = document.querySelector(".circle-btn"); // Add button
+    const modal = document.getElementById("modalForm");
+    const overlay = document.getElementById("modalOverlay");
+    const closeModal = document.getElementById("closeModal");
+
+    // Show Modal when "Add" button is clicked
+    addButton.addEventListener("click", function () {
+        modal.style.display = "block";
+        overlay.style.display = "block";
+    });
+
+    // Hide Modal when "X" is clicked
+    closeModal.addEventListener("click", function () {
+        modal.style.display = "none";
+        overlay.style.display = "none";
+    });
+
+    // Hide Modal when clicking outside it
+    overlay.addEventListener("click", function () {
+        modal.style.display = "none";
+        overlay.style.display = "none";
+    });
+});

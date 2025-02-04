@@ -2,7 +2,14 @@
     display: grid;
     grid-template-columns: 2fr 1fr; /* Left (Lists) takes more space */
     gap: 3%; /* Dynamic spacing */
-    padding: 10%; /* Adjust padding dynamically */
+    padding: 5%; /* Adjust padding dynamically */
+    margin-bottom: 10vh;
+}
+
+.side-box {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
 }
 
 /* Lists Styling */
@@ -103,10 +110,6 @@
     .dashboard-box {
         height: 12vh; /* Slightly taller on small screens */
     }
-
-    .dashboard-container {
-        padding: 5%;
-    }
 }
 
 @media (max-width: 480px) {
@@ -119,3 +122,4 @@
         padding: 1rem;
     }
 }
+

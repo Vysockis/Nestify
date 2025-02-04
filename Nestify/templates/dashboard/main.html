@@ -21,7 +21,7 @@ Dashboard | Nestify
     {% include "dashboard/main_boxes/smart.html"  %}
 
     <!-- Right Side: Dashboard Boxes -->
-    <div>
+    <div class="side-box">
         <div class="dashboard-boxes">
             {% include "dashboard/mini_boxes/list.html"  %}
             {% include "dashboard/mini_boxes/plans.html"  %}
@@ -33,6 +33,10 @@ Dashboard | Nestify
         {% include "dashboard/notification.html"  %}
     </div>
 </main>
+{% endblock %}
+
+{% block outter_content %}
+{% include "utils/form.html" %}
 {% endblock %}
 
 {% block javascript %}

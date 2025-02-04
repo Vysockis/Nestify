@@ -1,4 +1,5 @@
-.navbar  {
-    background-color: rgb(255, 0, 157);
+.navbar {
+    min-height: 70px; /* Adjust as needed */
+    padding-top: 10px;
+    padding-bottom: 10px;
 }
-

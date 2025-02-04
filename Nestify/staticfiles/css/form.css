@@ -1,0 +1,90 @@
+/* Modal Background Overlay */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4); /* Dark overlay */
+    backdrop-filter: blur(5px); /* Background blur */
+    z-index: 1031;
+}
+
+.modal-content {
+    background-color: rgba(0, 0, 0, 0);
+    border-radius:  0;
+    border: 0;
+}
+
+/* Modal Box */
+.modal {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 50%;
+    height: auto;
+    background: #f8f8f8;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
+    z-index: 1031;
+    text-align: center;
+}
+
+/* Modal Title */
+.modal-title {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+}
+
+/* Close Button */
+.close-btn {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: #666;
+}
+
+.close-btn:hover {
+    color: black;
+}
+
+/* Form Inputs */
+.modal-content input {
+    width: 100%;
+    padding: 12px;
+    margin: 8px 0;
+    border: 1px solid #cccccc;
+    border-radius: 8px;
+    font-size: 1rem;
+}
+
+
+.modal-content label {
+    float: left;
+}
+
+/* Submit Button */
+#submitBtn {
+    width: 100%;
+    background: black;
+    color: white;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    margin-top: 10px;
+}
+
+#submitBtn:hover {
+    background: #333;
+}

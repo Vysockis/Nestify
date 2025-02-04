@@ -1,3 +1,14 @@
+:root {
+    --font-primary: 'Inter', sans-serif;
+}
+
 body {
     background-color: #F3F4F9;
+}
+
+.master-container {
+    height: 90vh;
+    margin-top: 10vh;
+    display: flex;
+    flex-direction: column;
 }
