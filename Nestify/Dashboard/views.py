@@ -1,41 +1,67 @@
+import json
+from django.http import JsonResponse
 from django.shortcuts import render
+from List.enum import ListType
 from Nestify.decorators import family_member_required
 from django.utils import timezone
+from datetime import datetime
+from django.core.exceptions import ObjectDoesNotExist
 
 from List import models as lModels
 
+from List import forms as lForms
+
 @family_member_required
 def dashboard(request):
-    user = request.user
-    list = getList(user)
-    return render(request, 'dashboard/main.html', {"family_list": list})  # Redirect authenticated users to a dashboard or home page
+    return render(request, 'dashboard/main.html')  # Redirect authenticated users to a dashboard or home page
 
-def getList(user):
-    """Fetch family lists and items."""
+@family_member_required
+def get_family_list(request):
+    """API endpoint to fetch family list and items."""
+    user = request.user
     family = user.getFamily()
 
     if not family:
-        return None  # No family found, return None
+        return JsonResponse({"error": "No family found"}, status=400)
 
-    # Fetch family lists
+    # Fetch lists belonging to the family
     family_lists = lModels.List.get_family_list(family)
+    family_lists = family_lists.order_by("-datetime")
 
-    # Convert lists into a dictionary
-    now = timezone.now()
-    lists_data = []
+    # Convert lists and items to JSON format
+    data = []
     for lst in family_lists:
-        items = lModels.ListItem.get_list_items(lst)
-        list_data = {
-            "id": lst.id,
-            "name": lst.name,
-            "description": lst.description,
-            "date": format_time_difference_in(lst.datetime, now),
-            "items": [{"id": item.id, "name": item.name, "qty": item.qty if item.qty is not None else 0, "completed": item.completed} for item in items]
-        }
-        lists_data.append(list_data)
+        items = lModels.ListItem.get_list_items(lst)  # Fetch items for each list
 
-    print(list_data)
-    return lists_data  # Return structured data
+        itemData = []
+        for item in items:
+            name = ""
+            match lst.list_type:
+                case ListType.GROCERY.name:
+                    name = f"{item.qty if item.qty is not None else 0}x {item.name}"
+                case ListType.TASK.name:
+                    user_text = f"{item.assigned_to.first_name}: " if item.assigned_to is not None else ""
+                    name = f"{user_text}{item.name}"
+                case ListType.MEAL.name:
+                    name = f"{item.qty if item.qty is not None else 0}x {item.name}"
+                case ListType.OTHER.name:
+                    name = f"{item.name}"
+
+            itemData.append({
+                "id": item.pk,
+                "name": name,
+                "completed": item.completed
+            })
+
+        data.append({
+            "id": lst.id,
+            "type": lst.list_type,
+            "name": lst.name,
+            "date": format_time_difference_in(lst.datetime, timezone.now()),
+            "items": itemData
+        })
+
+    return JsonResponse({"family_list": data}, safe=False)
 
 
 def format_time_difference_in(datetime, datetime_other):
@@ -73,3 +99,120 @@ def format_time_difference_in(datetime, datetime_other):
         return f"po {lietuviskai(abs(minutes), 'minutės', 'minučių', 'minučių')}"
     else:
         return "ką tik"
+
+@family_member_required
+def update_item_status(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            item_id = data.get("item_id")
+            completed = data.get("completed")
+
+            item = lModels.ListItem.objects.get(pk=item_id)
+            item.completed = completed
+            item.save()
+
+            return JsonResponse({"success": True, "message": "Sekmingai atnaujinti duomenys"})
+        except ObjectDoesNotExist:
+            return JsonResponse({"error": "Įrašas nerastas"}, status=404)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
+    return JsonResponse({"error": "Netinkamas kvietimas"}, status=400)
+
+@family_member_required
+def item(request):
+    if request.method == "DELETE":
+        try:
+            data = json.loads(request.body)
+            item_id = data.get("item_id")
+
+            # Check if the list exists
+            list_item = lModels.ListItem.objects.get(pk=item_id)
+            list_item.delete()  # Delete the list
+
+            return JsonResponse({"success": True, "message": "Sėkmingai ištrinta"})
+        except ObjectDoesNotExist:
+            return JsonResponse({"error": "Irašas nerastas"}, status=404)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
+    elif request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            list_id = data.get("list_id")
+            list_obj = lModels.List.objects.get(id=list_id)
+
+            form = lForms.ListItemForm(data)
+            if form.is_valid():
+                item = form.save(commit=False)
+                item.list = list_obj
+                item.save()
+                return JsonResponse({"success": True})
+            else:
+                return JsonResponse({"error": form.errors}, status=400)
+
+        except ObjectDoesNotExist:
+            return JsonResponse({"error": "List not found"}, status=404)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
+    return JsonResponse({"error": "Netinkamas kvietimas"}, status=400)
+
+@family_member_required
+def list(request):
+    if request.method == "DELETE":
+        try:
+            data = json.loads(request.body)
+            list_id = data.get("list_id")
+
+            # Check if the list exists
+            family_list = lModels.List.objects.get(pk=list_id)
+            family_list.delete()  # Delete the list
+
+            return JsonResponse({"success": True, "message": "Sėkmingai ištrinta"})
+        except ObjectDoesNotExist:
+            return JsonResponse({"error": "Irašas nerastas"}, status=404)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
+    elif request.method == "POST":
+        try:
+            # Parse JSON body
+            data = json.loads(request.body)
+
+            # Ensure "datetime" key exists
+            if "datetime" not in data:
+                return JsonResponse({"error": "Missing 'datetime' field"}, status=400)
+
+            datetimeInt = data.pop("datetime")  # Remove 'datetime' to avoid form issues
+
+            # Convert timestamp to datetime object
+            if datetimeInt > 1e10:  # If timestamp is in milliseconds
+                datetime_obj = datetime.fromtimestamp(datetimeInt / 1000)
+            else:  # If timestamp is in seconds
+                datetime_obj = datetime.fromtimestamp(datetimeInt)
+
+            # Make timezone-aware if necessary
+            datetime_obj = timezone.make_aware(datetime_obj) if timezone.is_naive(datetime_obj) else datetime_obj
+
+            print(datetime_obj)
+
+            # Initialize form with modified data (without 'datetime')
+            form = lForms.ListForm(data)
+            if form.is_valid():
+                item = form.save(commit=False)
+                item.datetime = datetime_obj
+                item.creator_id = request.user.pk
+                item.family = request.user.getFamily()
+                item.save()
+                return JsonResponse({"success": True})
+            else:
+                return JsonResponse({"error": form.errors}, status=400)
+
+        except ObjectDoesNotExist:
+            return JsonResponse({"error": "List not found"}, status=404)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
+    return JsonResponse({"error": "Netinkamas kvietimas"}, status=400)

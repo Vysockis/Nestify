@@ -40,6 +40,7 @@ class ListItem(models.Model):
     qty = models.IntegerField(null=True, blank=True)
     item = models.ForeignKey("Inventory.Item", on_delete=models.DO_NOTHING, null=True, blank=True)
     completed = models.BooleanField(default=False)
+    assigned_to = models.ForeignKey("Profile.CustomUser", on_delete=models.SET_DEFAULT, default=None, null=True, blank=True)
 
     class Meta:
         verbose_name = _("ListItem")

@@ -1,24 +1,11 @@
 <div id="list" class="main-box selected">
     <div class="d-flex justify-content-between align-items-center">
         <div>
-            <h5>Analytics Overview</h5>
-            <h2>Lists</h2>
+            <h2>Sąrašai</h2>
         </div>
-        <!-- Button added to the right -->
         <button id="addListBtn" class="circle-btn">+</button>
     </div>
 
-    <ul class="list-group mt-3">
-        {% for list in family_list %}
-        <li class="list-group-item d-flex justify-content-between align-items-center toggle-list" data-toggle="list-{{ forloop.counter }}">
-            <span>{{ list.name }}</span>
-            <span class="text-muted">{{ list.date }}</span>
-        </li>
-        <ul id="list-{{ forloop.counter }}" class="nested-list">
-            {% for item in list.items %}
-            <li>{{item.qty}}x {{item.name}}</li>
-            {% endfor %}
-        </ul>
-        {% endfor %}
-    </ul>
+    <!-- This will be dynamically populated via JavaScript -->
+    <ul id="listContainer" class="list-group mt-3"></ul>
 </div>

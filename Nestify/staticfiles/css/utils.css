@@ -16,6 +16,10 @@
     transition: background-color 0.3s ease-in-out, transform 0.2s ease-in-out;
 }
 
+.circle-btn.red {
+    background-color: #ff000042 !important; 
+}
+
 /* Hover effect */
 .circle-btn:hover {
     background-color: #a5a5a5;
