@@ -20,6 +20,9 @@ class Family(models.Model):
     def get_absolute_url(self):
         return reverse("Family_detail", kwargs={"pk": self.pk})
 
+    def get_family_members(self):
+        return FamilyMember.objects.filter(family=self, accepted=True)
+
 
 class FamilyMember(models.Model):
     family = models.ForeignKey("Family.Family", on_delete=models.CASCADE)

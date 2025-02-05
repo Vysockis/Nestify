@@ -5,12 +5,23 @@ document.addEventListener("DOMContentLoaded", function () {
     listAdd.addEventListener("click", async function () {
         fields = [
             { id: "name", label: "Pavadinimas", type: "text", placeholder: "Įveskite pavadinimą", required: true },
+            { 
+                id: "list_type", label: "Tipas", type: "select", required: true, 
+                options: [
+                    { value: "GROCERY", label: "Pirkinių sąrašas" },
+                    { value: "TASK", label: "Darbai" },
+                    { value: "MEAL", label: "Receptai" },
+                    { value: "OTHER", label: "Kita" }
+                ] 
+            },
             { id: "datetime", label: "Data ir laikas", type: "datetime-local", required: true, today: true }
         ]  
         const formData = await openModal({
             title: `Pridėti įrašą`,
             fields: fields
         });
+        console.log("Hello?")
+        console.log(formData)
 
         if (formData) {
             fetch("api/list/", {
@@ -46,6 +57,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
 
                 data.family_list.forEach((list, index) => {
+                    if (list.type == "MEAL" || list.type == "OTHER") {
+                        return
+                    }
                     const listElement = document.createElement("li");
                     listElement.classList.add("list-group-item", "d-flex", "justify-content-between", "align-items-center", "toggle-list");
                     listElement.setAttribute("data-toggle", `list-${list.id}`);
@@ -101,7 +115,9 @@ document.addEventListener("DOMContentLoaded", function () {
                         textElement.textContent = `${item.name}`;
                     
                         // Append Completion Button + Text inside leftContent
-                        leftContent.appendChild(completionButton);
+                        if (list.type == "GROCERY" || list.type == "TASK") {
+                            leftContent.appendChild(completionButton);
+                        }
                         leftContent.appendChild(textElement);
                     
                         // Create the delete button (Right)
@@ -227,6 +243,7 @@ document.addEventListener("DOMContentLoaded", function () {
     async function confirmAndAddItem(list) {
         fields = []
         switch (list.type) {
+            case "MEAL":
             case "GROCERY":
                 fields = [
                     { id: "name", label: "Pavadinimas", type: "text", placeholder: "Įveskite pavadinimą", required: true },
@@ -234,12 +251,23 @@ document.addEventListener("DOMContentLoaded", function () {
                 ]
                 break;
             case "TASK":
+                let memberOption = [];
+                console.log(family_members)
+                family_members.forEach(element => {
+                    memberOption.push({
+                        value: element.id,
+                        label: element.name
+                    });
+                });
+
                 fields = [
                     { id: "name", label: "Pavadinimas", type: "text", placeholder: "Įveskite pavadinimą", required: true },
-                    { id: "assigned_to", label: "Atsakingas", type: "text", placeholder: "Pasirinkite šeimos narį", required: true}
-                ]
+                    { 
+                        id: "assigned_to", label: "Atsakingas žmogus", type: "select", required: true, 
+                        options: memberOption
+                    }
+                ];
                 break;
-            case "MEAL":
             case "OTHER":  
                 fields = [
                     { id: "name", label: "Pavadinimas", type: "text", placeholder: "Įveskite pavadinimą", required: true }

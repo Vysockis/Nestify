@@ -32,7 +32,10 @@
 
 {% block outter_content %}
 {% endblock %}
-<script>const csrfToken = '{{ csrf_token }}';</script>
+<script>
+  const csrfToken = '{{ csrf_token }}';
+  let family_members = []
+</script>
 <script src="{% static 'js/form.js' %}"></script>
 {% block javascript %}
 {% endblock %}

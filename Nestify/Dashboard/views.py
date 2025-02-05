@@ -2,14 +2,13 @@ import json
 from django.http import JsonResponse
 from django.shortcuts import render
 from List.enum import ListType
+from Family.models import FamilyMember
 from Nestify.decorators import family_member_required
 from django.utils import timezone
 from datetime import datetime
 from django.core.exceptions import ObjectDoesNotExist
 
 from List import models as lModels
-
-from List import forms as lForms
 
 @family_member_required
 def dashboard(request):
@@ -143,14 +142,27 @@ def item(request):
             list_id = data.get("list_id")
             list_obj = lModels.List.objects.get(id=list_id)
 
-            form = lForms.ListItemForm(data)
-            if form.is_valid():
-                item = form.save(commit=False)
-                item.list = list_obj
-                item.save()
+            name = data.get("name")
+            qty = data.get("qty")
+            assigned_to = data.get("assigned_to")
+
+            match list_obj.list_type:
+                case ListType.TASK.name:
+                    if assigned_to:
+                        assigned_to = FamilyMember.objects.get(pk=assigned_to).user
+
+            try:
+                lModels.ListItem.objects.update_or_create(
+                    name=name,
+                    list_id=list_id,
+                    defaults={
+                        "qty": qty,
+                        "assigned_to": assigned_to
+                    }
+                )
                 return JsonResponse({"success": True})
-            else:
-                return JsonResponse({"error": form.errors}, status=400)
+            except Exception:
+                return JsonResponse({"error": "Nepavyko sukurti įrašo"}, status=400)
 
         except ObjectDoesNotExist:
             return JsonResponse({"error": "List not found"}, status=404)
@@ -181,6 +193,9 @@ def list(request):
             # Parse JSON body
             data = json.loads(request.body)
 
+            name = data.get("name")
+            list_type = data.get("list_type")
+
             # Ensure "datetime" key exists
             if "datetime" not in data:
                 return JsonResponse({"error": "Missing 'datetime' field"}, status=400)
@@ -198,17 +213,20 @@ def list(request):
 
             print(datetime_obj)
 
-            # Initialize form with modified data (without 'datetime')
-            form = lForms.ListForm(data)
-            if form.is_valid():
-                item = form.save(commit=False)
-                item.datetime = datetime_obj
-                item.creator_id = request.user.pk
-                item.family = request.user.getFamily()
-                item.save()
+            try:
+                lModels.List.objects.update_or_create(
+                    name=name,
+                    list_type=list_type,
+                    creator_id=request.user.pk,
+                    family_id=request.user.getFamily().pk,
+                    defaults={
+                        "datetime": datetime_obj
+                    }
+                )
+
                 return JsonResponse({"success": True})
-            else:
-                return JsonResponse({"error": form.errors}, status=400)
+            except Exception:
+                return JsonResponse({"error": "Operacijoj įvyko klaida"}, status=400)
 
         except ObjectDoesNotExist:
             return JsonResponse({"error": "List not found"}, status=404)
