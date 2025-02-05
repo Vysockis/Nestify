@@ -9,9 +9,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 id: "list_type", label: "Tipas", type: "select", required: true, 
                 options: [
                     { value: "GROCERY", label: "Pirkinių sąrašas" },
-                    { value: "TASK", label: "Darbai" },
-                    { value: "MEAL", label: "Receptai" },
-                    { value: "OTHER", label: "Kita" }
+                    { value: "TASK", label: "Namų ruoša" }
                 ] 
             },
             { id: "datetime", label: "Data ir laikas", type: "datetime-local", required: true, today: true }
