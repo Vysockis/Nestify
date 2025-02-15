@@ -22,7 +22,7 @@ document.addEventListener("DOMContentLoaded", function () {
         console.log(formData)
 
         if (formData) {
-            fetch("api/list/", {
+            fetch("../list/api/list/", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -44,7 +44,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Fetch family list from the API
     function fetchFamilyList() {
-        fetch("api/family-list/")  // Django API URL
+        fetch("../list/api/family-list/")  // Django API URL
             .then(response => response.json())
             .then(data => {
                 listContainer.innerHTML = "";  // Clear existing content
@@ -174,7 +174,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
       // API Call to Update Completed Status
     function updateCompletionStatus(itemId, completed) {
-        fetch("api/update-item-status/", {
+        fetch("../list/api/update-item-status/", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -192,7 +192,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function confirmAndDeleteList(listId) {
         if (confirm("Ar tikrai norite tai ištrinti?")) {
-            fetch("api/list/", {
+            fetch("../list/api/list/", {
                 method: "DELETE",
                 headers: {
                     "Content-Type": "application/json",
@@ -216,7 +216,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function confirmAndDeleteItem(itemId) {
         if (confirm("Ar tikrai norite tai ištrinti?")) {
-            fetch("api/item/", {
+            fetch("../list/api/item/", {
                 method: "DELETE",
                 headers: {
                     "Content-Type": "application/json",
@@ -279,7 +279,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
 
         if (formData) {
-            fetch("api/item/", {
+            fetch("../list/api/item/", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
