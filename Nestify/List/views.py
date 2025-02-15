@@ -8,6 +8,8 @@ from django.utils import timezone
 from datetime import datetime
 from django.core.exceptions import ObjectDoesNotExist
 from . import models
+from Dashboard.views import format_time_difference_in
+import tzlocal  # Detects the system's local timezone
 
 
 # Create your views here.
@@ -77,7 +79,7 @@ def get_family_list(request):
 
     # Fetch lists belonging to the family
     family_lists = models.List.get_family_list(family)
-    family_lists = family_lists.order_by("-datetime")
+    family_lists = family_lists.order_by("datetime")
 
     # Convert lists and items to JSON format
     data = []
@@ -108,48 +110,11 @@ def get_family_list(request):
             "id": lst.id,
             "type": lst.list_type,
             "name": lst.name,
-            "date": format_time_difference_in(lst.datetime, timezone.now()),
+            "date": format_time_difference_in(timezone.now(), lst.datetime),
             "items": itemData
         })
 
     return JsonResponse({"family_list": data}, safe=False)
-
-
-def format_time_difference_in(datetime, datetime_other):
-    """
-    Grąžina laiko skirtumą tarp dviejų datetime objektų lietuviškai.
-    Palaiko tiek praeities, tiek ateities laikus.
-    """
-    time_diff = datetime - datetime_other
-    days = time_diff.days
-    seconds = abs(time_diff.seconds)  # Visada teigiamas skaičius skaičiavimui
-    hours = seconds // 3600
-    minutes = (seconds % 3600) // 60
-
-    def lietuviskai(number, word_singular, word_plural_2_9, word_plural_10_plus):
-        """ Teisingas linksniavimas pagal skaičių """
-        if number == 1:
-            return f"{number} {word_singular}"
-        elif 2 <= number <= 9:
-            return f"{number} {word_plural_2_9}"
-        else:
-            return f"{number} {word_plural_10_plus}"
-
-    # Nustatyti, ar laikas yra praeityje, ar ateityje
-    if days > 0:
-        return f"prieš {lietuviskai(days, 'dieną', 'dienas', 'dienų')}"
-    elif days < 0:
-        return f"po {lietuviskai(abs(days), 'dienos', 'dienų', 'dienų')}"
-    elif hours > 0:
-        return f"prieš {lietuviskai(hours, 'valandą', 'valandas', 'valandų')}"
-    elif hours < 0:
-        return f"po {lietuviskai(abs(hours), 'valandos', 'valandų', 'valandų')}"
-    elif minutes > 0:
-        return f"prieš {lietuviskai(minutes, 'minutę', 'minutes', 'minučių')}"
-    elif minutes < 0:
-        return f"po {lietuviskai(abs(minutes), 'minutės', 'minučių', 'minučių')}"
-    else:
-        return "ką tik"
 
 @family_member_required
 def item(request):
@@ -249,7 +214,10 @@ def list(request):
                 datetime_obj = datetime.fromtimestamp(datetimeInt)
 
             # Make timezone-aware if necessary
-            datetime_obj = timezone.make_aware(datetime_obj) if timezone.is_naive(datetime_obj) else datetime_obj
+            server_tz = tzlocal.get_localzone()
+
+            # Convert naive datetime to server timezone
+            datetime_obj = datetime_obj.replace(tzinfo=server_tz)
 
             # Save or update the list. You might also want to save the image file if provided.
             try:
@@ -268,7 +236,7 @@ def list(request):
                     obj.image.save(image_file.name, image_file)
                     obj.save()
 
-                return JsonResponse({"success": True})
+                return JsonResponse({"success": True, "list_id": obj.pk})
             except Exception:
                 return JsonResponse({"error": "Operacijoj įvyko klaida"}, status=400)
 

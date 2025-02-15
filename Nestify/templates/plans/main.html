@@ -1,0 +1,34 @@
+{% extends "master.html" %}
+
+{% load static %}
+
+{% block title %}
+Planai | Nestify
+{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/plans.css' %}">
+{% endblock %}
+
+{% block content %}
+<main class="container plans-container">
+    <!-- Left Side: Lists -->
+    
+    {% include "plans/list.html"  %}
+
+    <!-- Right Side: Dashboard Boxes -->
+    <div class="side-box">
+            {% include "plans/list_mini.html"  %}
+        
+    </div>
+</main>
+{% endblock %}
+
+{% block outter_content %}
+{% include "utils/form.html" %}
+{% endblock %}
+
+{% block javascript %}
+<script src="{% static 'js/plans/main.js' %}"></script>
+<script src="{% static 'js/plans/api/list.js' %}"></script>
+{% endblock %}

@@ -2,14 +2,16 @@ from django.db import models
 from .enum import ActivityType
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
+from List import models as lModels
 
 # Create your models here.
 class Plan(models.Model):
     family = models.ForeignKey("Family.Family", on_delete=models.CASCADE)
     name = models.CharField(max_length=50)
     description = models.TextField(blank=True, null=True)
-    date = models.DateField(auto_now=False, auto_now_add=False, blank=True, null=True)
+    datetime = models.DateTimeField(auto_now=False, auto_now_add=False, null=True)
     image = models.ImageField(upload_to=None, height_field=None, width_field=None, max_length=None, blank=True, null=True)
+    creator = models.ForeignKey("Profile.CustomUser", on_delete=models.CASCADE, null=True)
     plan_type = models.CharField(
         max_length=20,
         choices=ActivityType.choices(),
@@ -26,6 +28,16 @@ class Plan(models.Model):
     def get_absolute_url(self):
         return reverse("Plan_detail", kwargs={"pk": self.pk})
 
+    @staticmethod
+    def get_family_plans(family):
+        return Plan.objects.filter(family=family)
+
+    def get_list(self):
+        return lModels.List.objects.filter(plan=self).first()
+
+    def get_list_item(self):
+        return lModels.ListItem.get_list_items(self.get_list())
+
 class PlanMember(models.Model):
     plan = models.ForeignKey("Plan.Plan", on_delete=models.CASCADE)
     user = models.ForeignKey("Family.FamilyMember", verbose_name=_(""), on_delete=models.CASCADE)
@@ -39,3 +51,7 @@ class PlanMember(models.Model):
 
     def get_absolute_url(self):
         return reverse("PlanMember_detail", kwargs={"pk": self.pk})
+
+    @staticmethod
+    def get_plan_members(plan):
+        return PlanMember.objects.filter(plan=plan)

@@ -1,0 +1,19 @@
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from . import models
+from List import models as lModels
+from List.enum import ListType
+
+@receiver(post_save, sender=models.Plan)
+def create_list_for_plan(sender, instance, created, **kwargs):
+    """Creates a List whenever a Plan is created"""
+    if created:  # Ensure this only runs when a Plan is first created
+        lModels.List.objects.create(
+            family=instance.family,
+            name=f"{instance.name} - List",
+            description=f"List for {instance.name}",
+            creator=instance.creator,
+            plan=instance,  # Link this list to the Plan
+            list_type=ListType.OTHER.name,
+            datetime=instance.datetime
+        )

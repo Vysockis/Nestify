@@ -17,6 +17,8 @@
 }
 
 .circle-btn.red {
+    width: 40px !important;
+    height: 40px !important;
     background-color: #ff000042 !important; 
 }
 
