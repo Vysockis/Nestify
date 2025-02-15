@@ -2,14 +2,22 @@ document.addEventListener("DOMContentLoaded", function () {
     const listContainer = document.getElementById("listContainer");
     const listAdd = document.getElementById("addListBtn");
     const recipeDisplay = document.getElementById("list"); // Main recipe display container
+    const addListItemBtn = document.getElementById("addListItemBtn");
+    const addListBtn = document.getElementById("addListBtn");
   
     let recipesData = []; // Global storage for fetched recipes
-  
-    const addListBtn = document.getElementById("addListBtn");
-    if (!addListBtn) {
-      console.error("No element with id 'addListBtn' found.");
-      return;
-    }
+
+    addListItemBtn.addEventListener("click", function () {
+        // Retrieve the current list id from the button's data attribute
+        const listId = addListItemBtn.dataset.listId;
+        if (!listId) {
+            console.error("No list id found.");
+            return;
+        }
+        // Open the modal for adding a new list item, passing the listId if needed.
+        openAddListItemModal(listId);
+    });
+
     addListBtn.addEventListener("click", function () {
       openAddListModal();
     });
@@ -56,6 +64,36 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
      
+    async function openAddListItemModal(listId) {
+        fields = [
+            { id: "name", label: "Pavadinimas", type: "text", placeholder: "Įveskite pavadinimą", required: true },
+            { id: "qty", label: "Kiekis", type: "number", placeholder: "Įveskite kiekį", required: true, min: 1, value: 1}
+        ]
+        const formData = await openModal({
+            title: `Pridėti įrašą prie ${list.name}`,
+            fields: fields
+        });
+
+        if (formData) {
+            fetch("../api/item/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken
+                },
+                body: JSON.stringify({ list_id: listId, ...formData })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    fetchFamilyList(); // Update list dynamically
+                } else {
+                    alert("Klaida: " + JSON.stringify(data.error));
+                }
+            })
+            .catch(error => console.error("Klaida pridedant įrašą:", error));
+        }
+    }
 
     // Fetch family list (recipes) from the API
     function fetchFamilyList() {
@@ -120,49 +158,47 @@ document.addEventListener("DOMContentLoaded", function () {
         });
       });
     }
-  
-    // Update the main recipe display with details from the selected recipe
+
     function updateRecipeDisplay(recipe) {
         if (!recipeDisplay) return;
         if (!recipe) return; // Guard against undefined recipes
-
+    
         // Update background image of the recipe image container
         const imageDiv = recipeDisplay.querySelector(".recipes-image-content");
         if (imageDiv && recipe.image) {
-        imageDiv.style.backgroundImage = `url('${recipe.image}')`;
+            imageDiv.style.backgroundImage = `url('${recipe.image}')`;
         }
-
+    
         // Update the recipe name shown on the image
         const nameEl = recipeDisplay.querySelector(".recipe-image-text");
         if (nameEl) {
-        nameEl.textContent = recipe.name;
+            nameEl.textContent = recipe.name;
         }
-
+    
         // Update the recipe description (assumes the first <p> is used for description)
         const descriptionEl = recipeDisplay.querySelector("p");
         if (descriptionEl) {
-            // Replace newlines with <br>
             const formattedDescription = recipe.description.replace(/\n/g, "<br>");
             descriptionEl.innerHTML = formattedDescription;
-            }
-  
+        }
+    
         // Update the list of ingredients (assumes the <ul> exists for ingredients)
         const ingredientsList = recipeDisplay.querySelector("ul");
         if (ingredientsList) {
             ingredientsList.innerHTML = ""; // Clear previous ingredients
             recipe.items.forEach(item => {
-            const li = document.createElement("li");
-            li.className = "list-group-item";
-            if (item.qty && item.qty != 1) {
-                li.textContent = `${item.qty}x ${item.name}`;
-            }
-            else {
-                li.textContent = item.name;
-            }
-            ingredientsList.appendChild(li);
+                const li = document.createElement("li");
+                li.className = "list-group-item";
+                li.textContent = item.qty && item.qty != 1 ? `${item.qty}x ${item.name}` : item.name;
+                ingredientsList.appendChild(li);
             });
         }
-    }
+    
+        // Set the data attribute on the addListItemBtn to the current recipe/list id
+        if (addListItemBtn) {
+            addListItemBtn.dataset.listId = recipe.id;
+        }
+    }    
   
     fetchFamilyList(); // Populate list on page load
 });
