@@ -18,8 +18,6 @@ document.addEventListener("DOMContentLoaded", function () {
             title: `Pridėti įrašą`,
             fields: fields
         });
-        console.log("Hello?")
-        console.log(formData)
 
         if (formData) {
             fetch("../list/api/list/", {

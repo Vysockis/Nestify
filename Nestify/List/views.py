@@ -12,9 +12,39 @@ from . import models
 
 # Create your views here.
 @family_member_required
-def recipes(request):
-    print("e")
+def recipes_view(request):
     return render(request, 'recipes/main.html')
+
+@family_member_required
+def recipes(request):
+    family = request.user.getFamily()
+    recipes = models.List.objects.filter(family=family, list_type=ListType.MEAL.name)
+
+    recipe_list = []
+    for recipe in recipes:
+        recipe_item = models.ListItem.get_list_items(recipe)
+        recipe_item_list = []
+        for item in recipe_item:
+            recipe_item_list.append({
+                "id": item.pk,
+                "name": item.name,
+                "qty": item.qty
+            })
+
+        if recipe.image:
+            full_image_url = request.build_absolute_uri(recipe.image.url)
+        else:
+            full_image_url = 'none'
+
+        recipe_list.append({
+            "id": recipe.pk,
+            "name": recipe.name,
+            "image": full_image_url,
+            "description": recipe.description,
+            "items": recipe_item_list
+        })
+
+    return JsonResponse({"recipe_list": recipe_list}, safe=False)
 
 @family_member_required
 def update_item_status(request):
@@ -192,17 +222,25 @@ def list(request):
 
     elif request.method == "POST":
         try:
-            # Parse JSON body
-            data = json.loads(request.body)
+            # Check if the request is multipart/form-data (i.e. contains files)
+            if request.content_type.startswith("multipart/form-data"):
+                # Use request.POST for non-file fields and request.FILES for file fields.
+                data = request.POST.dict()  # Convert QueryDict to a normal dict
+                image_file = request.FILES.get("image")
+            else:
+                # For non-file JSON requests
+                data = json.loads(request.body)
+                image_file = None
 
             name = data.get("name")
             list_type = data.get("list_type")
+            description = data.get("description")
 
             # Ensure "datetime" key exists
             if "datetime" not in data:
                 return JsonResponse({"error": "Missing 'datetime' field"}, status=400)
 
-            datetimeInt = data.pop("datetime")  # Remove 'datetime' to avoid form issues
+            datetimeInt = int(data.pop("datetime"))  # Remove 'datetime' to avoid form issues
 
             # Convert timestamp to datetime object
             if datetimeInt > 1e10:  # If timestamp is in milliseconds
@@ -213,18 +251,22 @@ def list(request):
             # Make timezone-aware if necessary
             datetime_obj = timezone.make_aware(datetime_obj) if timezone.is_naive(datetime_obj) else datetime_obj
 
-            print(datetime_obj)
-
+            # Save or update the list. You might also want to save the image file if provided.
             try:
-                models.List.objects.update_or_create(
+                obj, created = models.List.objects.update_or_create(
                     name=name,
                     list_type=list_type,
                     creator_id=request.user.pk,
                     family_id=request.user.getFamily().pk,
                     defaults={
-                        "datetime": datetime_obj
+                        "datetime": datetime_obj,
+                        "description": description
                     }
                 )
+                # If an image file was provided, handle it here (for example, update the object's image field)
+                if image_file:
+                    obj.image.save(image_file.name, image_file)
+                    obj.save()
 
                 return JsonResponse({"success": True})
             except Exception:

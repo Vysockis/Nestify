@@ -9,7 +9,7 @@ class List(models.Model):
     name = models.CharField(max_length=50)
     description = models.TextField(null=True, blank=True)
     creator = models.ForeignKey("Profile.CustomUser", on_delete=models.CASCADE)
-    photo = models.ImageField(null=True, blank=True)
+    image = models.ImageField(_(""), upload_to="recipes/", null=True, blank=True)
     finished = models.BooleanField(default=False)
     plan = models.ForeignKey("Plan.Plan", on_delete=models.CASCADE, null=True, blank=True)
     list_type = models.CharField(
@@ -37,6 +37,7 @@ class List(models.Model):
 class ListItem(models.Model):
     list = models.ForeignKey("List.List", on_delete=models.CASCADE)
     name = models.CharField(max_length=50)
+    description = models.TextField(null=True, blank=True)
     qty = models.IntegerField(null=True, blank=True)
     item = models.ForeignKey("Inventory.Item", on_delete=models.DO_NOTHING, null=True, blank=True)
     completed = models.BooleanField(default=False)

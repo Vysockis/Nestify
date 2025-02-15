@@ -1,8 +1,8 @@
 .recipes-container {
     display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 3%; 
-    padding: 5%; 
+    grid-template-columns: 2fr 1fr; /* Left (Lists) takes more space */
+    gap: 3%; /* Dynamic spacing */
+    padding: 5%; /* Adjust padding dynamically */
     margin-bottom: 10vh;
 }
 
@@ -18,7 +18,13 @@
     display: block;
 }
 
+
+.list-group-item.active {
+    background-color: #a5a5a5 !important;
+}
+
 .list-group-item {
+    cursor: pointer;
     background: #fff; 
     padding: 12px 16px;
     margin-bottom: 6px;
@@ -35,6 +41,10 @@
     flex-direction: column;
     justify-content: flex-start;
     padding: 1rem;
+    background-size: cover;
+    background-position: center;
+    width: 40vw;
+    margin-bottom: 1vh;
 }
 
 .recipe-image-text {
@@ -43,3 +53,4 @@
     padding: 1rem;
     border-radius: 1rem;
 }
+  
