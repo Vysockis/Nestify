@@ -1,0 +1,29 @@
+{% extends "master.html" %}
+
+{% load static %}
+
+{% block title %}
+Kalendorius | Nestify
+{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/calendar.css' %}">
+<!-- FullCalendar CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.5/main.min.css">
+{% endblock %}
+
+{% block content %}
+<main class="container calendar-container">
+    <div id="calendar-box" class="main-box selected">
+        <h2 class="text-center">Kalendorius</h2>
+        <div id="calendar"></div>
+    </div>
+</main>
+{% endblock %}
+
+{% block javascript %}
+<!-- FullCalendar JS -->
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.5/main.min.js"></script>
+<!-- Custom Calendar JS -->
+<script src="{% static 'js/calendar/main.js' %}"></script>
+{% endblock %}

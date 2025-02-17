@@ -16,13 +16,13 @@
           <a class="nav-link" href="/">Pagrindinis</a>
         </li>
         <li class="nav-item mx-2">
-          <a class="nav-link" href="#">Šeima</a>
+          <a class="nav-link" href="#">Financai</a>
         </li>
         <li class="nav-item mx-2">
           <a class="nav-link" href="#">Turtas</a>
         </li>
         <li class="nav-item mx-2">
-          <a class="nav-link" href="#">Kalendorius</a>
+          <a class="nav-link" href="/dashboard/calendar/">Kalendorius</a>
         </li>
         <li class="nav-item mx-2">
           <a class="nav-link" href="/list/recipes/">Receptai</a>
@@ -38,7 +38,7 @@
       <ul class="navbar-nav">
         {% if user.is_authenticated %}
         <li class="nav-item mx-2">
-          <a class="nav-link" href="#">Profilis</a>
+          <a class="nav-link" href="#">{{ user_family.name }}</a>
         </li>
         <li class="nav-item mx-2">
           <a class="nav-link text-danger" href="{% url 'logout' %}">Atsijungti</a>

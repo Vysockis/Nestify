@@ -1,0 +1,126 @@
+/* General styles */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f6f9;
+    margin: 0;
+    padding: 0;
+}
+
+/* Ensure the container takes full width */
+.master-container {
+    width: 100% !important;
+    overflow-x: auto; /* Allow horizontal scrolling */
+}
+
+/* Adjust the calendar width to fit the page */
+.calendar-container {
+    width: 95%;
+    max-width: 1400px; /* Prevent it from becoming too wide */
+    margin: 40px auto;
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Header styling */
+h2 {
+    text-align: center;
+    color: #333;
+    font-size: 2rem;
+    margin-bottom: 15px;
+}
+
+/* Calendar box */
+#calendar-box {
+    padding: 20px;
+    overflow-x: auto; /* Prevents events from getting cut off */
+}
+
+/* FullCalendar container adjustments */
+.fc {
+    background: #fff;
+    border-radius: 8px;
+    padding: 15px;
+    width: 100% !important;
+    min-width: 1200px; /* Ensures events don’t get squished */
+}
+
+/* FullCalendar Table Fix */
+.fc-view {
+    overflow-x: auto; /* Enables scrolling if needed */
+}
+
+/* Header buttons */
+.fc-header-toolbar {
+    display: flex;
+    justify-content: center; /* Align center */
+    align-items: center;
+    padding-bottom: 10px;
+    flex-wrap: wrap; /* Prevents button overlap */
+}
+
+/* Navigation buttons */
+.fc-button {
+    background-color: #a5a5a5 !important;
+    color: white !important;
+    border: none !important;
+    padding: 10px 15px !important;
+    font-size: 16px !important;
+    border-radius: 5px !important;
+    transition: all 0.3s ease;
+}
+
+.fc-button:hover {
+    background-color: #ECECEC !important;
+}
+
+/* Active button */
+.fc-button-active {
+    background-color: #ECECEC !important;
+}
+
+/* Fix event layout to avoid overflow */
+.fc-daygrid-event {
+    white-space: normal !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Event styling */
+.fc-event {
+    background-color: #a5a5a5 !important;
+    border: none !important;
+    border-radius: 5px !important;
+    padding: 8px !important;
+    font-size: 14px !important;
+    min-width: 50px; /* Ensures event width doesn't collapse */
+}
+
+/* Prevent events from getting cut off */
+.fc-daygrid-event-dot {
+    display: none; /* Removes unnecessary dots */
+}
+
+/* Improve row height for week & day views */
+.fc-timeGridWeek-view .fc-timegrid-slot,
+.fc-timeGridDay-view .fc-timegrid-slot {
+    height: 40px !important;
+}
+
+/* Ensure event text is readable */
+.fc-event-title {
+    color: white !important;
+    font-weight: bold !important;
+    text-align: center;
+}
+
+/* Fix scrollbar for better UX */
+.fc-scroller {
+    scrollbar-width: none;
+}
+
+/* Ensure the calendar container has no extra border */
+.fc-view-container {
+    border: none !important;
+}

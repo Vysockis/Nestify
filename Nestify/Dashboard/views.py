@@ -1,11 +1,20 @@
+from django.http import JsonResponse
 from django.shortcuts import render
+from django.urls import reverse
 from django.utils import timezone
 from Nestify.decorators import family_member_required
+from List import models as lModels
+from Plan import models as pModels
 
 
 @family_member_required
 def dashboard(request):
     return render(request, 'dashboard/main.html')
+
+
+@family_member_required
+def calendar(request):
+    return render(request, 'calendar/main.html')
 
 def format_time_difference_in(dt1, dt2):
 
@@ -44,3 +53,39 @@ def format_time_difference_in(dt1, dt2):
         return f"{prefix} {lietuviskai(minutes, 'minutes', 'minučių', 'minučių')}"
     else:
         return "ką tik"
+
+@family_member_required
+def calendar_events(request):
+    print("ADS")  # Debugging message
+
+    family = request.user.getFamily()
+
+    # Fetch list events
+    listEvents = lModels.List.objects.filter(family=family)
+    listEvent_list = [
+        {
+            "id": listEvent.id,
+            "title": listEvent.name,
+            "start": listEvent.datetime.isoformat(),
+            "end": None,
+        }
+        for listEvent in listEvents
+    ]
+
+    # Fetch plan events with full URL
+    planEvents = pModels.Plan.objects.filter(family=family)
+    planEvent_list = [
+        {
+            "id": planEvent.id,
+            "title": planEvent.name,
+            "start": planEvent.datetime.isoformat(),
+            "end": None,
+            "url": f"{request.build_absolute_uri(reverse('plan-view'))}?planId={planEvent.id}"
+        }
+        for planEvent in planEvents
+    ]
+
+    # Combine events into a single list (instead of nested lists)
+    events = listEvent_list + planEvent_list
+
+    return JsonResponse(events, safe=False)
