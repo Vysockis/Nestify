@@ -1,7 +1,8 @@
 document.addEventListener("DOMContentLoaded", function () {
     const planContainer = document.getElementById("planContainer"); // Plan list container
-    const planDisplay = document.getElementById("list"); // Main plan display container
+    const planDisplay = document.getElementById("list"); // Main plan display container 
     const addPlanMemberBtn = document.getElementById("addPlanMemberBtn");
+    const addPlanItemBtn = document.getElementById("addPlanItemBtn");
     const addPlanBtn = document.getElementById("addPlanBtn");
 
     let plansData = []; // Global storage for fetched plans
@@ -14,12 +15,110 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
         // Open modal to add a new plan member (replace with actual modal function)
-        // openAddPlanMemberModal(planId);
+        openAddPlanMemberModal(planId);
+    });
+
+    addPlanItemBtn.addEventListener("click", function () {
+        const listId = addPlanItemBtn.dataset.listId;
+        const planId = addPlanMemberBtn.dataset.planId;
+        if (!listId) {
+            console.error("No plan ID found.");
+            return;
+        }
+        // Open modal to add a new plan member (replace with actual modal function)
+        openAddPlanItemModal(listId, planId);
     });
 
     addPlanBtn.addEventListener("click", function () {
         openAddPlanModal();
     });
+
+    async function openAddPlanItemModal(listId, planId) {
+        fields = [
+            { id: "name", label: "Pavadinimas", type: "text", placeholder: "Įveskite pavadinimą", required: true }
+        ] 
+    
+        const formData = await openModal({
+            title: `Pridėti įrašą`,
+            fields: fields
+        });
+    
+        if (formData) {
+            fetch("../list/api/item/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken
+                },
+                body: JSON.stringify({ list_id: listId, ...formData })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (planId) {
+                        const newUrl = new URL(window.location.href);
+                        newUrl.searchParams.set("planId", planId);
+                        window.history.pushState({}, "", newUrl); 
+                    }
+
+                    fetchPlanList();
+                } else {
+                    alert("Klaida: " + JSON.stringify(data.error));
+                }
+            })
+            .catch(error => console.error("Klaida pridedant įrašą:", error));
+        }
+    }
+
+    async function openAddPlanMemberModal(planId) {
+        let memberOption = [];
+        console.log(family_members)
+        family_members.forEach(element => {
+            memberOption.push({
+                value: element.id,
+                label: element.name
+            });
+        });
+
+        fields = [
+            { 
+                id: "member_id", label: "Pasirinkite žmogų", type: "select", required: true, 
+                options: memberOption
+            }
+        ];
+    
+        const formData = await openModal({
+            title: `Pridėti įrašą`,
+            fields: fields
+        });
+    
+        if (formData) {
+            fetch("../plan/api/member/", {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": csrfToken
+                },
+                body: JSON.stringify({ plan_id: planId, ...formData })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const newPlanId = data.plan_id;
+
+                    if (newPlanId) {
+                        const newUrl = new URL(window.location.href);
+                        newUrl.searchParams.set("planId", newPlanId);
+                        window.history.pushState({}, "", newUrl); 
+                    }
+
+                    fetchPlanList();
+                } else {
+                    alert("Klaida: " + JSON.stringify(data.error));
+                }
+            })
+            .catch(error => console.error("Klaida pridedant įrašą:", error));
+        }
+    }
 
     async function openAddPlanModal() {
         const fields = [
@@ -191,6 +290,12 @@ document.addEventListener("DOMContentLoaded", function () {
         if (addPlanMemberBtn) {
             addPlanMemberBtn.dataset.planId = plan.id;
         }
+
+        
+        if (addPlanItemBtn) {
+            addPlanItemBtn.dataset.listId = plan.listId;
+            addPlanItemBtn.dataset.planId = plan.id;
+        }
     }
 
     // Fetch and update list items inside #listContainer
@@ -204,23 +309,22 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
 
-        plan.listitems.forEach(list => {
+        plan.listitems.forEach(item => {
             const listItem = document.createElement("li");
             listItem.classList.add("list-group-item", "d-flex", "justify-content-between", "align-items-center");
 
             // Create wrapper div for name
             const nameDiv = document.createElement("div");
-            nameDiv.textContent = list.name;
+            nameDiv.textContent = item.name;
 
             // Create delete button
             const deleteButton = document.createElement("button");
             deleteButton.classList.add("circle-btn", "red");
             deleteButton.innerHTML = "&times;";
-            deleteButton.dataset.listId = list.id;
+            deleteButton.dataset.listId = item.id;
 
             deleteButton.addEventListener("click", function () {
-                console.log("Remove")
-                //removeListItem(list.id);
+                confirmAndDeleteItem(item.id)
             });
 
             // Append elements in correct order
@@ -256,7 +360,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     deleteButton.dataset.memberId = member.id; // Store member ID in dataset
 
                     deleteButton.addEventListener("click", function () {
-                        console.log("Removed")
+                        confirmAndDeleteMember(member.id, plan.id)
                         //removePlanMember(plan.id, member.id); // Use correct member ID
                     });
 
@@ -267,6 +371,55 @@ document.addEventListener("DOMContentLoaded", function () {
                     membersList.appendChild(itemElement);
                 });
             }
+        }
+    }
+
+    function confirmAndDeleteItem(itemId) {
+        if (confirm("Ar tikrai norite tai ištrinti?")) {
+            fetch("../list/api/item/", {
+                method: "DELETE",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken // Include CSRF token for security
+                },
+                body: JSON.stringify({
+                    item_id: itemId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    fetchPlanList(); // Reload the list after deletion
+                } else {
+                    console.log("Error: " + data.error);
+                }
+            })
+            .catch(error => console.error("Error deleting list:", error));
+        }
+    }
+
+    function confirmAndDeleteMember(memberId, planId) {
+        if (confirm("Ar tikrai norite tai ištrinti?")) {
+            fetch("../plan/api/member/", {
+                method: "DELETE",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken // Include CSRF token for security
+                },
+                body: JSON.stringify({
+                    member_id: memberId,
+                    plan_id: planId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    fetchPlanList(); // Reload the list after deletion
+                } else {
+                    console.log("Error: " + data.error);
+                }
+            })
+            .catch(error => console.error("Error deleting list:", error));
         }
     }
 

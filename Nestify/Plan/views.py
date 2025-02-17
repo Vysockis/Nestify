@@ -2,6 +2,7 @@ import json
 from django.http import JsonResponse
 from django.shortcuts import render
 import tzlocal
+from Family.models import FamilyMember
 from Nestify.decorators import family_member_required
 from django.utils import timezone
 from datetime import datetime
@@ -91,6 +92,52 @@ def plan(request):
     return JsonResponse({"error": "Netinkamas kvietimas"}, status=400)
 
 @family_member_required
+def member(request):
+    if request.method == "DELETE":
+        try:
+            data = json.loads(request.body)
+            member_id = data.get("member_id")
+            plan_id = data.get("plan_id")
+            member = FamilyMember.objects.get(pk=member_id)
+            family_plan = models.Plan.objects.get(pk=plan_id)
+
+            # Check if the list exists
+            plan_member = models.PlanMember.objects.get(user=member, plan=family_plan)
+            plan_member.delete()  # Delete the list
+
+            return JsonResponse({"success": True, "message": "Sėkmingai ištrinta"})
+        except ObjectDoesNotExist:
+            return JsonResponse({"error": "Irašas nerastas"}, status=404)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
+    elif request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            member_id = data.get("member_id")
+            plan_id = data.get("plan_id")
+            member = FamilyMember.objects.get(pk=member_id)
+            family_plan = models.Plan.objects.get(pk=plan_id)
+            # Save or update the list. You might also want to save the image file if provided.
+            try:
+                obj, created = models.PlanMember.objects.update_or_create(
+                    plan=family_plan,
+                    user=member
+                )
+
+                return JsonResponse({"success": True, "plan_member_id": obj.pk})
+            except Exception as e:
+                print(e)
+                return JsonResponse({"error": "Operacijoj įvyko klaida"}, status=400)
+
+        except ObjectDoesNotExist:
+            return JsonResponse({"error": "List not found"}, status=404)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
+    return JsonResponse({"error": "Netinkamas kvietimas"}, status=400)
+
+@family_member_required
 def plan_view(request):
     # Get planId from GET or POST request
     plan_id = request.GET.get("planId") or request.POST.get("planId")
@@ -134,6 +181,7 @@ def plans(request):
             "image": full_image_url,
             "date": format_time_difference_in(timezone.now(), plan.datetime),
             "members": member_list,
+            "listId": plan.get_list().pk if plan.get_list() else 0,
             "listitems": plan_list_item
         })
 
