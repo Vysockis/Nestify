@@ -40,8 +40,11 @@ Dashboard | Nestify
 {% endblock %}
 
 {% block javascript %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script src="{% static 'js/dashboard/main.js' %}"></script>
 <script src="{% static 'js/dashboard/api/list.js' %}"></script>
 <script src="{% static 'js/dashboard/api/plans.js' %}"></script>
+<script src="{% static 'js/dashboard/api/finance.js' %}"></script>
+
 {% endblock %}

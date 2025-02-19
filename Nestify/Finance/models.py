@@ -62,49 +62,14 @@ class Transaction(models.Model):
 
 class Category(models.Model):
     name = models.CharField(max_length=50)
-    family = models.ForeignKey("Family.Family", on_delete=models.CASCADE)
+    color = models.CharField(max_length=7, default="#FFFFFF")  # Default white color
 
     class Meta:
         verbose_name = _("Category")
         verbose_name_plural = _("Categorys")
 
     def __str__(self):
-        return f"{self.family.name}: {self.name}"
+        return f"{self.name}"
 
     def get_absolute_url(self):
         return reverse("Category_detail", kwargs={"pk": self.pk})
-
-
-class Operation(models.Model):
-    wallet = models.ForeignKey("Finance.Wallet", verbose_name=_(""), on_delete=models.CASCADE)
-    category = models.ForeignKey("Finance.Category", verbose_name=_(""), on_delete=models.CASCADE)
-    date = models.DateTimeField(auto_now=False, auto_now_add=True)
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
-    receipt_pdf = models.FileField(upload_to='receipts/', blank=True, null=True)
-
-    class Meta:
-        verbose_name = _("Operation")
-        verbose_name_plural = _("Operations")
-
-    def __str__(self):
-        return f"{self.wallet} {self.category}"
-
-    def get_absolute_url(self):
-        return reverse("Operation_detail", kwargs={"pk": self.pk})
-
-
-class OperationItem(models.Model):
-    operation = models.ForeignKey("Finance.Operation", on_delete=models.CASCADE)
-    name = models.CharField(max_length=50, blank=True, null=True)
-    qty = models.IntegerField()
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
-
-    class Meta:
-        verbose_name = _("OperationItem")
-        verbose_name_plural = _("OperationItems")
-
-    def __str__(self):
-        return f"{self.operation.wallet.family.name} {self.name}"
-
-    def get_absolute_url(self):
-        return reverse("OperationItem_detail", kwargs={"pk": self.pk})

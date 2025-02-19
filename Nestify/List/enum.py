@@ -5,6 +5,7 @@ class ListType(Enum):
     GROCERY = _("Grocery")
     TASK = _("Task")
     MEAL = _("Meal")
+    FINANCE = _("Finance")
     OTHER = _("Other")
 
     @classmethod
