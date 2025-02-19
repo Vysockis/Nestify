@@ -53,7 +53,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
 
                 data.family_list.forEach((list, index) => {
-                    if (list.type == "MEAL" || list.type == "OTHER") {
+                    if (list.type == "MEAL" || list.type == "OTHER" || list.type == "FINANCE") {
                         return
                     }
                     const listElement = document.createElement("li");
