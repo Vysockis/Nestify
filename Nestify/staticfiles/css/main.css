@@ -3,12 +3,61 @@
 }
 
 body {
-    background-color: #F3F4F9;
+    font-family: 'Inter', sans-serif;
+    background-color: #f8f9fa;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    margin: 0;
 }
 
 .master-container {
-    height: 90vh;
-    margin-top: 10vh;
+    flex: 1;
+    padding: 2rem;
+    margin-top: 1rem;
     display: flex;
     flex-direction: column;
+    min-height: calc(100vh - 4rem); /* Account for navbar height and margins */
+}
+
+/* Footer styles */
+footer {
+    margin-top: auto;
+    padding: 1rem 0;
+}
+
+.footer-container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+.footer-content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.footer-column-left p {
+    margin: 0;
+    color: #6c757d;
+    font-size: 0.875rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .master-container {
+        padding: 1.5rem;
+        margin-top: 0.75rem;
+        min-height: calc(100vh - 3.5rem);
+    }
+}
+
+@media (max-width: 480px) {
+    .master-container {
+        padding: 1rem;
+        margin-top: 0.5rem;
+        min-height: calc(100vh - 3rem);
+    }
 }

@@ -3,90 +3,88 @@
 {% load static %}
 
 {% block title %}
-Register | SkinBot
+Registracija | Nestify
 {% endblock %}
 
 {% block css %}
-  <link rel="stylesheet" href="{% static 'css/settings/fonts.css' %}">
-  <link rel="stylesheet" href="{% static 'css/settings/colors.css' %}">
-  <link rel="stylesheet" href="{% static 'css/components/buttons.css' %}">
-  <link rel="stylesheet" href="{% static 'css/components/text.css' %}">
-  <link rel="stylesheet" href="{% static 'css/components/forms.css' %}">
-  <link rel="stylesheet" href="{% static 'css/pages/login-register.css' %}">
+<link rel="stylesheet" href="{% static 'css/auth.css' %}">
 {% endblock %}
 
 {% block content %}
-<div class="main-container">
-
-  <div class="register-container">
-    <div class="header-text-container">
-      <h1>Welcome to Skinbot</h1>
-      <p>To get started, please create an account</p>
+<div class="auth-container">
+  <div class="auth-card register">
+    <div class="auth-header">
+      <h2>Sveiki atvykę į Nestify</h2>
+      <p>Užpildykite registracijos formą</p>
     </div>
+
+    {% if form.errors %}
+    <div class="alert alert-danger">
+      Patikrinkite įvestus duomenis ir bandykite dar kartą.
+    </div>
+    {% endif %}
+
     <form method="post" action="{% url 'register' %}">
       {% csrf_token %}
-      <div class="input-fields">
 
-        <div class="form-group">
-          <label for="{{ form.username.id_for_label }}">Username</label>
-          {{ form.username }}
-          {% if form.username.errors %}
-            {% for error in form.username.errors %}
-              <div class="error">{{ error }}</div>
-            {% endfor %}
-          {% endif %}
-        </div>
-
-        <div class="form-group">
-          <label for="{{ form.email.id_for_label }}">Email</label>
-          {{ form.email }}
-          {% if form.email.errors %}
-            {% for error in form.email.errors %}
-              <div class="error">{{ error }}</div>
-            {% endfor %}
-          {% endif %}
-        </div>
-
-        <div class="form-group">
-          <label for="{{ form.password1.id_for_label }}">Password:</label>
-          {{ form.password1 }}
-          {% if form.password1.errors %}
-            {% for error in form.password1.errors %}
-                <div class="error">{{ error }}</div>
-            {% endfor %}
-          {% endif %}
-        </div>
-
-        <div class="form-group">
-          <label for="{{ form.password2.id_for_label }}">Confirm Password:</label>
-          {{ form.password2 }}
-          {% if form.password2.errors %}
-            {% for error in form.password2.errors %}
-                <div class="error">{{ error }}</div>
-            {% endfor %}
-          {% endif %}
-        </div>
-
-        <!-- Registration Code Field -->
-        <div class="form-group">
-          <label for="{{ form.registration_code.id_for_label }}">Registration Code</label>
-          {{ form.registration_code }}
-          {% if form.registration_code.errors %}
-              {% for error in form.registration_code.errors %}
-                  <div class="error">{{ error }}</div>
-              {% endfor %}
-          {% endif %}
-      </div>
-      </div>
       <div class="form-group">
-        <button class="btn-main btn-green" type="submit">Register</button>
+        <label for="username" class="form-label">Vartotojo vardas</label>
+        <input type="text" class="form-control {% if form.username.errors %}error{% endif %}" id="username" name="username" value="{{ form.username.value|default:'' }}" required>
+        {% if form.username.errors %}
+          <div class="text-danger">{{ form.username.errors.0 }}</div>
+        {% endif %}
       </div>
+
+      <div class="form-group">
+        <label for="first_name" class="form-label">Vardas</label>
+        <input type="text" class="form-control {% if form.first_name.errors %}error{% endif %}" id="first_name" name="first_name" value="{{ form.first_name.value|default:'' }}" required>
+        {% if form.first_name.errors %}
+          <div class="text-danger">{{ form.first_name.errors.0 }}</div>
+        {% endif %}
+      </div>
+
+      <div class="form-group">
+        <label for="last_name" class="form-label">Pavardė</label>
+        <input type="text" class="form-control {% if form.last_name.errors %}error{% endif %}" id="last_name" name="last_name" value="{{ form.last_name.value|default:'' }}" required>
+        {% if form.last_name.errors %}
+          <div class="text-danger">{{ form.last_name.errors.0 }}</div>
+        {% endif %}
+      </div>
+
+      <div class="form-group">
+        <label for="email" class="form-label">El. paštas</label>
+        <input type="email" class="form-control {% if form.email.errors %}error{% endif %}" id="email" name="email" value="{{ form.email.value|default:'' }}" required>
+        {% if form.email.errors %}
+          <div class="text-danger">{{ form.email.errors.0 }}</div>
+        {% endif %}
+      </div>
+
+      <div class="form-group">
+        <label for="password1" class="form-label">Slaptažodis</label>
+        <input type="password" class="form-control {% if form.password1.errors %}error{% endif %}" id="password1" name="password1" required>
+        {% if form.password1.errors %}
+          <div class="text-danger">{{ form.password1.errors.0 }}</div>
+        {% endif %}
+      </div>
+
+      <div class="form-group">
+        <label for="password2" class="form-label">Pakartokite slaptažodį</label>
+        <input type="password" class="form-control {% if form.password2.errors %}error{% endif %}" id="password2" name="password2" required>
+        {% if form.password2.errors %}
+          <div class="text-danger">{{ form.password2.errors.0 }}</div>
+        {% endif %}
+      </div>
+
+      <button type="submit" class="btn btn-primary">Registruotis</button>
     </form>
-    <div class="change-signup">
-      <p>Already have an account? <a class="text-link" href="{% url 'login' %}">Log in</a></p>
+
+    <div class="text-center" style="margin: 1.5rem 0;">
+      <p>Jau turite paskyrą? <a href="{% url 'login' %}" class="text-primary">Prisijungti</a></p>
     </div>
   </div>
-
 </div>
+{% endblock %}
 
+{% block javascript %}
+<script src="{% static 'js/auth.js' %}"></script>
 {% endblock %}
