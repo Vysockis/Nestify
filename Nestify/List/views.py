@@ -200,6 +200,8 @@ def list(request):
             name = data.get("name")
             list_type = data.get("list_type")
             description = data.get("description")
+            amount = data.get("amount")
+            category_id = data.get("category")
 
             # Ensure "datetime" key exists
             if "datetime" not in data:
@@ -221,24 +223,32 @@ def list(request):
 
             # Save or update the list. You might also want to save the image file if provided.
             try:
+                defaults = {
+                    "datetime": datetime_obj,
+                    "description": description
+                }
+
+                # Add finance-specific fields if it's a finance operation
+                if list_type == ListType.FINANCE.name:
+                    defaults["amount"] = amount
+                    defaults["category_id"] = category_id
+
                 obj, created = models.List.objects.update_or_create(
                     name=name,
                     list_type=list_type,
                     creator_id=request.user.pk,
                     family_id=request.user.getFamily().pk,
-                    defaults={
-                        "datetime": datetime_obj,
-                        "description": description
-                    }
+                    defaults=defaults
                 )
-                # If an image file was provided, handle it here (for example, update the object's image field)
+
+                # If an image file was provided, handle it here
                 if image_file:
                     obj.image.save(image_file.name, image_file)
                     obj.save()
 
                 return JsonResponse({"success": True, "list_id": obj.pk})
-            except Exception:
-                return JsonResponse({"error": "Operacijoj įvyko klaida"}, status=400)
+            except Exception as e:
+                return JsonResponse({"error": f"Operacijoj įvyko klaida: {str(e)}"}, status=400)
 
         except ObjectDoesNotExist:
             return JsonResponse({"error": "List not found"}, status=404)

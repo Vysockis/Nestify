@@ -17,6 +17,88 @@ document.addEventListener("DOMContentLoaded", function() {
     let financeChartInstance;
     let categoryChartInstance;
 
+    financeAdd.addEventListener("click", async function () {
+        fields = [
+            { 
+                id: "category", 
+                label: "Kategorija", 
+                type: "select", 
+                required: true, 
+                options: finance_categories.map(cat => ({
+                    value: cat.id,
+                    label: cat.name
+                }))
+            },
+            { 
+                id: "amount", 
+                label: "Suma", 
+                type: "number", 
+                placeholder: "Įveskite sumą", 
+                required: true, 
+                step: "0.01",
+                min: "-999999.99",
+                max: "999999.99"
+            },
+            {
+                id: "date",
+                label: "Data",
+                type: "datetime-local",
+                required: true,
+                value: new Date().toISOString().slice(0, 16)
+            }
+        ]  
+        const formData = await openModal({
+            title: `Pridėti finansinį įrašą`,
+            fields: fields
+        });
+
+        if (formData) {
+            // Validate amount
+            const amount = parseFloat(formData.amount);
+            if (isNaN(amount)) {
+                alert("Klaida: Neteisingas sumos formatas");
+                return;
+            }
+
+            // Create loading indicator
+            const loadingIndicator = document.createElement('div');
+            loadingIndicator.id = 'loading-indicator';
+            loadingIndicator.textContent = 'Įrašoma...';
+            document.body.appendChild(loadingIndicator);
+
+            try {
+                const response = await fetch("../list/api/list/", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": csrfToken
+                    },
+                    body: JSON.stringify({ 
+                        name: `Finance Operation ${new Date().toLocaleString()}`,
+                        list_type: "FINANCE",
+                        datetime: new Date(formData.date).getTime(),
+                        amount: amount,
+                        category: formData.category
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    processChartData(); // Update charts dynamically
+                } else {
+                    alert("Klaida: " + (data.error || "Nepavyko pridėti įrašo"));
+                }
+            } catch (error) {
+                console.error("Klaida pridedant įrašą:", error);
+                alert("Klaida: Nepavyko pridėti įrašo. Bandykite dar kartą.");
+            } finally {
+                // Remove loading indicator
+                document.getElementById('loading-indicator')?.remove();
+            }
+        }
+    });
+
     function createCharts(data) {
         // Destroy previous instances if they exist
         if (financeChartInstance) {
