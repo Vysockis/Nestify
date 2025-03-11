@@ -4,6 +4,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const financeCtx = document.getElementById('financeChart').getContext('2d');
     const categoryCtx = document.getElementById('categoryChart').getContext('2d');
     const newestExpensesList = document.getElementById('newest-expenses');
+    const financeAdd = document.getElementById("addFinanceBtn");
 
     const today = new Date();
     const lastYear = new Date();

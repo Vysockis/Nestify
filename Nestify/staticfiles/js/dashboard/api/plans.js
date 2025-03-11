@@ -84,7 +84,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     });
                 });
 
-                addToggleFunctionality(); // Attach click event to newly created elements
+                //addToggleFunctionality(); // Attach click event to newly created elements
             })
             .catch(error => console.error("Error fetching lists:", error));
     }

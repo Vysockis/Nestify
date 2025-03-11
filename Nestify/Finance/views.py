@@ -109,3 +109,17 @@ def get_pie(operation_list):
     }
 
     return result
+
+# Create your views here.
+@family_member_required
+def categories(request):
+    """API endpoint to fetch family list and items."""
+    categories = models.Category.objects.all()
+    category_data = []
+    for category in categories:
+        category_data.append({
+            "id": category.pk,
+            "name": category.name
+        })
+
+    return JsonResponse({"finance_categories": category_data}, safe=False)
