@@ -1,0 +1,62 @@
+.member-item {
+    transition: background-color 0.2s;
+}
+
+.member-item:hover {
+    background-color: #f8f9fa;
+}
+
+.member-avatar {
+    width: 40px;
+    height: 40px;
+    background-color: #e9ecef;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.member-avatar i {
+    color: #6c757d;
+    font-size: 1.2rem;
+}
+
+.member-actions {
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.member-item:hover .member-actions {
+    opacity: 1;
+}
+
+.invitation-code-item {
+    transition: background-color 0.2s;
+}
+
+.invitation-code-item:hover {
+    background-color: #f8f9fa;
+}
+
+.invitation-code-item code {
+    background-color: #e9ecef;
+    padding: 0.2rem 0.4rem;
+    border-radius: 4px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .member-actions {
+        opacity: 1;
+    }
+    
+    .member-item {
+        flex-direction: column;
+        align-items: flex-start !important;
+    }
+    
+    .member-actions {
+        margin-top: 1rem;
+        margin-left: 3.5rem;
+    }
+} 

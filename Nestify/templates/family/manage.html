@@ -1,0 +1,145 @@
+{% extends 'master.html' %}
+{% load static %}
+
+{% block title %}Šeimos Valdymas | Nestify{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/family.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <!-- Members List -->
+        <div class="{% if is_admin %}col-lg-8{% else %}col-lg-12{% endif %}">
+            <div class="card shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Šeimos Nariai</h5>
+                    {% if is_admin %}
+                    <button class="btn btn-primary" id="inviteBtn">
+                        <i class="fas fa-user-plus me-1"></i>Pakviesti Narį
+                    </button>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <div class="members-list">
+                        {% for member in members %}
+                        <div class="member-item d-flex justify-content-between align-items-center p-2 border-bottom">
+                            <div class="d-flex align-items-center">
+                                <div class="member-avatar me-3">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">{{ member.user.get_full_name }}</h6>
+                                    <small class="text-muted">
+                                        {% if member.is_admin %}Admin
+                                        {% elif member.is_kid %}Vaikas
+                                        {% else %}Narys
+                                        {% endif %}
+                                    </small>
+                                </div>
+                            </div>
+                            {% if is_admin and not member.is_admin %}
+                            <div class="member-actions">
+                                <button class="btn btn-outline-secondary btn-sm me-2 toggle-kid-btn" 
+                                        data-member-id="{{ member.id }}"
+                                        data-is-kid="{{ member.is_kid|lower }}">
+                                    {% if member.is_kid %}
+                                    <i class="fas fa-user me-1"></i>Pažymėti Suaugusiu
+                                    {% else %}
+                                    <i class="fas fa-child me-1"></i>Pažymėti Vaiku
+                                    {% endif %}
+                                </button>
+                                <button class="btn btn-danger btn-sm remove-member-btn" 
+                                        data-member-id="{{ member.id }}">
+                                    <i class="fas fa-trash-alt me-1"></i>Pašalinti
+                                </button>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% empty %}
+                        <p class="text-center text-muted my-3">Šeimos narių nerasta</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Invitation Codes (Admin Only) -->
+        {% if is_admin %}
+        <div class="col-lg-4 mt-4 mt-lg-0">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0">Pakvietimo Kodai</h5>
+                </div>
+                <div class="card-body">
+                    <div class="invitation-codes-list">
+                        {% for code in invitation_codes %}
+                        <div class="invitation-code-item d-flex justify-content-between align-items-center p-2 border-bottom">
+                            <code>{{ code.code }}</code>
+                            <button class="btn btn-danger btn-sm delete-code-btn" 
+                                    data-code-id="{{ code.id }}">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        {% empty %}
+                        <p class="text-center text-muted my-3">Nėra aktyvių kodų</p>
+                        {% endfor %}
+                        <div class="mt-3">
+                            <button class="btn btn-primary w-100" id="generateCodeBtn">
+                                <i class="fas fa-plus me-1"></i>Generuoti Kodą
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Invite Modal (Admin Only) -->
+{% if is_admin %}
+<div class="modal fade" id="inviteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Pakviesti Narį</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Pakvietimo Kodas</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="invitationCode" readonly>
+                        <button class="btn btn-outline-secondary" type="button" id="copyCodeBtn">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+                <p class="text-muted small">
+                    Pasidalinkite šiuo kodu su asmeniu, kurį norite pakviesti į šeimą.
+                    Kodas galios 24 valandas.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Uždaryti</button>
+                <button type="button" class="btn btn-primary" id="modalGenerateCodeBtn">Generuoti Kodą</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block javascript %}
+<!-- Debug script -->
+<script>
+    console.log('Template loaded');
+    document.addEventListener('DOMContentLoaded', function() {
+        const mainBtn = document.getElementById('generateCodeBtn');
+        const modalBtn = document.getElementById('modalGenerateCodeBtn');
+    });
+</script>
+<script src="{% static 'js/family/manage.js' %}"></script>
+{% endblock %} 
