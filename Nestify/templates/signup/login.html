@@ -14,13 +14,13 @@ Prisijungimas | Nestify
 <div class="auth-container">
   <div class="auth-card">
     <div class="auth-header">
-      <h2>Sveiki sugrįžę!</h2>
-      <p>Įveskite savo prisijungimo duomenis</p>
+      <h2>Prisijungimas</h2>
+      <p>Sveiki sugrįžę! Prisijunkite prie savo paskyros.</p>
     </div>
 
     {% if messages %}
     {% for message in messages %}
-    <div class="alert alert-{% if message.tags == 'success' %}success{% else %}danger{% endif %}">
+    <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
       {{ message }}
     </div>
     {% endfor %}
@@ -51,8 +51,8 @@ Prisijungimas | Nestify
       <button type="submit" class="btn btn-primary">Prisijungti</button>
     </form>
 
-    <div class="text-center" style="margin: 1.5rem 0;">
-      <p>Neturite paskyros? <a href="{% url 'register' %}" class="text-primary">Registruotis</a></p>
+    <div class="auth-links">
+      <p>Neturite paskyros? <a href="{% url 'register' %}">Registruokitės</a></p>
     </div>
   </div>
 </div>

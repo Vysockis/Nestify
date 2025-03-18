@@ -91,7 +91,7 @@ def get_family_list(request):
             name = ""
             match lst.list_type:
                 case ListType.GROCERY.name:
-                    name = f"{item.qty if item.qty is not None else 0}x {item.name}"
+                    name = f"{f"{item.qty}x" if item.qty is not None and item.qty != 1 else ""} {item.name}"
                 case ListType.TASK.name:
                     user_text = f"{item.assigned_to.first_name}: " if item.assigned_to is not None else ""
                     name = f"{user_text}{item.name}"

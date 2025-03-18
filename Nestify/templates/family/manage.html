@@ -12,6 +12,41 @@
     <div class="row">
         <!-- Members List -->
         <div class="{% if is_admin %}col-lg-8{% else %}col-lg-12{% endif %}">
+            {% if is_admin and pending_members %}
+            <div class="card shadow-sm mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Laukiantys patvirtinimo</h5>
+                </div>
+                <div class="card-body">
+                    <div class="pending-members-list">
+                        {% for member in pending_members %}
+                        <div class="member-item d-flex justify-content-between align-items-center p-2 border-bottom">
+                            <div class="d-flex align-items-center">
+                                <div class="member-avatar me-3">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">{{ member.user.get_full_name }}</h6>
+                                    <small class="text-muted">Laukia patvirtinimo</small>
+                                </div>
+                            </div>
+                            <div class="member-actions">
+                                <button class="btn btn-success btn-sm me-2 approve-member-btn" 
+                                        data-member-id="{{ member.id }}">
+                                    <i class="fas fa-check me-1"></i>Patvirtinti
+                                </button>
+                                <button class="btn btn-danger btn-sm reject-member-btn" 
+                                        data-member-id="{{ member.id }}">
+                                    <i class="fas fa-times me-1"></i>Atmesti
+                                </button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
             <div class="card shadow-sm">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">Šeimos Nariai</h5>
@@ -32,19 +67,19 @@
                                 <div>
                                     <h6 class="mb-0">{{ member.user.get_full_name }}</h6>
                                     <small class="text-muted">
-                                        {% if member.is_admin %}Admin
-                                        {% elif member.is_kid %}Vaikas
+                                        {% if member.admin %}Admin
+                                        {% elif member.kid %}Vaikas
                                         {% else %}Narys
                                         {% endif %}
                                     </small>
                                 </div>
                             </div>
-                            {% if is_admin and not member.is_admin %}
+                            {% if is_admin and not member.admin %}
                             <div class="member-actions">
                                 <button class="btn btn-outline-secondary btn-sm me-2 toggle-kid-btn" 
                                         data-member-id="{{ member.id }}"
-                                        data-is-kid="{{ member.is_kid|lower }}">
-                                    {% if member.is_kid %}
+                                        data-is-kid="{{ member.kid|lower }}">
+                                    {% if member.kid %}
                                     <i class="fas fa-user me-1"></i>Pažymėti Suaugusiu
                                     {% else %}
                                     <i class="fas fa-child me-1"></i>Pažymėti Vaiku

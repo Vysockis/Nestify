@@ -12,20 +12,42 @@
 
 {% block content %}
 <div class="auth-container">
-  <div class="auth-card">
-    <div class="auth-header">
-      <h2>Dar nesate šeimos narys?</h2>
-      <p>Pasirinkite vieną iš žemiau pateiktų variantų</p>
-    </div>
+    <div class="auth-card">
+        <div class="auth-header">
+            <h2>Šeimos pasirinkimas</h2>
+            <p>Pasirinkite, ar norite sukurti naują šeimą, ar prisijungti prie esamos</p>
+        </div>
 
-    <div class="family-buttons">
-      <button class="btn btn-outline join-family">Prisijungti prie šeimos</button>
-      <button class="btn btn-primary create-family">Sukurti šeimą</button>
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        <div class="d-flex justify-content-between">
+            <button class="btn btn-primary" onclick="showJoinForm()">Prisijungti prie šeimos</button>
+            <a href="{% url 'create_family' %}" class="btn btn-secondary">Sukurti šeimą</a>
+        </div>
+
+        <div class="join-form" id="joinForm">
+            <form method="post" action="{% url 'join_family' %}">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="invitation_code" class="form-label">Pakvietimo kodas</label>
+                    <input type="text" name="invitation_code" id="invitation_code" class="form-control" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Prisijungti</button>
+            </form>
+        </div>
     </div>
-  </div>
 </div>
-{% endblock %}
 
-{% block javascript %}
-<script src="{% static 'js/auth.js' %}"></script>
+<script>
+function showJoinForm() {
+    const form = document.getElementById('joinForm');
+    form.classList.add('active');
+}
+</script>
 {% endblock %} 

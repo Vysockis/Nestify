@@ -214,6 +214,114 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // Approve member
+    document.addEventListener('click', async function(e) {
+        if (e.target.closest('.approve-member-btn')) {
+            const btn = e.target.closest('.approve-member-btn');
+            const memberId = btn.dataset.memberId;
+            
+            try {
+                const response = await fetch(`/family/api/approve-member/${memberId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken'),
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                if (!response.ok) throw new Error('Failed to approve member');
+                
+                // Remove from pending list and add to members list
+                const memberItem = btn.closest('.member-item');
+                const memberName = memberItem.querySelector('h6').textContent;
+                
+                // Create new member item
+                const newMemberItem = document.createElement('div');
+                newMemberItem.className = 'member-item d-flex justify-content-between align-items-center p-2 border-bottom';
+                newMemberItem.innerHTML = `
+                    <div class="d-flex align-items-center">
+                        <div class="member-avatar me-3">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-0">${memberName}</h6>
+                            <small class="text-muted">Narys</small>
+                        </div>
+                    </div>
+                    <div class="member-actions">
+                        <button class="btn btn-outline-secondary btn-sm me-2 toggle-kid-btn" 
+                                data-member-id="${memberId}"
+                                data-is-kid="false">
+                            <i class="fas fa-child me-1"></i>Pažymėti Vaiku
+                        </button>
+                        <button class="btn btn-danger btn-sm remove-member-btn" 
+                                data-member-id="${memberId}">
+                            <i class="fas fa-trash-alt me-1"></i>Pašalinti
+                        </button>
+                    </div>
+                `;
+                
+                // Add to members list
+                const membersList = document.querySelector('.members-list');
+                const emptyMessage = membersList.querySelector('p.text-muted');
+                if (emptyMessage) {
+                    emptyMessage.remove();
+                }
+                membersList.appendChild(newMemberItem);
+                
+                // Remove from pending list
+                memberItem.remove();
+                
+                // Check if pending list is empty
+                const pendingList = document.querySelector('.pending-members-list');
+                if (!pendingList.querySelector('.member-item')) {
+                    pendingList.closest('.card').remove();
+                }
+                
+                showAlert('success', 'Narys patvirtintas sėkmingai');
+            } catch (error) {
+                console.error('Error approving member:', error);
+                showAlert('error', 'Nepavyko patvirtinti nario');
+            }
+        }
+    });
+
+    // Reject member
+    document.addEventListener('click', async function(e) {
+        if (e.target.closest('.reject-member-btn')) {
+            if (!confirm('Ar tikrai norite atmesti šį narį?')) return;
+            
+            const btn = e.target.closest('.reject-member-btn');
+            const memberId = btn.dataset.memberId;
+            
+            try {
+                const response = await fetch(`/family/api/reject-member/${memberId}/`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken'),
+                    }
+                });
+                
+                if (!response.ok) throw new Error('Failed to reject member');
+                
+                // Remove from pending list
+                const memberItem = btn.closest('.member-item');
+                memberItem.remove();
+                
+                // Check if pending list is empty
+                const pendingList = document.querySelector('.pending-members-list');
+                if (!pendingList.querySelector('.member-item')) {
+                    pendingList.closest('.card').remove();
+                }
+                
+                showAlert('success', 'Narys atmestas sėkmingai');
+            } catch (error) {
+                console.error('Error rejecting member:', error);
+                showAlert('error', 'Nepavyko atmesti nario');
+            }
+        }
+    });
+
     // Helper function to get CSRF token
     function getCookie(name) {
         let cookieValue = null;

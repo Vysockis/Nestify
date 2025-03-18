@@ -1,19 +1,23 @@
-<!-- Modal Overlay (Hidden by Default) -->
-<div id="modalOverlay" class="modal-overlay"></div>
+{% load static %}
 
-<!-- Modal Form (Hidden by Default) -->
-<div id="modalForm" class="modal">
-    <div class="modal-content">
-        <!-- Modal Header -->
-        <div style="display: flex; justify-content: space-between;">
-            <h2 id="modalTitle" class="modal-title">Modal Title</h2>
-            <button id="closeModal" class="circle-btn">&times;</button>
+<!-- Bootstrap Modal -->
+<div class="modal fade" id="modalForm" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle"></h5>
+                <button type="button" class="btn-close" id="closeModal" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="post" id="modalFormContent">
+                    {% csrf_token %}
+                    <div id="modalInputs"></div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Uždaryti</button>
+                        <button type="submit" class="btn btn-primary">Išsaugoti</button>
+                    </div>
+                </form>
+            </div>
         </div>
-
-        <!-- Dynamic Form -->
-        <form id="modalFormContent">
-            <div id="modalInputs"></div> <!-- This is where inputs will be injected dynamically -->
-            <button type="submit" id="submitBtn">Submit</button>
-        </form>
     </div>
 </div>

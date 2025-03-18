@@ -174,4 +174,31 @@ a:hover {
     .auth-card.register {
         padding: 1.25rem;
     }
+}
+
+/* Waiting approval page styles */
+.waiting-card {
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.status-icon {
+    font-size: 3rem;
+    color: #ffc107;
+    margin-bottom: 1rem;
+}
+
+/* Join family form styles */
+.join-form {
+    display: none;
+}
+
+.join-form.active {
+    display: block;
+}
+
+/* Auth links */
+.auth-links {
+    margin: 1.5rem 0;
+    text-align: center;
 } 

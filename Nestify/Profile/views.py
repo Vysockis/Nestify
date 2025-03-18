@@ -16,9 +16,15 @@ from Profile.forms import CustomUserCreationForm
 def landing(request):
     try:
         # Check if user exists in FamilyMember model
-        fModels.FamilyMember.objects.get(user=request.user)
-        return redirect('/dashboard')
-    except ObjectDoesNotExist:
+        family_member = fModels.FamilyMember.objects.get(user=request.user)
+        if family_member.accepted:
+            return redirect('/dashboard')
+        else:
+            # User has a pending request
+            return render(request, 'signup/waiting_approval.html', {
+                'family_name': family_member.family.name
+            })
+    except fModels.FamilyMember.DoesNotExist:
         return render(request, 'signup/family_choice.html')
 
 @login_required
@@ -67,7 +73,7 @@ def manage_family(request):
     try:
         # Check if user exists in FamilyMember model
         family_member = fModels.FamilyMember.objects.get(user=request.user, accepted=True)
-        is_admin = family_member.admin  # Note: field is 'admin' not 'is_admin'
+        is_admin = family_member.admin
         family = family_member.family
     except fModels.FamilyMember.DoesNotExist:
         messages.error(request, 'Jūs nesate šeimos narys.')
@@ -76,10 +82,54 @@ def manage_family(request):
     context = {
         'is_admin': is_admin,
         'members': fModels.FamilyMember.objects.filter(family=family, accepted=True),
+        'pending_members': fModels.FamilyMember.objects.filter(family=family, accepted=False) if is_admin else None,
         'invitation_codes': fModels.FamilyCode.objects.filter(family=family, used=False) if is_admin else None
     }
     
     return render(request, 'family/manage.html', context)
+
+@login_required
+@require_http_methods(['POST'])
+def approve_member(request, member_id):
+    try:
+        # Check if user is admin
+        admin_member = fModels.FamilyMember.objects.get(user=request.user, accepted=True, admin=True)
+        
+        # Get pending member
+        pending_member = fModels.FamilyMember.objects.get(
+            id=member_id,
+            family=admin_member.family,
+            accepted=False
+        )
+        
+        # Approve member
+        pending_member.accepted = True
+        pending_member.save()
+        
+        return JsonResponse({'status': 'success'})
+    except fModels.FamilyMember.DoesNotExist:
+        return JsonResponse({'error': 'Unauthorized or member not found'}, status=403)
+
+@login_required
+@require_http_methods(['DELETE'])
+def reject_member(request, member_id):
+    try:
+        # Check if user is admin
+        admin_member = fModels.FamilyMember.objects.get(user=request.user, accepted=True, admin=True)
+        
+        # Get pending member
+        pending_member = fModels.FamilyMember.objects.get(
+            id=member_id,
+            family=admin_member.family,
+            accepted=False
+        )
+        
+        # Delete the pending member
+        pending_member.delete()
+        
+        return JsonResponse({'status': 'success'})
+    except fModels.FamilyMember.DoesNotExist:
+        return JsonResponse({'error': 'Unauthorized or member not found'}, status=403)
 
 @login_required
 @require_http_methods(['POST'])
@@ -174,3 +224,108 @@ def remove_family_member(request, member_id):
             return JsonResponse({'error': 'Member not found'}, status=404)
     except fModels.FamilyMember.DoesNotExist:
         return JsonResponse({'error': 'Not a family member'}, status=403)
+
+@login_required
+def join_family(request):
+    if request.method == 'POST':
+        code = request.POST.get('code')
+        try:
+            # Find the invitation code
+            family_code = fModels.FamilyCode.objects.get(code=code, used=False)
+            
+            # Check if user is already in a family
+            if fModels.FamilyMember.objects.filter(user=request.user).exists():
+                messages.error(request, 'Jūs jau priklausote šeimai arba turite aktyvų prašymą.')
+                return redirect('landing')
+            
+            # Create family member with accepted=False
+            fModels.FamilyMember.objects.create(
+                user=request.user,
+                family=family_code.family,
+                admin=False,
+                kid=False,
+                accepted=False
+            )
+            
+            # Mark code as used
+            family_code.used = True
+            family_code.user = request.user
+            family_code.save()
+            
+            messages.success(request, 'Prašymas prisijungti prie šeimos išsiųstas. Laukite administratoriaus patvirtinimo.')
+            return redirect('landing')
+            
+        except fModels.FamilyCode.DoesNotExist:
+            messages.error(request, 'Neteisingas arba nebegaliojantis pakvietimo kodas.')
+            return redirect('landing')
+    
+    return render(request, 'signup/family_choice.html')
+
+@login_required
+def cancel_join_request(request):
+    if request.method == 'POST':
+        try:
+            # Find and delete the pending request
+            family_member = fModels.FamilyMember.objects.get(
+                user=request.user,
+                accepted=False
+            )
+            
+            # Get the family code associated with this request
+            family_code = fModels.FamilyCode.objects.get(
+                user=request.user,
+                family=family_member.family,
+                used=True
+            )
+            
+            # Delete the family member request
+            family_member.delete()
+            
+            # Mark the code as unused so it can be used again
+            family_code.used = False
+            family_code.user = None
+            family_code.save()
+            
+            messages.success(request, 'Prašymas prisijungti prie šeimos atšauktas.')
+        except (fModels.FamilyMember.DoesNotExist, fModels.FamilyCode.DoesNotExist):
+            messages.error(request, 'Prašymas nerastas.')
+            
+    return redirect('landing')
+
+@login_required
+def create_family(request):
+    if request.method == 'POST':
+        family_name = request.POST.get('family_name')
+        if not family_name:
+            messages.error(request, 'Šeimos pavadinimas yra privalomas.')
+            return redirect('landing')
+
+        try:
+            # Check if user already has a family
+            if fModels.FamilyMember.objects.filter(user=request.user).exists():
+                messages.error(request, 'Jūs jau priklausote šeimai arba turite aktyvų prašymą.')
+                return redirect('landing')
+
+            # Create new family
+            family = fModels.Family.objects.create(
+                name=family_name,
+                creator=request.user
+            )
+
+            # Create family member (creator is automatically admin and accepted)
+            fModels.FamilyMember.objects.create(
+                user=request.user,
+                family=family,
+                admin=True,
+                kid=False,
+                accepted=True
+            )
+
+            messages.success(request, f'Šeima "{family_name}" sėkmingai sukurta!')
+            return redirect('manage_family')
+
+        except Exception:
+            messages.error(request, 'Įvyko klaida kuriant šeimą. Bandykite dar kartą.')
+            return redirect('landing')
+
+    return render(request, 'signup/create_family.html')

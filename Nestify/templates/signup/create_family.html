@@ -1,0 +1,40 @@
+{% extends 'master.html' %}
+{% load static %}
+
+{% block title %}Sukurti šeimą | Nestify{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/auth.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <h2>Sukurti naują šeimą</h2>
+            <p>Įveskite šeimos pavadinimą</p>
+        </div>
+
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="family_name" class="form-label">Šeimos pavadinimas</label>
+                <input type="text" class="form-control" id="family_name" name="family_name" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Sukurti šeimą</button>
+        </form>
+
+        <div class="auth-links">
+            <a href="{% url 'landing' %}" class="text-primary">Grįžti atgal</a>
+        </div>
+    </div>
+</div>
+{% endblock %} 

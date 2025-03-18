@@ -1,0 +1,42 @@
+{% extends 'master.html' %}
+{% load static %}
+
+{% block title %}Laukiama patvirtinimo | Nestify{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/auth.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card shadow-sm waiting-card">
+        <div class="card-body text-center py-5">
+            <div class="status-icon">
+                <i class="fas fa-clock"></i>
+            </div>
+            <h3 class="mb-3">Laukiama patvirtinimo</h3>
+            <p class="text-muted mb-4">
+                Jūsų prašymas prisijungti prie šeimos "{{ family_name }}" išsiųstas.<br>
+                Laukiama administratoriaus patvirtinimo.
+            </p>
+            <form method="POST" action="{% url 'cancel_join_request' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger" onclick="return confirm('Ar tikrai norite atšaukti prašymą?')">
+                    <i class="fas fa-times me-2"></i>Atšaukti prašymą
+                </button>
+            </form>
+        </div>
+    </div>
+
+    {% if messages %}
+    <div class="mt-3">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %} 
