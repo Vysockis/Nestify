@@ -289,14 +289,14 @@ def items(request):
                     "price": item.amount,  # Use amount field as price
                     "completed": item.completed
                 }
-                
+
                 # Add assigned_to if it exists
                 if item.assigned_to:
                     item_data["assigned_to"] = {
                         "id": item.assigned_to.pk,
                         "name": f"{item.assigned_to.first_name} {item.assigned_to.last_name}"
                     }
-                
+
                 items_data.append(item_data)
 
             return JsonResponse({"success": True, "items": items_data}, safe=False)

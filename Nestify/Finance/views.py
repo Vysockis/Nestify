@@ -33,11 +33,11 @@ def dashboard(request):
     operation_list = lModels.List.get_family_list_finance(family).order_by("-datetime")
 
     newest = get_newest_operations(operation_list)
-    
+
     # Filter by date range and get all operations
     date_filtered_operations = operation_list.filter(datetime__gte=start_date, datetime__lte=end_date)
     all_operations = get_all_operations(date_filtered_operations)
-    
+
     # Continue with other processing
     chart = get_chart(date_filtered_operations)
     pie = get_pie(date_filtered_operations)
@@ -138,11 +138,11 @@ def categories(request):
 def get_all_operations(operation_list):
     """Returns all operations in the given operation list with formatting."""
     result = []
-    
+
     for op in operation_list:
         # Check if the operation has any items
         has_items = op.listitem_set.exists()
-        
+
         result.append({
             "id": op.id,
             "category": op.category.name,
@@ -150,5 +150,5 @@ def get_all_operations(operation_list):
             "date": op.datetime.strftime("%Y-%m-%d"),
             "has_items": has_items
         })
-    
+
     return result
