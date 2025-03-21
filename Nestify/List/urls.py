@@ -8,4 +8,5 @@ urlpatterns = [
     path('api/family-list/', views.get_family_list, name="get_family_list"),
     path('api/item/', views.item, name="item"),
     path('api/list/', views.list, name="list"),
+    path('api/items/', views.items, name="items"),
 ]

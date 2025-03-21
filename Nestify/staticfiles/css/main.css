@@ -12,6 +12,8 @@ body {
 }
 
 .master-container {
+    width: 80%;
+    margin: 0 auto;
     flex: 1;
     padding: 2rem;
     margin-top: 1rem;

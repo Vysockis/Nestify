@@ -6,6 +6,7 @@ from . import models
 from datetime import datetime
 from django.utils import timezone
 from calendar import monthrange
+from django.shortcuts import render
 
 # Create your views here.
 @family_member_required
@@ -32,18 +33,28 @@ def dashboard(request):
     operation_list = lModels.List.get_family_list_finance(family).order_by("-datetime")
 
     newest = get_newest_operations(operation_list)
-    operation_list = operation_list.filter(datetime__gte=start_date, datetime__lte=end_date)
-    chart = get_chart(operation_list)
-    pie = get_pie(operation_list)
+    
+    # Filter by date range and get all operations
+    date_filtered_operations = operation_list.filter(datetime__gte=start_date, datetime__lte=end_date)
+    all_operations = get_all_operations(date_filtered_operations)
+    
+    # Continue with other processing
+    chart = get_chart(date_filtered_operations)
+    pie = get_pie(date_filtered_operations)
 
     payload = {
         "chart": chart,
         "pie": pie,
-        "newest": newest
+        "newest": newest,
+        "all_operations": all_operations
     }
 
     return JsonResponse({"data": payload}, safe=False)
 
+@family_member_required
+def finance(request):
+    """View for the finance page."""
+    return render(request, 'finance/finance.html')
 
 def get_newest_operations(operation_list):
     operation_list = operation_list[:5]
@@ -123,3 +134,21 @@ def categories(request):
         })
 
     return JsonResponse({"finance_categories": category_data}, safe=False)
+
+def get_all_operations(operation_list):
+    """Returns all operations in the given operation list with formatting."""
+    result = []
+    
+    for op in operation_list:
+        # Check if the operation has any items
+        has_items = op.listitem_set.exists()
+        
+        result.append({
+            "id": op.id,
+            "category": op.category.name,
+            "amount": op.amount,
+            "date": op.datetime.strftime("%Y-%m-%d"),
+            "has_items": has_items
+        })
+    
+    return result

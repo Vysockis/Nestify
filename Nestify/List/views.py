@@ -140,7 +140,8 @@ def item(request):
             list_obj = models.List.objects.get(id=list_id)
 
             name = data.get("name")
-            qty = data.get("qty")
+            qty = data.get("quantity")
+            price = data.get("price")  # We'll use this value for the amount field
             assigned_to = data.get("assigned_to")
 
             match list_obj.list_type:
@@ -154,12 +155,13 @@ def item(request):
                     list_id=list_id,
                     defaults={
                         "qty": qty,
+                        "amount": price,  # Store price in the amount field
                         "assigned_to": assigned_to
                     }
                 )
                 return JsonResponse({"success": True})
-            except Exception:
-                return JsonResponse({"error": "Nepavyko sukurti įrašo"}, status=400)
+            except Exception as e:
+                return JsonResponse({"error": f"Nepavyko sukurti įrašo: {str(e)}"}, status=400)
 
         except ObjectDoesNotExist:
             return JsonResponse({"error": "List not found"}, status=404)
@@ -252,6 +254,53 @@ def list(request):
 
         except ObjectDoesNotExist:
             return JsonResponse({"error": "List not found"}, status=404)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
+    return JsonResponse({"error": "Netinkamas kvietimas"}, status=400)
+
+@family_member_required
+def items(request):
+    if request.method == "GET":
+        try:
+            list_id = request.GET.get("list_id")
+            if not list_id:
+                return JsonResponse({"error": "Missing list_id parameter"}, status=400)
+
+            # Check if the list exists and belongs to the user's family
+            user = request.user
+            family = user.getFamily()
+
+            try:
+                list_obj = models.List.objects.get(pk=list_id, family=family)
+            except ObjectDoesNotExist:
+                return JsonResponse({"error": "List not found"}, status=404)
+
+            # Fetch items for the list
+            items = models.ListItem.get_list_items(list_obj)
+
+            # Convert items to JSON format
+            items_data = []
+            for item in items:
+                item_data = {
+                    "id": item.pk,
+                    "name": item.name,
+                    "quantity": item.qty,
+                    "price": item.amount,  # Use amount field as price
+                    "completed": item.completed
+                }
+                
+                # Add assigned_to if it exists
+                if item.assigned_to:
+                    item_data["assigned_to"] = {
+                        "id": item.assigned_to.pk,
+                        "name": f"{item.assigned_to.first_name} {item.assigned_to.last_name}"
+                    }
+                
+                items_data.append(item_data)
+
+            return JsonResponse({"success": True, "items": items_data}, safe=False)
+
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
 
