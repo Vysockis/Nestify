@@ -38,86 +38,222 @@ document.addEventListener("DOMContentLoaded", function() {
     fetchCategories();
 
     financeAdd.addEventListener("click", async function () {
-        fields = [
-            { 
-                id: "category", 
-                label: "Kategorija", 
-                type: "select", 
-                required: true, 
-                options: finance_categories.map(cat => ({
-                    value: cat.id,
-                    label: cat.name
-                }))
-            },
-            { 
-                id: "amount", 
-                label: "Suma", 
-                type: "number", 
-                placeholder: "Įveskite sumą", 
-                required: true, 
-                step: "0.01",
-                min: "-999999.99",
-                max: "999999.99"
-            },
-            {
-                id: "date",
-                label: "Data",
-                type: "datetime-local",
-                required: true,
-                value: new Date().toISOString().slice(0, 16)
-            }
-        ]  
-        const formData = await openModal({
-            title: `Pridėti finansinį įrašą`,
-            fields: fields
-        });
-
-        if (formData) {
-            // Validate amount
-            const amount = parseFloat(formData.amount);
-            if (isNaN(amount)) {
-                alert("Klaida: Neteisingas sumos formatas");
-                return;
-            }
-
-            // Create loading indicator
-            const loadingIndicator = document.createElement('div');
-            loadingIndicator.id = 'loading-indicator';
-            loadingIndicator.textContent = 'Įrašoma...';
-            document.body.appendChild(loadingIndicator);
-
-            try {
-                const response = await fetch("../list/api/list/", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-CSRFToken": csrfToken
+        try {
+            const scanOptions = [
+                {
+                    id: "scan_type",
+                    label: "Įvedimo būdas",
+                    type: "select",
+                    required: true,
+                    options: [
+                        { value: "manual", label: "Įvesti rankiniu būdu" },
+                        { value: "receipt", label: "Nuskaityti kvitą" }
+                    ]
+                }
+            ];
+            
+            // Show type selection modal
+            const scanChoice = await openModal({
+                title: "Pasirinkite įvedimo būdą",
+                fields: scanOptions
+            });
+            
+            // If modal was closed without a selection, just return
+            if (!scanChoice) return;
+            
+            console.log("Scan choice selected:", scanChoice.scan_type);
+            
+            // Make sure we wait just a little bit before showing the next modal
+            await new Promise(resolve => setTimeout(resolve, 300));
+            
+            // Process the selection
+            if (scanChoice.scan_type === "receipt") {
+                // Receipt scanning option
+                const receiptFields = [
+                    {
+                        id: "receipt_image",
+                        label: "Įkelkite kvito nuotrauką",
+                        type: "image",
+                        required: true
+                    }
+                ];
+                
+                console.log("Opening receipt upload modal");
+                const receiptData = await openModal({
+                    title: "Kvito nuskaitymas",
+                    fields: receiptFields
+                });
+                
+                if (receiptData && receiptData.receipt_image) {
+                    // Show loading indicator
+                    const loadingIndicator = document.createElement('div');
+                    loadingIndicator.id = 'loading-indicator';
+                    loadingIndicator.textContent = 'Nuskaitoma...';
+                    document.body.appendChild(loadingIndicator);
+                    
+                    try {
+                        // Process receipt image
+                        const formData = new FormData();
+                        formData.append('receipt_image', receiptData.receipt_image);
+                        
+                        const response = await fetch("/finance/api/scan-receipt/", {
+                            method: "POST",
+                            headers: {
+                                "X-CSRFToken": csrfToken
+                            },
+                            body: formData
+                        });
+                        
+                        if (!response.ok) {
+                            throw new Error("Failed to scan receipt");
+                        }
+                        
+                        const extractedData = await response.json();
+                        
+                        // Now use the extracted data to create a finance operation
+                        const data = await createFinanceOperation({
+                            category: extractedData.category_id || finance_categories[0].id,
+                            amount: -Math.abs(extractedData.total_amount), // Negative for expense
+                            date: new Date().toISOString()
+                        });
+                        
+                        if (data.success && data.list_id) {
+                            // Add items from receipt
+                            for (const item of extractedData.items) {
+                                await addReceiptItem(data.list_id, item);
+                            }
+                            
+                            // Refresh the charts
+                            processChartData();
+                        }
+                    } catch (error) {
+                        console.error("Error scanning receipt:", error);
+                        alert("Klaida: Nepavyko nuskaityti kvito. Bandykite įvesti rankiniu būdu.");
+                    } finally {
+                        document.getElementById('loading-indicator')?.remove();
+                    }
+                }
+            } else {
+                // Regular manual input
+                fields = [
+                    { 
+                        id: "category", 
+                        label: "Kategorija", 
+                        type: "select", 
+                        required: true, 
+                        options: finance_categories.map(cat => ({
+                            value: cat.id,
+                            label: cat.name
+                        }))
                     },
-                    body: JSON.stringify({ 
-                        name: `Finance Operation ${new Date().toLocaleString()}`,
-                        list_type: "FINANCE",
-                        datetime: new Date(formData.date).getTime(),
-                        amount: amount,
-                        category: formData.category
-                    })
+                    { 
+                        id: "amount", 
+                        label: "Suma", 
+                        type: "number", 
+                        placeholder: "Įveskite sumą", 
+                        required: true, 
+                        step: "0.01",
+                        min: "-999999.99",
+                        max: "999999.99"
+                    },
+                    {
+                        id: "date",
+                        label: "Data",
+                        type: "datetime-local",
+                        required: true,
+                        value: new Date().toISOString().slice(0, 16)
+                    }
+                ];
+                
+                console.log("Opening manual input modal");
+                const formData = await openModal({
+                    title: `Pridėti finansinį įrašą`,
+                    fields: fields
                 });
 
-                const data = await response.json();
-                
-                if (data.success) {
-                    processChartData(); // Update charts dynamically
-                } else {
-                    alert("Klaida: " + (data.error || "Nepavyko pridėti įrašo"));
+                if (formData) {
+                    await createFinanceOperation(formData);
                 }
-            } catch (error) {
-                console.error("Klaida pridedant įrašą:", error);
-                alert("Klaida: Nepavyko pridėti įrašo. Bandykite dar kartą.");
-            } finally {
-                // Remove loading indicator
-                document.getElementById('loading-indicator')?.remove();
             }
+        } catch (error) {
+            console.error("Error in finance add process:", error);
+            alert("Klaida apdorojant jūsų užklausą. Bandykite dar kartą.");
         }
     });
+    
+    // Helper function to create finance operation
+    async function createFinanceOperation(formData) {
+        // Validate amount
+        const amount = parseFloat(formData.amount);
+        if (isNaN(amount)) {
+            alert("Klaida: Neteisingas sumos formatas");
+            return { success: false };
+        }
+
+        // Create loading indicator
+        const loadingIndicator = document.createElement('div');
+        loadingIndicator.id = 'loading-indicator';
+        loadingIndicator.textContent = 'Įrašoma...';
+        document.body.appendChild(loadingIndicator);
+
+        try {
+            const response = await fetch("../list/api/list/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken
+                },
+                body: JSON.stringify({ 
+                    name: `Finance Operation ${new Date().toLocaleString()}`,
+                    list_type: "FINANCE",
+                    datetime: formData.date ? new Date(formData.date).getTime() : new Date().getTime(),
+                    amount: amount,
+                    category: formData.category
+                })
+            });
+
+            const data = await response.json();
+            
+            if (data.success) {
+                processChartData(); // Update charts dynamically
+                return data;
+            } else {
+                alert("Klaida: " + (data.error || "Nepavyko pridėti įrašo"));
+                return { success: false };
+            }
+        } catch (error) {
+            console.error("Klaida pridedant įrašą:", error);
+            alert("Klaida: Nepavyko pridėti įrašo. Bandykite dar kartą.");
+            return { success: false };
+        } finally {
+            // Remove loading indicator
+            document.getElementById('loading-indicator')?.remove();
+        }
+    }
+    
+    // Helper function to add items from receipt
+    async function addReceiptItem(listId, item) {
+        try {
+            const response = await fetch("/list/api/item/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken
+                },
+                body: JSON.stringify({
+                    name: item.name,
+                    quantity: item.quantity || 1,
+                    price: item.price,
+                    list_id: listId
+                })
+            });
+            
+            return await response.json();
+        } catch (error) {
+            console.error("Error adding receipt item:", error);
+            return { success: false };
+        }
+    }
 
     function createCharts(data) {
         // Destroy previous instances if they exist
