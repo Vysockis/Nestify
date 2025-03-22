@@ -19,6 +19,14 @@ document.addEventListener("DOMContentLoaded", function() {
     let categoryChartInstance;
     let finance_categories = [];
 
+    // Add Font Awesome CSS if not already present
+    if (!document.querySelector('link[href*="fontawesome"]')) {
+        const fontAwesomeLink = document.createElement('link');
+        fontAwesomeLink.rel = 'stylesheet';
+        fontAwesomeLink.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css';
+        document.head.appendChild(fontAwesomeLink);
+    }
+
     // Fetch categories on page load
     function fetchCategories() {
         fetch("../finance/api/categories/", {
@@ -365,6 +373,7 @@ document.addEventListener("DOMContentLoaded", function() {
                                 <th>Pavadinimas</th>
                                 <th>Kiekis</th>
                                 <th>Kaina</th>
+                                <th>Veiksmai</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -395,6 +404,11 @@ document.addEventListener("DOMContentLoaded", function() {
                         <td>${item.name || '-'}</td>
                         <td>${item.quantity !== null && item.quantity !== undefined ? item.quantity : 1}</td>
                         <td>${priceDisplay}</td>
+                        <td class="text-end">
+                            <button class="btn btn-sm btn-outline-danger delete-item-btn" data-item-id="${item.id}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
                     </tr>
                 `;
             });
@@ -404,7 +418,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 </tbody>
                 <tfoot>
                     <tr>
-                        <th colspan="2" class="text-end">Viso:</th>
+                        <th colspan="3" class="text-end">Viso:</th>
                         <th>${totalAmount.toFixed(2)} Eur</th>
                     </tr>
                 </tfoot>
@@ -451,6 +465,50 @@ document.addEventListener("DOMContentLoaded", function() {
                 setTimeout(() => {
                     handleAddItemClick({ target: { dataset: { operationId } } });
                 }, 300);
+            });
+            
+            // Set up delete buttons for each item
+            document.querySelectorAll('.delete-item-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    e.stopPropagation(); // Prevent event bubbling
+                    
+                    const itemId = btn.dataset.itemId;
+                    if (!itemId) {
+                        alert("Klaida: Elemento ID nerastas");
+                        return;
+                    }
+                    
+                    if (confirm("Ar tikrai norite ištrinti šį elementą?")) {
+                        try {
+                            const response = await fetch("/list/api/item/", {
+                                method: "DELETE",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    "X-CSRFToken": csrfToken
+                                },
+                                body: JSON.stringify({ item_id: itemId })
+                            });
+                            
+                            const data = await response.json();
+                            
+                            if (data.success) {
+                                // Close the current modal
+                                bsModal.hide();
+                                
+                                // Refresh the data and reshow the modal with updated items
+                                setTimeout(() => {
+                                    processChartData(); // Refresh all data
+                                    showOperationItems(operationId); // Reshow the modal with updated items
+                                }, 300);
+                            } else {
+                                alert("Klaida: " + (data.error || "Nepavyko ištrinti elemento"));
+                            }
+                        } catch (error) {
+                            console.error("Klaida trinant elementą:", error);
+                            alert("Klaida: Nepavyko ištrinti elemento");
+                        }
+                    }
+                });
             });
             
             // Clean up when modal is hidden
