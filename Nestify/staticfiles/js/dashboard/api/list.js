@@ -73,8 +73,15 @@ document.addEventListener("DOMContentLoaded", function () {
                         }
                     });
 
+                    // Calculate completion status
+                    const totalItems = list.items.length;
+                    const completedItems = list.items.filter(item => item.completed).length;
+                    
                     listElement.innerHTML = `
-                        <span>${list.name}</span>
+                        <div>
+                            <span>${list.name}</span>
+                            <span class="badge bg-secondary ms-2">${completedItems}/${totalItems}</span>
+                        </div>
                         <span class="text-muted">${list.date}</span>
                     `;
                     listElement.appendChild(actionButton); // Append delete button
@@ -103,6 +110,23 @@ document.addEventListener("DOMContentLoaded", function () {
                         completionButton.addEventListener("click", function () {
                             item.completed = !item.completed;
                             completionButton.textContent = item.completed ? "✅" : "⚪";
+                            
+                            // Get the parent list element to update its badge
+                            const listId = list.id;
+                            const listElement = document.querySelector(`li[data-toggle="list-${listId}"]`);
+                            
+                            // Update the counter in the UI
+                            const totalItems = list.items.length;
+                            const completedItems = list.items.filter(i => 
+                                i.id === item.id ? i.completed = item.completed : i.completed
+                            ).length;
+                            
+                            // Update the badge text
+                            const badgeElement = listElement.querySelector('.badge');
+                            if (badgeElement) {
+                                badgeElement.textContent = `${completedItems}/${totalItems}`;
+                            }
+                            
                             updateCompletionStatus(item.id, item.completed);
                         });
                     
