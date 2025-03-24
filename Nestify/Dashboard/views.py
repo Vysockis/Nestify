@@ -60,8 +60,14 @@ def calendar_events(request):
 
     family = request.user.getFamily()
 
-    # Fetch list events (excluding those with non-null plan)
-    listEvents = lModels.List.objects.filter(family=family, plan__isnull=True)
+    # Fetch list events (excluding those with non-null plan and excluding Finance lists)
+    listEvents = lModels.List.objects.filter(
+        family=family, 
+        plan__isnull=True
+    ).exclude(
+        list_type='FINANCE'
+    )
+    
     listEvent_list = [
         {
             "id": listEvent.id,
