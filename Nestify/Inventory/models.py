@@ -2,6 +2,9 @@ from django.db import models
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 
+class ItemType(models.TextChoices):
+    FOOD = 'FOOD', _('Maistas')
+    MEDICINE = 'MEDICINE', _('Vaistai')
 
 class ItemCategory(models.Model):
     family = models.ForeignKey("Family.Family", on_delete=models.CASCADE)
@@ -38,10 +41,15 @@ class ItemSubCategory(models.Model):
 class Item(models.Model):
     family = models.ForeignKey("Family.Family", on_delete=models.CASCADE)
     name = models.CharField(max_length=50)
-    description = models.TextField()
-    avg_price = models.DecimalField(max_digits=10, decimal_places=2)
+    description = models.TextField(blank=True, null=True)
+    avg_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     statistics_qty = models.IntegerField(default=0)
-    subcategory = models.ForeignKey("Inventory.ItemSubCategory", on_delete=models.DO_NOTHING)
+    subcategory = models.ForeignKey("Inventory.ItemSubCategory", on_delete=models.DO_NOTHING, blank=True, null=True)
+    item_type = models.CharField(
+        max_length=10,
+        choices=ItemType.choices,
+        default=ItemType.FOOD
+    )
 
     class Meta:
         verbose_name = _("Item")
@@ -66,7 +74,7 @@ class ItemOperation(models.Model):
         verbose_name_plural = _("ItemOperations")
 
     def __str__(self):
-        return self.name
+        return f"{self.item.name} - {self.qty}"
 
     def get_absolute_url(self):
         return reverse("ItemOperation_detail", kwargs={"pk": self.pk})

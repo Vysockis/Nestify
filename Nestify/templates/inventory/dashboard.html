@@ -1,0 +1,270 @@
+{% extends 'master.html' %}
+
+{% block title %}Turtas - Nestify{% endblock %}
+
+{% block content %}
+<div class="container mt-5 pt-5">
+    <div class="main-box mb-4" style="background-color: white; border-radius: 0.8rem; padding: 2rem; box-shadow: 0 0.2rem 0.8rem rgba(0, 0, 0, 0.1);">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1>Turto valdymas</h1>
+                <p class="lead mb-0">Maisto ir vaistų sąrašas su galiojimo datomis</p>
+            </div>
+            <button id="addItemBtn" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Pridėti naują
+            </button>
+        </div>
+
+        <!-- Tabs -->
+        <ul class="nav nav-tabs mb-4">
+            <li class="nav-item">
+                <a class="nav-link active" id="all-tab" data-bs-toggle="tab" href="#all-content">Visi</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="food-tab" data-bs-toggle="tab" href="#food-content">Maistas</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="medicine-tab" data-bs-toggle="tab" href="#medicine-content">Vaistai</a>
+            </li>
+        </ul>
+
+        <!-- Tab content -->
+        <div class="tab-content">
+            <!-- All tab -->
+            <div class="tab-pane fade show active" id="all-content">
+                <div class="all-items-container">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Kraunama...</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Food tab -->
+            <div class="tab-pane fade" id="food-content">
+                <div class="food-items-container">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Kraunama...</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Medicine tab -->
+            <div class="tab-pane fade" id="medicine-content">
+                <div class="medicine-items-container">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Kraunama...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="alert alert-info mt-4">
+            <div class="fw-bold mb-2">Informacija apie galiojimo datas:</div>
+            <ul class="mb-0">
+                <li><span class="badge bg-danger">Raudona</span> - Baigėsi galiojimo laikas</li>
+                <li><span class="badge bg-warning">Geltona</span> - Baigiasi galiojimo laikas (7 dienos)</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascript %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    function fetchItems() {
+        // Fetch all items for "Visi" tab
+        Promise.all([
+            fetch('/inventory/api/items/?type=FOOD').then(response => response.json()),
+            fetch('/inventory/api/items/?type=MEDICINE').then(response => response.json())
+        ]).then(([foodData, medicineData]) => {
+            const allContainer = document.querySelector('.all-items-container');
+            const allItems = [...foodData.items, ...medicineData.items];
+            displayItems(allItems, allContainer, 999); // Show all items
+        });
+        
+        // Fetch food items
+        fetch('/inventory/api/items/?type=FOOD')
+            .then(response => response.json())
+            .then(data => {
+                const foodContainer = document.querySelector('.food-items-container');
+                displayItems(data.items, foodContainer, 999); // Show all items
+            });
+        
+        // Fetch medicine items
+        fetch('/inventory/api/items/?type=MEDICINE')
+            .then(response => response.json())
+            .then(data => {
+                const medicineContainer = document.querySelector('.medicine-items-container');
+                displayItems(data.items, medicineContainer, 999); // Show all items
+            });
+    }
+    
+    function displayItems(items, container, limit) {
+        container.innerHTML = ''; // Clear loading spinner
+        
+        if (items.length === 0) {
+            container.innerHTML = '<p class="text-muted text-center">Nėra įrašų</p>';
+            return;
+        }
+        
+        const table = document.createElement('table');
+        table.className = 'table table-hover';
+        
+        const thead = document.createElement('thead');
+        thead.innerHTML = `
+            <tr>
+                <th>Pavadinimas</th>
+                <th>Tipas</th>
+                <th>Kiekis</th>
+                <th>Galiojimo data</th>
+                <th>Veiksmai</th>
+            </tr>
+        `;
+        
+        const tbody = document.createElement('tbody');
+        
+        // Only show up to the limit
+        const itemsToShow = items.slice(0, limit);
+        
+        itemsToShow.forEach(item => {
+            const row = document.createElement('tr');
+            
+            // Add classes for expiration status
+            if (item.is_expired) {
+                row.classList.add('table-danger');
+            } else if (item.is_expiring_soon) {
+                row.classList.add('table-warning');
+            }
+            
+            row.innerHTML = `
+                <td>${item.name}</td>
+                <td>${item.type || (item.type_value === 'FOOD' ? 'Maistas' : 'Vaistai')}</td>
+                <td>${item.qty}</td>
+                <td>${item.exp_date || 'Nenustatyta'}</td>
+                <td>
+                    <button class="btn btn-sm btn-outline-danger delete-operation" data-operation-id="${item.id}">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            
+            tbody.appendChild(row);
+        });
+        
+        table.appendChild(thead);
+        table.appendChild(tbody);
+        container.appendChild(table);
+        
+        // Setup delete buttons
+        container.querySelectorAll('.delete-operation').forEach(button => {
+            button.addEventListener('click', function() {
+                const operationId = this.getAttribute('data-operation-id');
+                if (confirm('Ar tikrai norite ištrinti šį įrašą?')) {
+                    deleteOperation(operationId);
+                }
+            });
+        });
+    }
+    
+    function deleteOperation(operationId) {
+        fetch(`/inventory/api/operations/${operationId}/delete/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                fetchItems(); // Atnaujinti sąrašą po ištrynimo
+            } else {
+                alert(data.error || 'Įvyko klaida. Bandykite dar kartą vėliau.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Įvyko klaida. Bandykite dar kartą vėliau.');
+        });
+    }
+    
+    // Setup add item button
+    const addItemBtn = document.getElementById('addItemBtn');
+    if (addItemBtn) {
+        addItemBtn.addEventListener('click', async function() {
+            const typeOptions = [
+                {% for value, label in item_types %}
+                { value: "{{ value }}", label: "{{ label }}" },
+                {% endfor %}
+            ];
+            
+            const formData = await openModal({
+                title: "Pridėti naują turtą",
+                fields: [
+                    {
+                        id: "name",
+                        label: "Pavadinimas",
+                        type: "text",
+                        required: true
+                    },
+                    {
+                        id: "item_type",
+                        label: "Tipas",
+                        type: "select",
+                        required: true,
+                        options: typeOptions
+                    },
+                    {
+                        id: "qty",
+                        label: "Kiekis",
+                        type: "number",
+                        value: "1",
+                        min: "1"
+                    },
+                    {
+                        id: "exp_date",
+                        label: "Galiojimo data",
+                        type: "date"
+                    }
+                ]
+            });
+            
+            if (formData) {
+                saveNewItem(formData);
+            }
+        });
+    }
+    
+    function saveNewItem(formData) {
+        const form = new FormData();
+        for (const key in formData) {
+            form.append(key, formData[key]);
+        }
+        
+        fetch('{% url "inventory:add_item" %}', {
+            method: 'POST',
+            body: form,
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert(data.error);
+            } else if (data.success) {
+                fetchItems(); // Atnaujinti sąrašą po pridėjimo
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Įvyko klaida. Bandykite dar kartą vėliau.');
+        });
+    }
+    
+    // Initial data load
+    fetchItems();
+});
+</script>
+{% endblock %} 

@@ -1,0 +1,94 @@
+{% extends 'master.html' %}
+
+{% block title %}Pridėti turtą - Nestify{% endblock %}
+
+{% block content %}
+<div class="container mt-5 pt-5">
+    <div class="row mb-4">
+        <div class="col">
+            <h1>Pridėti naują turtą</h1>
+            <p class="text-muted">Pridėkite naują maisto arba vaistų įrašą</p>
+        </div>
+        <div class="col-auto">
+            <a href="{% url 'inventory:items' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Grįžti į sąrašą
+            </a>
+        </div>
+    </div>
+    
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <form id="addItemForm" method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Pavadinimas*</label>
+                            <input type="text" class="form-control" id="name" name="name" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="item_type" class="form-label">Tipas*</label>
+                            <select class="form-select" id="item_type" name="item_type" required>
+                                <option value="">-- Pasirinkite --</option>
+                                {% for value, label in item_types %}
+                                <option value="{{ value }}">{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="qty" class="form-label">Kiekis</label>
+                            <input type="number" class="form-control" id="qty" name="qty" min="1" value="1">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="exp_date" class="form-label">Galiojimo data</label>
+                            <input type="date" class="form-control" id="exp_date" name="exp_date">
+                        </div>
+                        
+                        <div class="text-end">
+                            <button type="submit" class="btn btn-primary">Išsaugoti</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascript %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const addItemForm = document.getElementById('addItemForm');
+    
+    addItemForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(addItemForm);
+        
+        fetch('{% url "inventory:add_item" %}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert(data.error);
+            } else if (data.success) {
+                window.location.href = data.redirect;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Įvyko klaida. Bandykite dar kartą vėliau.');
+        });
+    });
+});
+</script>
+{% endblock %} 
