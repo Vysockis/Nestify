@@ -2,6 +2,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const listContainer = document.getElementById("listContainer");
     const recipeDisplay = document.getElementById("list"); // Main recipe display container
     const addListItemBtn = document.getElementById("addListItemBtn");
+    const editListBtn = document.getElementById("editListBtn");
     const addListBtn = document.getElementById("addListBtn");
 
     let recipesData = []; // Global storage for fetched recipes
@@ -11,6 +12,20 @@ document.addEventListener("DOMContentLoaded", function () {
         const urlParams = new URLSearchParams(window.location.search);
         return urlParams.get("list_id"); // Ensure correct parameter name
     }
+
+    editListBtn.addEventListener("click", function () {
+        const recipeId = editListBtn.dataset.listId;
+        if (!recipeId) {
+            console.error("No recipe found.");
+            return;
+        }
+        const recipe = recipesData.find(r => r.id.toString() === recipeId);
+        if (!recipe) {
+            console.error("Recipe not found in data.");
+            return;
+        }
+        openEditRecipeModal(recipe);
+    });
 
     addListItemBtn.addEventListener("click", function () {
         const listId = addListItemBtn.dataset.listId;
@@ -102,6 +117,45 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
+    async function openEditRecipeModal(recipe) {
+        const fields = [
+            { id: "name", label: "Pavadinimas", type: "text", placeholder: "Įveskite pavadinimą", required: true, value: recipe.name, visible: false },
+            { id: "description", label: "Aprašymas", type: "textarea", placeholder: "Aprašymas...", required: false, value: recipe.description },
+            { id: "list_type", type: "hidden", required: true, value: "MEAL", visible: false },
+            { id: "image", label: "Nuotrauka", type: "image", required: false },
+            { id: "datetime", label: "Data ir laikas", type: "datetime-local", required: true, today: true, visible: false }
+        ];
+        
+        const formData = await openModal({
+            title: `Redaguoti receptą`,
+            fields: fields
+        });
+
+        if (formData) {
+            const fd = new FormData();
+            for (const key in formData) {
+                fd.append(key, formData[key]);
+            }
+            
+            fetch("../api/list/", {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": csrfToken
+                },
+                body: fd
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    fetchFamilyList(); // Update list dynamically
+                } else {
+                    alert("Klaida: " + JSON.stringify(data.error));
+                }
+            })
+            .catch(error => console.error("Klaida atnaujinant receptą:", error));
+        }
+    }
+
     function fetchFamilyList() {
         fetch("../api/recipes/")
             .then(response => response.json())
@@ -189,6 +243,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (addListItemBtn) {
             addListItemBtn.dataset.listId = recipe.id;
+            editListBtn.dataset.listId = recipe.id;
         }
     }
 

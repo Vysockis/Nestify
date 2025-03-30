@@ -9,14 +9,14 @@ function getCurrentDateTime() {
     const day = String(now.getDate()).padStart(2, "0");
     const hours = String(now.getHours()).padStart(2, "0");
     const minutes = String(now.getMinutes()).padStart(2, "0");
+    const seconds = String(now.getSeconds()).padStart(2, "0");
 
-    return `${year}-${month}-${day}T${hours}:${minutes}`;
+    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
 }
 
 // Function to clean up any modal artifacts
 function cleanupModals(isInitial = false) {
     try {
-        console.log("Cleaning modals, isInitial:", isInitial);
         
         // Force cleanup for static HTML modals that might be in the page
         const staticModals = document.querySelectorAll('.modal[id]:not(#formModal)');
@@ -134,6 +134,9 @@ window.openModal = function(options) {
                 
                 if (options.fields && options.fields.length > 0) {
                     options.fields.forEach(field => {
+                        // Skip fields that have visible: false
+                        if (field.visible === false) return;
+
                         let fieldHtml = '';
                         const fieldId = `modal-field-${field.id}`;
                         
@@ -166,10 +169,17 @@ window.openModal = function(options) {
                         } else {
                             // Default to input type="text" or specified type
                             const inputType = field.type || 'text';
+                            let fieldValue = field.value;
+                            
+                            // Handle today property for datetime-local fields
+                            if (inputType === 'datetime-local') {
+                                fieldValue = getCurrentDateTime();
+                            }
+                            
                             fieldHtml = `
                                 <div class="mb-3">
                                     <label for="${fieldId}" class="form-label">${field.label}${field.required ? ' *' : ''}</label>
-                                    <input type="${inputType}" class="form-control${field.required ? ' required' : ''}" id="${fieldId}" name="${field.id}" placeholder="${field.placeholder || ''}" value="${field.value || ''}" ${field.min ? `min="${field.min}"` : ''} ${field.max ? `max="${field.max}"` : ''} ${field.step ? `step="${field.step}"` : ''} ${field.required ? 'required' : ''}>
+                                    <input type="${inputType}" class="form-control${field.required ? ' required' : ''}" id="${fieldId}" name="${field.id}" placeholder="${field.placeholder || ''}" value="${fieldValue || ''}" ${field.min ? `min="${field.min}"` : ''} ${field.max ? `max="${field.max}"` : ''} ${field.step ? `step="${field.step}"` : ''} ${field.required ? 'required' : ''}>
                                 </div>
                             `;
                         }
@@ -255,17 +265,31 @@ window.openModal = function(options) {
                     if (form.checkValidity()) {
                         const formData = {};
                         
+                        // Include all fields, even those with visible: false
                         options.fields.forEach(field => {
-                            const fieldElement = document.getElementById(`modal-field-${field.id}`);
-                            
-                            if (field.type === 'image') {
-                                if (fieldElement.files && fieldElement.files[0]) {
-                                    formData[field.id] = fieldElement.files[0];
-                                }
+                            if (field.type === 'datetime-local') {
+                                // For datetime fields, always ensure we have a value
+                                const fieldElement = document.getElementById(`modal-field-${field.id}`);
+                                formData[field.id] = fieldElement ? fieldElement.value : getCurrentDateTime();
                             } else {
-                                formData[field.id] = fieldElement.value;
+                                const fieldElement = document.getElementById(`modal-field-${field.id}`);
+                                if (fieldElement) {
+                                    if (field.type === 'image') {
+                                        if (fieldElement.files && fieldElement.files[0]) {
+                                            formData[field.id] = fieldElement.files[0];
+                                        }
+                                    } else {
+                                        formData[field.id] = fieldElement.value;
+                                    }
+                                } else if (!field.visible) {
+                                    // For hidden fields, use their default value
+                                    formData[field.id] = field.value;
+                                }
                             }
                         });
+                        
+                        // Log the form data for debugging
+                        console.log("Form data being submitted:", formData);
                         
                         cleanupModals(firstRun); // Use firstRun flag to give special handling
                         resolve(formData);
