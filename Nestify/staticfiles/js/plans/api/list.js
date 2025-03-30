@@ -4,8 +4,24 @@ document.addEventListener("DOMContentLoaded", function () {
     const addPlanMemberBtn = document.getElementById("addPlanMemberBtn");
     const addPlanItemBtn = document.getElementById("addPlanItemBtn");
     const addPlanBtn = document.getElementById("addPlanBtn");
+    const editDescriptionBtn = document.getElementById("editDescriptionBtn");
 
     let plansData = []; // Global storage for fetched plans
+
+    // Event listener for editing plan description
+    editDescriptionBtn.addEventListener("click", function () {
+        const planId = editDescriptionBtn.dataset.planId;
+        if (!planId) {
+            console.error("No plan ID found.");
+            return;
+        }
+        const plan = plansData.find(p => p.id.toString() === planId);
+        if (!plan) {
+            console.error("Plan not found in data.");
+            return;
+        }
+        openEditPlanModal(plan);
+    });
 
     // Event listener for adding a member to a plan
     addPlanMemberBtn.addEventListener("click", function () {
@@ -178,6 +194,57 @@ document.addEventListener("DOMContentLoaded", function () {
             .catch(error => console.error("Klaida pridedant įrašą:", error));
         }
     }
+
+    async function openEditPlanModal(plan) {
+        const fields = [
+            { id: "name", label: "Pavadinimas", type: "text", placeholder: "Įveskite pavadinimą", required: true, value: plan.name, visible: false },
+            { id: "description", label: "Aprašymas", type: "textarea", placeholder: "Aprašymas...", required: false, value: plan.description },
+            { id: "plan_type", type: "hidden", required: true, value: plan.plan_type, visible: false },
+            { id: "image", label: "Nuotrauka", type: "image", required: false },
+            { id: "datetime", label: "Data ir laikas", type: "datetime-local", required: true, value: plan.datetime, visible: false }
+        ];
+        
+        const formData = await openModal({
+            title: `Redaguoti planą`,
+            fields: fields
+        });
+
+        if (formData) {
+            const fd = new FormData();
+            // Add the plan ID to identify which plan to update
+            fd.append("plan_id", plan.id);
+            
+            for (const key in formData) {
+                if (formData[key] instanceof File) {
+                    fd.append(key, formData[key], formData[key].name);
+                } else {
+                    fd.append(key, formData[key]);
+                }
+            }
+            
+            fetch("../plan/api/plan/", {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": csrfToken
+                },
+                body: fd
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update URL with planId
+                    const newUrl = new URL(window.location.href);
+                    newUrl.searchParams.set("planId", plan.id);
+                    window.history.pushState({}, "", newUrl);
+                    
+                    fetchPlanList(); // Update list dynamically
+                } else {
+                    alert("Klaida: " + JSON.stringify(data.error));
+                }
+            })
+            .catch(error => console.error("Klaida atnaujinant planą:", error));
+        }
+    }
     
 
     // Fetch list of plans from the API
@@ -259,42 +326,31 @@ document.addEventListener("DOMContentLoaded", function () {
     // Update the main plan display with selected plan details
     function updatePlanDisplay(plan) {
         if (!planDisplay) return;
-        if (!plan) return; // Guard against undefined plans
+        if (!plan) return;
 
-        // Update background image of the plan image container
         const imageDiv = planDisplay.querySelector(".plans-image-content");
         if (imageDiv && plan.image) {
             imageDiv.style.backgroundImage = `url('${plan.image}')`;
         }
 
-        // Update the plan name shown on the image
         const nameEl = planDisplay.querySelector(".plans-image-text");
         if (nameEl) {
-            nameEl.textContent = `${plan.name} ${plan.date}`;
+            nameEl.textContent = plan.name;
         }
 
-        // Update the plan description
-        const descriptionEl = planDisplay.querySelector("p");
+        const descriptionEl = planDisplay.querySelector("#planDescription");
         if (descriptionEl) {
             descriptionEl.innerHTML = plan.description.replace(/\n/g, "<br>");
         }
 
-        // Update the list of members inside the correct #planMembersList div
-        updatePlanMembers(plan);
-
-        // Update the list items inside #listContainer
-        updateListItems(plan);
-
-
-        // Set the data attribute on the addPlanMemberBtn to the current plan ID
-        if (addPlanMemberBtn) {
-            addPlanMemberBtn.dataset.planId = plan.id;
-        }
-
         if (addPlanItemBtn) {
             addPlanItemBtn.dataset.listId = plan.listId;
-            addPlanItemBtn.dataset.planId = plan.id;
+            addPlanMemberBtn.dataset.planId = plan.id;
+            editDescriptionBtn.dataset.planId = plan.id;
         }
+
+        updateListItems(plan);
+        updatePlanMembers(plan);
     }
 
     // Fetch and update list items inside #listContainer

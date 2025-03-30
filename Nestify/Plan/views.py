@@ -43,6 +43,7 @@ def plan(request):
             name = data.get("name")
             plan_type = data.get("plan_type")
             description = data.get("description")
+            plan_id = data.get("plan_id")  # Get plan_id if it exists
 
             # Ensure "datetime" key exists
             if "datetime" not in data:
@@ -72,20 +73,29 @@ def plan(request):
 
             # Save or update the list. You might also want to save the image file if provided.
             try:
-                obj, created = models.Plan.objects.update_or_create(
-                    name=name,
-                    plan_type=plan_type,
-                    creator_id=request.user.pk,
-                    family_id=request.user.getFamily().pk,
-                    defaults={
-                        "datetime": datetime_obj,
-                        "description": description
-                    }
-                )
-                # If an image file was provided, handle it here (for example, update the object's image field)
-                if image_file:
-                    obj.image.save(image_file.name, image_file)
+                if plan_id:
+                    # If plan_id exists, update the existing plan
+                    obj = models.Plan.objects.get(pk=plan_id)
+                    obj.name = name
+                    obj.plan_type = plan_type
+                    obj.description = description
+                    obj.datetime = datetime_obj
+                    if image_file:
+                        obj.image.save(image_file.name, image_file)
                     obj.save()
+                else:
+                    # Create new plan if no plan_id
+                    obj = models.Plan.objects.create(
+                        name=name,
+                        plan_type=plan_type,
+                        creator_id=request.user.pk,
+                        family_id=request.user.getFamily().pk,
+                        datetime=datetime_obj,
+                        description=description
+                    )
+                    if image_file:
+                        obj.image.save(image_file.name, image_file)
+                        obj.save()
 
                 return JsonResponse({"success": True, "plan_id": obj.pk})
             except Exception as e:
