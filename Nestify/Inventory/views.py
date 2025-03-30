@@ -213,3 +213,35 @@ def api_items(request):
     items_data.sort(key=lambda x: x.get('exp_date') or '9999-12-31')
     
     return JsonResponse({'items': items_data})
+
+@login_required
+@family_member_required
+def api_expiring_items(request):
+    family = request.user.getFamily()
+    base_items = Item.objects.filter(family=family)
+    
+    # Get all operations
+    operations = ItemOperation.objects.filter(item__in=base_items).order_by('exp_date')
+    
+    items_data = []
+    today = timezone.now().date()
+    
+    # Create data for each operation
+    for op in operations:
+        exp_date = op.exp_date
+        if exp_date:
+            days_until_expiry = (exp_date - today).days
+            # Include expired items (negative days) and items expiring in 3 days
+            if days_until_expiry <= 3:
+                items_data.append({
+                    'id': op.id,
+                    'name': op.item.name,
+                    'type': op.item.get_item_type_display(),
+                    'type_value': op.item.item_type,
+                    'qty': op.qty,
+                    'exp_date': exp_date.strftime('%Y-%m-%d'),
+                    'days_left': days_until_expiry,
+                    'is_expired': days_until_expiry < 0
+                })
+    
+    return JsonResponse({"items": items_data}, safe=False)
