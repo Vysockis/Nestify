@@ -1,6 +1,11 @@
 {% extends 'master.html' %}
+{% load static %}
 
 {% block title %}Turtas - Nestify{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/inventory.css' %}">
+{% endblock %}
 
 {% block content %}
 <div class="container mt-5 pt-5">
@@ -57,7 +62,8 @@
             <div class="fw-bold mb-2">Informacija apie galiojimo datas:</div>
             <ul class="mb-0">
                 <li><span class="badge bg-danger">Raudona</span> - Baigėsi galiojimo laikas</li>
-                <li><span class="badge bg-warning">Geltona</span> - Baigiasi galiojimo laikas (7 dienos)</li>
+                <li><span class="badge bg-warning">Geltona</span> - Baigiasi galiojimo laikas (3 dienos)</li>
+                <li><span class="badge bg-orange">Oranžinė</span> - Baigiasi galiojimo laikas (7 dienos)</li>
             </ul>
         </div>
     </div>
@@ -122,8 +128,10 @@ document.addEventListener("DOMContentLoaded", function() {
             
             if (item.is_expired) {
                 row.classList.add('table-danger');
-            } else if (item.is_expiring_soon) {
+            } else if (item.is_expiring_very_soon) {
                 row.classList.add('table-warning');
+            } else if (item.is_expiring_soon) {
+                row.classList.add('table-orange');
             }
             
             row.innerHTML = `
@@ -132,8 +140,8 @@ document.addEventListener("DOMContentLoaded", function() {
                 <td>${item.qty}</td>
                 <td>${item.exp_date || 'Nenustatyta'}</td>
                 <td>
-                    <button class="btn btn-sm btn-outline-danger delete-operation" data-operation-id="${item.id}">
-                        <i class="fas fa-trash"></i>
+                    <button class="circle-btn red delete-operation" data-operation-id="${item.id}">
+                        &times;
                     </button>
                 </td>
             `;

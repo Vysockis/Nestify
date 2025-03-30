@@ -277,8 +277,40 @@ document.addEventListener("DOMContentLoaded", function () {
                         "toggle-plan"
                     );
                     listElement.setAttribute("data-toggle", `plan-${plan.id}`);
-                    listElement.textContent = plan.name;
-    
+                    
+                    // Create text span for plan name
+                    const nameSpan = document.createElement("span");
+                    nameSpan.textContent = plan.name;
+                    listElement.appendChild(nameSpan);
+                    
+                    // Create delete button
+                    const deleteBtn = document.createElement("button");
+                    deleteBtn.classList.add("circle-btn", "red");
+                    deleteBtn.innerHTML = "&times;";
+                    deleteBtn.addEventListener("click", function(event) {
+                        event.stopPropagation(); // Prevent plan item click
+                        if (confirm("Ar tikrai norite ištrinti šį planą?")) {
+                            fetch("../plan/api/plan/", {
+                                method: "DELETE",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    "X-CSRFToken": csrfToken
+                                },
+                                body: JSON.stringify({ plan_id: plan.id })
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    fetchPlanList(); // Refresh the list
+                                } else {
+                                    alert("Klaida: " + JSON.stringify(data.error));
+                                }
+                            })
+                            .catch(error => console.error("Klaida trinant planą:", error));
+                        }
+                    });
+                    
+                    listElement.appendChild(deleteBtn);
                     planContainer.appendChild(listElement);
     
                     // Check if this plan is the one from the URL

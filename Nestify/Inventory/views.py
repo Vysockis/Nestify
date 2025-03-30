@@ -187,11 +187,14 @@ def api_items(request):
             # Ar baigiasi galiojimas
             is_expiring_soon = False
             is_expired = False
+            is_expiring_very_soon = False
             
             if exp_date:
                 today = timezone.now().date()
-                is_expiring_soon = (exp_date - today).days <= 7 and (exp_date - today).days >= 0
+                days_until_expiry = (exp_date - today).days
+                is_expiring_soon = days_until_expiry <= 7 and days_until_expiry >= 0
                 is_expired = exp_date < today
+                is_expiring_very_soon = days_until_expiry <= 3 and days_until_expiry >= 0
             
             items_data.append({
                 'id': op.id,  # Operacijos ID, ne prekės
@@ -201,8 +204,9 @@ def api_items(request):
                 'type_value': item.item_type,
                 'qty': op.qty,  # Šios konkrečios operacijos kiekis
                 'exp_date': exp_date.strftime('%Y-%m-%d') if exp_date else None,
+                'is_expired': is_expired,
                 'is_expiring_soon': is_expiring_soon,
-                'is_expired': is_expired
+                'is_expiring_very_soon': is_expiring_very_soon
             })
     
     # Rūšiuoti pagal galiojimo datą (pirmi, kurių galiojimas baigsis greičiausiai)

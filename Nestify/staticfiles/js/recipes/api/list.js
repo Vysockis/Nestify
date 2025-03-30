@@ -181,7 +181,40 @@ document.addEventListener("DOMContentLoaded", function () {
                         "toggle-list"
                     );
                     listElement.setAttribute("data-toggle", `list-${recipe.id}`);
-                    listElement.textContent = recipe.name;
+                    
+                    // Create text span for recipe name
+                    const nameSpan = document.createElement("span");
+                    nameSpan.textContent = recipe.name;
+                    listElement.appendChild(nameSpan);
+                    
+                    // Create delete button
+                    const deleteBtn = document.createElement("button");
+                    deleteBtn.classList.add("circle-btn", "red");
+                    deleteBtn.innerHTML = "&times;";
+                    deleteBtn.addEventListener("click", function(event) {
+                        event.stopPropagation(); // Prevent list item click
+                        if (confirm("Ar tikrai norite ištrinti šį receptą?")) {
+                            fetch("../api/list/", {
+                                method: "DELETE",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    "X-CSRFToken": csrfToken
+                                },
+                                body: JSON.stringify({ list_id: recipe.id })
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    fetchFamilyList(); // Refresh the list
+                                } else {
+                                    alert("Klaida: " + JSON.stringify(data.error));
+                                }
+                            })
+                            .catch(error => console.error("Klaida trinant receptą:", error));
+                        }
+                    });
+                    
+                    listElement.appendChild(deleteBtn);
                     listContainer.appendChild(listElement);
 
                     // Check if this list should be active based on URL
