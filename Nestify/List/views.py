@@ -9,7 +9,6 @@ from datetime import datetime
 from django.core.exceptions import ObjectDoesNotExist
 from . import models
 from Dashboard.views import format_time_difference_in
-import tzlocal  # Detects the system's local timezone
 
 
 # Create your views here.
@@ -209,27 +208,20 @@ def list(request):
             if "datetime" not in data:
                 return JsonResponse({"error": "Missing 'datetime' field"}, status=400)
 
-            datetime_str = data.pop("datetime")  # Remove 'datetime' to avoid form issues
-
+            # Handle datetime conversion
             try:
-                # Try to parse as ISO format datetime string
-                datetime_obj = datetime.fromisoformat(datetime_str.replace('Z', '+00:00'))
-            except ValueError:
+                datetime_str = data["datetime"]
                 try:
-                    # If not ISO format, try parsing as timestamp
-                    datetimeInt = int(datetime_str)
-                    if datetimeInt > 1e10:  # If timestamp is in milliseconds
-                        datetime_obj = datetime.fromtimestamp(datetimeInt / 1000)
-                    else:  # If timestamp is in seconds
-                        datetime_obj = datetime.fromtimestamp(datetimeInt)
-                except ValueError:
-                    return JsonResponse({"error": "Invalid datetime format"}, status=400)
-
-            # Make timezone-aware if necessary
-            server_tz = tzlocal.get_localzone()
-
-            # Convert naive datetime to server timezone
-            datetime_obj = datetime_obj.replace(tzinfo=server_tz)
+                    # First try to parse as timestamp (milliseconds)
+                    datetime_obj = datetime.fromtimestamp(int(datetime_str) / 1000, tz=timezone.get_current_timezone())
+                except (ValueError, TypeError):
+                    # If not a timestamp, try parsing as ISO format string
+                    datetime_obj = datetime.fromisoformat(datetime_str.replace('Z', '+00:00'))
+                    # Make timezone-aware if necessary
+                    if datetime_obj.tzinfo is None:
+                        datetime_obj = timezone.make_aware(datetime_obj)
+            except Exception as e:
+                return JsonResponse({"error": f"Invalid datetime format: {str(e)}"}, status=400)
 
             # Save or update the list. You might also want to save the image file if provided.
             try:

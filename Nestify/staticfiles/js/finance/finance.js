@@ -553,17 +553,25 @@ document.addEventListener("DOMContentLoaded", function() {
             
             // Format the amount class and display
             let amountClass = '';
-            if (operation.amount > 0) {
-                amountClass = 'profit';
-            } else if (operation.amount < 0) {
-                amountClass = 'expense';
+            let amountDisplay = '0.00';
+            
+            if (operation.amount !== null && operation.amount !== undefined) {
+                const amount = parseFloat(operation.amount);
+                if (!isNaN(amount)) {
+                    amountDisplay = amount.toFixed(2);
+                    if (amount > 0) {
+                        amountClass = 'profit';
+                    } else if (amount < 0) {
+                        amountClass = 'expense';
+                    }
+                }
             }
             
             row.innerHTML = `
                 <td>${operation.date}</td>
                 <td>${operation.category}</td>
                 <td class="${amountClass}">
-                    ${operation.amount} Eur
+                    ${amountDisplay} Eur
                 </td>
             `;
             
