@@ -3,6 +3,9 @@ import time
 import schedule
 import threading
 from django.core.management.base import BaseCommand
+from django.utils import timezone
+from Inventory.models import ItemOperation
+from Family.models import Notification
 
 # Define locks for thread-safe task execution
 task_locks = {
@@ -21,7 +24,7 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS("Starting notification scheduler..."))
         
         # Schedule tasks directly in the main thread
-        schedule.every(30).minutes.do(self.run_notification_task_safely)
+        schedule.every(5).minutes.do(self.run_notification_task_safely)
 
         # Keep this management command alive
         try:
@@ -78,7 +81,63 @@ class Command(BaseCommand):
 
     def notification_task(self):
         """
-        Simple task that prints hello.
-        This is a placeholder for future notification tasks.
+        Check for expiring items and create notifications
         """
-        self.stdout.write(self.style.SUCCESS("Hello from notification scheduler!"))
+        today = timezone.now().date()
+
+        # Get all items with expiration dates
+        items = ItemOperation.objects.filter(exp_date__isnull=False)
+
+        for item in items:
+            family = item.item.family
+            days_until_expiry = (item.exp_date - today).days
+
+            # Skip if already expired
+            if days_until_expiry < 0:
+                # Check if we already notified about this expired item
+                if not Notification.objects.filter(
+                    family=family,
+                    notification_type='inventory_expired',
+                    related_object_id=item.id
+                ).exists():
+                    Notification.create_notification(
+                        family=family,
+                        recipient=family.creator,  # Notify family creator
+                        notification_type='inventory_expired',
+                        title=f'Produktas pasibaigė: {item.item.name}',
+                        message=f'{item.item.name} ({item.qty} vnt.) galiojimo laikas baigėsi {abs(days_until_expiry)} dienų atgal.',
+                        related_object_id=item.id
+                    )
+
+            # Check for items expiring in 3 days
+            elif days_until_expiry <= 3 or days_until_expiry > 1:
+                if not Notification.objects.filter(
+                    family=family,
+                    notification_type='inventory_expiring',
+                    related_object_id=item.id
+                ).exists():
+                    Notification.create_notification(
+                        family=family,
+                        recipient=family.creator,
+                        notification_type='inventory_expiring',
+                        title=f'Produktas baigiasi: {item.item.name}',
+                        message=f'{item.item.name} ({item.qty} vnt.) galiojimo laikas baigsis po 3 dienų.',
+                        related_object_id=item.id
+                    )
+
+            # Check for items expiring in 1 day
+            elif days_until_expiry == 1:
+                if not Notification.objects.filter(
+                    family=family,
+                    notification_type='inventory_expiring',
+                    related_object_id=item.id
+                ).exists():
+                    Notification.create_notification(
+                        family=family,
+                        recipient=family.creator,
+                        notification_type='inventory_expiring',
+                        title=f'Produktas baigiasi: {item.item.name}',
+                        message=f'{item.item.name} ({item.qty} vnt.) galiojimo laikas baigsis rytoj.',
+                        related_object_id=item.id
+                    )
+                    self.stdout.write(self.style.WARNING(f"Created 1-day notification for {item.item.name}"))
