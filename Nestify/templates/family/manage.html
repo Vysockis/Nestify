@@ -10,7 +10,6 @@
 {% block content %}
 <div class="container mt-5">
     <div class="row">
-        <!-- Members List -->
         <div class="{% if is_admin %}col-lg-8{% else %}col-lg-12{% endif %}">
             {% if is_admin and pending_members %}
             <div class="card shadow-sm mb-4">
@@ -31,12 +30,10 @@
                                 </div>
                             </div>
                             <div class="member-actions">
-                                <button class="btn btn-success btn-sm me-2 approve-member-btn" 
-                                        data-member-id="{{ member.id }}">
+                                <button class="btn btn-success btn-sm me-2 approve-member-btn" data-member-id="{{ member.id }}">
                                     <i class="fas fa-check me-1"></i>Patvirtinti
                                 </button>
-                                <button class="btn btn-danger btn-sm reject-member-btn" 
-                                        data-member-id="{{ member.id }}">
+                                <button class="btn btn-danger btn-sm reject-member-btn" data-member-id="{{ member.id }}">
                                     <i class="fas fa-times me-1"></i>Atmesti
                                 </button>
                             </div>
@@ -85,8 +82,7 @@
                                     <i class="fas fa-child me-1"></i>Pažymėti Vaiku
                                     {% endif %}
                                 </button>
-                                <button class="btn btn-danger btn-sm remove-member-btn" 
-                                        data-member-id="{{ member.id }}">
+                                <button class="btn btn-danger btn-sm remove-member-btn" data-member-id="{{ member.id }}">
                                     <i class="fas fa-trash-alt me-1"></i>Pašalinti
                                 </button>
                             </div>
@@ -100,7 +96,6 @@
             </div>
         </div>
 
-        <!-- Invitation Codes (Admin Only) -->
         {% if is_admin %}
         <div class="col-lg-4 mt-4 mt-lg-0">
             <div class="card shadow-sm">
@@ -112,8 +107,7 @@
                         {% for code in invitation_codes %}
                         <div class="invitation-code-item d-flex justify-content-between align-items-center p-2 border-bottom">
                             <code>{{ code.code }}</code>
-                            <button class="btn btn-danger btn-sm delete-code-btn" 
-                                    data-code-id="{{ code.id }}">
+                            <button class="btn btn-danger btn-sm delete-code-btn" data-code-id="{{ code.id }}">
                                 <i class="fas fa-times"></i>
                             </button>
                         </div>
@@ -133,7 +127,6 @@
     </div>
 </div>
 
-<!-- Invite Modal (Admin Only) -->
 {% if is_admin %}
 <div class="modal fade" id="inviteModal" tabindex="-1">
     <div class="modal-dialog">
@@ -168,13 +161,5 @@
 {% endblock %}
 
 {% block javascript %}
-<!-- Debug script -->
-<script>
-    console.log('Template loaded');
-    document.addEventListener('DOMContentLoaded', function() {
-        const mainBtn = document.getElementById('generateCodeBtn');
-        const modalBtn = document.getElementById('modalGenerateCodeBtn');
-    });
-</script>
 <script src="{% static 'js/family/manage.js' %}"></script>
 {% endblock %} 

@@ -6,14 +6,13 @@ from List.enum import ListType
 
 @receiver(post_save, sender=models.Plan)
 def create_list_for_plan(sender, instance, created, **kwargs):
-    """Creates a List whenever a Plan is created"""
-    if created:  # Ensure this only runs when a Plan is first created
+    if created:
         lModels.List.objects.create(
             family=instance.family,
             name=f"{instance.name} - List",
             description=f"List for {instance.name}",
             creator=instance.creator,
-            plan=instance,  # Link this list to the Plan
+            plan=instance,
             list_type=ListType.OTHER.name,
             datetime=instance.datetime
         )

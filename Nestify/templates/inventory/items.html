@@ -46,7 +46,6 @@
                                 </tr>
                             </thead>
                             <tbody id="itemsTableBody">
-                                <!-- Items will be loaded dynamically -->
                                 <tr>
                                     <td colspan="5" class="text-center">
                                         <div class="spinner-border text-primary" role="status">
@@ -87,7 +86,6 @@
 {% block javascript %}
 <script>
 document.addEventListener("DOMContentLoaded", function() {
-    // Pridėti naują prekę mygtuko funkcija
     function setupAddItemButtons() {
         const addItemBtn = document.getElementById('addItemBtn');
         const addItemBtnEmpty = document.getElementById('addItemBtnEmpty');
@@ -144,7 +142,6 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     }
     
-    // Išsaugoti naują prekę
     function saveNewItem(formData) {
         const form = new FormData();
         for (const key in formData) {
@@ -163,7 +160,7 @@ document.addEventListener("DOMContentLoaded", function() {
             if (data.error) {
                 alert(data.error);
             } else if (data.success) {
-                fetchItems(); // Atnaujinti sąrašą po pridėjimo
+                fetchItems();
             }
         })
         .catch(error => {
@@ -215,7 +212,6 @@ document.addEventListener("DOMContentLoaded", function() {
         items.forEach(item => {
             const row = document.createElement('tr');
             
-            // Add classes for expiration status
             if (item.is_expired) {
                 row.classList.add('table-danger');
             } else if (item.is_expiring_soon) {
@@ -242,46 +238,38 @@ document.addEventListener("DOMContentLoaded", function() {
             tableBody.appendChild(row);
         });
         
-        // Pridėti event listener delete mygtukams
         setupDeleteButtons();
     }
     
     function setupDeleteButtons() {
         document.querySelectorAll('.delete-operation').forEach(button => {
             button.addEventListener('click', function() {
-                const operationId = this.getAttribute('data-operation-id');
+                const operationId = this.dataset.operationId;
                 if (confirm('Ar tikrai norite ištrinti šį įrašą?')) {
-                    deleteOperation(operationId);
+                    fetch(`/inventory/api/operations/${operationId}/delete/`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            fetchItems();
+                        } else {
+                            alert(data.error || 'Įvyko klaida. Bandykite dar kartą vėliau.');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Įvyko klaida. Bandykite dar kartą vėliau.');
+                    });
                 }
             });
         });
     }
-
-    function deleteOperation(operationId) {
-        fetch(`/inventory/api/operations/${operationId}/delete/`, {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': '{{ csrf_token }}'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                fetchItems(); // Atnaujinti sąrašą po ištrynimo
-            } else {
-                alert(data.error || 'Įvyko klaida. Bandykite dar kartą vėliau.');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Įvyko klaida. Bandykite dar kartą vėliau.');
-        });
-    }
     
-    // Initial setup
     setupAddItemButtons();
-    
-    // Initial data load
     fetchItems();
 });
 </script>

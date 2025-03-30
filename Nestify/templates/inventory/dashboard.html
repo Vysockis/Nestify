@@ -5,7 +5,6 @@
 {% block content %}
 <div class="container mt-5 pt-5">
     <div class="main-box mb-4" style="background-color: white; border-radius: 0.8rem; padding: 2rem; box-shadow: 0 0.2rem 0.8rem rgba(0, 0, 0, 0.1);">
-        <!-- Header -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
                 <h1>Turto valdymas</h1>
@@ -16,7 +15,6 @@
             </button>
         </div>
 
-        <!-- Tabs -->
         <ul class="nav nav-tabs mb-4">
             <li class="nav-item">
                 <a class="nav-link active" id="all-tab" data-bs-toggle="tab" href="#all-content">Visi</a>
@@ -29,9 +27,7 @@
             </li>
         </ul>
 
-        <!-- Tab content -->
         <div class="tab-content">
-            <!-- All tab -->
             <div class="tab-pane fade show active" id="all-content">
                 <div class="all-items-container">
                     <div class="spinner-border text-primary" role="status">
@@ -40,7 +36,6 @@
                 </div>
             </div>
             
-            <!-- Food tab -->
             <div class="tab-pane fade" id="food-content">
                 <div class="food-items-container">
                     <div class="spinner-border text-primary" role="status">
@@ -49,7 +44,6 @@
                 </div>
             </div>
             
-            <!-- Medicine tab -->
             <div class="tab-pane fade" id="medicine-content">
                 <div class="medicine-items-container">
                     <div class="spinner-border text-primary" role="status">
@@ -74,35 +68,32 @@
 <script>
 document.addEventListener("DOMContentLoaded", function() {
     function fetchItems() {
-        // Fetch all items for "Visi" tab
         Promise.all([
             fetch('/inventory/api/items/?type=FOOD').then(response => response.json()),
             fetch('/inventory/api/items/?type=MEDICINE').then(response => response.json())
         ]).then(([foodData, medicineData]) => {
             const allContainer = document.querySelector('.all-items-container');
             const allItems = [...foodData.items, ...medicineData.items];
-            displayItems(allItems, allContainer, 999); // Show all items
+            displayItems(allItems, allContainer, 999);
         });
         
-        // Fetch food items
         fetch('/inventory/api/items/?type=FOOD')
             .then(response => response.json())
             .then(data => {
                 const foodContainer = document.querySelector('.food-items-container');
-                displayItems(data.items, foodContainer, 999); // Show all items
+                displayItems(data.items, foodContainer, 999);
             });
         
-        // Fetch medicine items
         fetch('/inventory/api/items/?type=MEDICINE')
             .then(response => response.json())
             .then(data => {
                 const medicineContainer = document.querySelector('.medicine-items-container');
-                displayItems(data.items, medicineContainer, 999); // Show all items
+                displayItems(data.items, medicineContainer, 999);
             });
     }
     
     function displayItems(items, container, limit) {
-        container.innerHTML = ''; // Clear loading spinner
+        container.innerHTML = '';
         
         if (items.length === 0) {
             container.innerHTML = '<p class="text-muted text-center">Nėra įrašų</p>';
@@ -124,14 +115,11 @@ document.addEventListener("DOMContentLoaded", function() {
         `;
         
         const tbody = document.createElement('tbody');
-        
-        // Only show up to the limit
         const itemsToShow = items.slice(0, limit);
         
         itemsToShow.forEach(item => {
             const row = document.createElement('tr');
             
-            // Add classes for expiration status
             if (item.is_expired) {
                 row.classList.add('table-danger');
             } else if (item.is_expiring_soon) {
@@ -157,39 +145,33 @@ document.addEventListener("DOMContentLoaded", function() {
         table.appendChild(tbody);
         container.appendChild(table);
         
-        // Setup delete buttons
         container.querySelectorAll('.delete-operation').forEach(button => {
             button.addEventListener('click', function() {
-                const operationId = this.getAttribute('data-operation-id');
+                const operationId = this.dataset.operationId;
                 if (confirm('Ar tikrai norite ištrinti šį įrašą?')) {
-                    deleteOperation(operationId);
+                    fetch(`/inventory/api/operations/${operationId}/delete/`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            fetchItems();
+                        } else {
+                            alert(data.error || 'Įvyko klaida. Bandykite dar kartą vėliau.');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Įvyko klaida. Bandykite dar kartą vėliau.');
+                    });
                 }
             });
         });
     }
     
-    function deleteOperation(operationId) {
-        fetch(`/inventory/api/operations/${operationId}/delete/`, {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': '{{ csrf_token }}'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                fetchItems(); // Atnaujinti sąrašą po ištrynimo
-            } else {
-                alert(data.error || 'Įvyko klaida. Bandykite dar kartą vėliau.');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Įvyko klaida. Bandykite dar kartą vėliau.');
-        });
-    }
-    
-    // Setup add item button
     const addItemBtn = document.getElementById('addItemBtn');
     if (addItemBtn) {
         addItemBtn.addEventListener('click', async function() {
@@ -231,39 +213,34 @@ document.addEventListener("DOMContentLoaded", function() {
             });
             
             if (formData) {
-                saveNewItem(formData);
+                const form = new FormData();
+                for (const key in formData) {
+                    form.append(key, formData[key]);
+                }
+                
+                fetch('{% url "inventory:add_item" %}', {
+                    method: 'POST',
+                    body: form,
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        alert(data.error);
+                    } else if (data.success) {
+                        fetchItems();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Įvyko klaida. Bandykite dar kartą vėliau.');
+                });
             }
         });
     }
     
-    function saveNewItem(formData) {
-        const form = new FormData();
-        for (const key in formData) {
-            form.append(key, formData[key]);
-        }
-        
-        fetch('{% url "inventory:add_item" %}', {
-            method: 'POST',
-            body: form,
-            headers: {
-                'X-CSRFToken': '{{ csrf_token }}'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.error) {
-                alert(data.error);
-            } else if (data.success) {
-                fetchItems(); // Atnaujinti sąrašą po pridėjimo
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Įvyko klaida. Bandykite dar kartą vėliau.');
-        });
-    }
-    
-    // Initial data load
     fetchItems();
 });
 </script>

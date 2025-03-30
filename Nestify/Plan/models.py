@@ -8,15 +8,11 @@ from List import models as lModels
 class Plan(models.Model):
     family = models.ForeignKey("Family.Family", on_delete=models.CASCADE)
     name = models.CharField(max_length=50)
-    description = models.TextField(blank=True, null=True)
-    datetime = models.DateTimeField(auto_now=False, auto_now_add=False, null=True)
-    image = models.ImageField(upload_to=None, height_field=None, width_field=None, max_length=None, blank=True, null=True)
-    creator = models.ForeignKey("Profile.CustomUser", on_delete=models.CASCADE, null=True)
-    plan_type = models.CharField(
-        max_length=20,
-        choices=ActivityType.choices(),
-        default=ActivityType.OTHER.name,  # Use the name of the enum
-    )
+    description = models.TextField(blank=True)
+    datetime = models.DateTimeField()
+    image = models.ImageField(upload_to="plans/", blank=True)
+    creator = models.ForeignKey("Profile.CustomUser", on_delete=models.CASCADE)
+    plan_type = models.CharField(max_length=20, choices=ActivityType.choices(), default=ActivityType.OTHER.name)
 
     class Meta:
         verbose_name = _("Plan")
@@ -40,7 +36,7 @@ class Plan(models.Model):
 
 class PlanMember(models.Model):
     plan = models.ForeignKey("Plan.Plan", on_delete=models.CASCADE)
-    user = models.ForeignKey("Family.FamilyMember", verbose_name=_(""), on_delete=models.CASCADE)
+    user = models.ForeignKey("Family.FamilyMember", on_delete=models.CASCADE)
 
     class Meta:
         verbose_name = _("PlanMember")

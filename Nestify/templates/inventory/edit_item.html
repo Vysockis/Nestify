@@ -22,12 +22,10 @@
                 <div class="card-body">
                     <form id="editItemForm" method="post">
                         {% csrf_token %}
-                        
                         <div class="mb-3">
                             <label for="name" class="form-label">Pavadinimas*</label>
                             <input type="text" class="form-control" id="name" name="name" value="{{ item.name }}" required>
                         </div>
-                        
                         <div class="mb-3">
                             <label for="item_type" class="form-label">Tipas*</label>
                             <select class="form-select" id="item_type" name="item_type" required>
@@ -37,7 +35,6 @@
                                 {% endfor %}
                             </select>
                         </div>
-                        
                         <div class="text-end">
                             <button type="submit" class="btn btn-primary">Išsaugoti</button>
                         </div>
@@ -87,7 +84,6 @@ document.addEventListener("DOMContentLoaded", function() {
     
     editItemForm.addEventListener('submit', function(e) {
         e.preventDefault();
-        
         const formData = new FormData(editItemForm);
         
         fetch('{% url "inventory:edit_item" item.id %}', {
@@ -111,7 +107,6 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     });
     
-    // Pridėti kiekį modalinis langas
     addStockBtn.addEventListener('click', async function() {
         const formData = await openModal({
             title: "Pridėti kiekį - {{ item.name }}",
@@ -133,10 +128,8 @@ document.addEventListener("DOMContentLoaded", function() {
         });
         
         if (formData) {
-            // Pridėti paslėptus laukus
             formData.name = "{{ item.name }}";
             formData.item_type = "{{ item.item_type }}";
-            
             saveNewStock(formData);
         }
     });
