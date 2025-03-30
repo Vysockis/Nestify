@@ -204,6 +204,7 @@ def items(request):
                 "name": item.name,
                 "qty": item.qty,
                 "completed": item.completed,
+                "price": item.amount,
                 "assigned_to": item.assigned_to.user.pk if item.assigned_to else None
             } for item in items]
         })
