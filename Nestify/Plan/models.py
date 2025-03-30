@@ -3,15 +3,16 @@ from .enum import ActivityType
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from List import models as lModels
+from django.utils import timezone
 
 # Create your models here.
 class Plan(models.Model):
     family = models.ForeignKey("Family.Family", on_delete=models.CASCADE)
     name = models.CharField(max_length=50)
-    description = models.TextField(blank=True)
-    datetime = models.DateTimeField()
-    image = models.ImageField(upload_to="plans/", blank=True)
-    creator = models.ForeignKey("Profile.CustomUser", on_delete=models.CASCADE)
+    description = models.TextField(blank=True, null=True)
+    datetime = models.DateTimeField(default=timezone.now)
+    image = models.ImageField(upload_to="plans/", blank=True, null=True)
+    creator = models.ForeignKey("Profile.CustomUser", on_delete=models.CASCADE, null=True, blank=True)
     plan_type = models.CharField(max_length=20, choices=ActivityType.choices(), default=ActivityType.OTHER.name)
 
     class Meta:

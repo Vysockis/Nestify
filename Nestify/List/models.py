@@ -7,16 +7,16 @@ from .enum import ListType
 class List(models.Model):
     family = models.ForeignKey("Family.Family", on_delete=models.CASCADE)
     name = models.CharField(max_length=50)
-    description = models.TextField(blank=True)
+    description = models.TextField(blank=True, null=True)
     creator = models.ForeignKey("Profile.CustomUser", on_delete=models.CASCADE)
-    image = models.ImageField(upload_to="recipes/", blank=True)
+    image = models.ImageField(upload_to="recipes/", blank=True, null=True)
     finished = models.BooleanField(default=False)
     plan = models.ForeignKey("Plan.Plan", on_delete=models.CASCADE, null=True, blank=True)
     category = models.ForeignKey("Finance.Category", on_delete=models.SET_NULL, null=True, blank=True)
     amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    receipt_pdf = models.FileField(upload_to='receipts/', blank=True)
+    receipt_pdf = models.FileField(upload_to='receipts/', blank=True, null=True)
     list_type = models.CharField(max_length=20, choices=ListType.choices(), default=ListType.OTHER.name)
-    datetime = models.DateTimeField()
+    datetime = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         verbose_name = _("FamilyList")
@@ -40,7 +40,7 @@ class List(models.Model):
 class ListItem(models.Model):
     list = models.ForeignKey("List.List", on_delete=models.CASCADE)
     name = models.CharField(max_length=50)
-    description = models.TextField(blank=True)
+    description = models.TextField(blank=True, null=True)
     qty = models.IntegerField(null=True, blank=True)
     amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     item = models.ForeignKey("Inventory.Item", on_delete=models.DO_NOTHING, null=True, blank=True)

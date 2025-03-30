@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'Inventory',
     'List',
     'Plan',
+    'Dashboard',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
