@@ -70,6 +70,38 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
+    async function openAddListItemModal(listId) {
+        const fields = [
+            { id: "name", label: "Pavadinimas", type: "text", placeholder: "Įveskite pavadinimą", required: true },
+            { id: "quantity", label: "Kiekis", type: "number", placeholder: "Įveskite kiekį", required: true, min: 1, value: 1 }
+        ];
+
+        const formData = await openModal({
+            title: `Pridėti įrašą`,
+            fields: fields
+        });
+
+        if (formData) {
+            fetch("../api/item/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken
+                },
+                body: JSON.stringify({ list_id: listId, ...formData })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    fetchFamilyList(); // Update list dynamically
+                } else {
+                    alert("Klaida: " + JSON.stringify(data.error));
+                }
+            })
+            .catch(error => console.error("Klaida pridedant įrašą:", error));
+        }
+    }
+
     function fetchFamilyList() {
         fetch("../api/recipes/")
             .then(response => response.json())

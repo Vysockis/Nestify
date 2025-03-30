@@ -291,7 +291,6 @@ document.addEventListener("DOMContentLoaded", function () {
             addPlanMemberBtn.dataset.planId = plan.id;
         }
 
-        
         if (addPlanItemBtn) {
             addPlanItemBtn.dataset.listId = plan.listId;
             addPlanItemBtn.dataset.planId = plan.id;
