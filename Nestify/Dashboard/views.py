@@ -5,11 +5,39 @@ from django.utils import timezone
 from Nestify.decorators import family_member_required
 from List import models as lModels
 from Plan import models as pModels
+from Family.models import Notification
 
 
 @family_member_required
 def dashboard(request):
-    return render(request, 'dashboard/main.html')
+    family = request.user.getFamily()
+    notifications = Notification.objects.filter(
+        family=family,
+        recipient=request.user,
+        is_read=False
+    ).order_by('-created_at')[:5]
+
+    context = {
+        'notifications': notifications,
+        'unread_count': notifications.count()
+    }
+    
+    return render(request, 'dashboard/main.html', context)
+
+
+@family_member_required
+def mark_notification_read(request, notification_id):
+    try:
+        notification = Notification.objects.get(
+            id=notification_id,
+            recipient=request.user,
+            is_read=False
+        )
+        notification.is_read = True
+        notification.save()
+        return JsonResponse({'status': 'success'})
+    except Notification.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Notification not found'}, status=404)
 
 
 @family_member_required
@@ -51,7 +79,7 @@ def calendar_events(request):
     family = request.user.getFamily()
 
     list_events = lModels.List.objects.filter(
-        family=family, 
+        family=family,
         plan__isnull=True
     ).exclude(list_type='FINANCE')
     

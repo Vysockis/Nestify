@@ -1,6 +1,59 @@
 <!-- Notifications Box -->
 <div class="notifications-box mt-3">
-    <h5>Recent Notifications <span class="badge-notification">5</span></h5>
-    <p class="text-muted">Rokiškio pienas baigs galioti po 1 dienos.</p>
-    <p class="text-muted small">2024-10-12</p>
+    <h5>Recent Notifications <span class="badge-notification">{{ unread_count }}</span></h5>
+    {% if notifications %}
+        {% for notification in notifications %}
+            <div class="notification-item mb-3" data-notification-id="{{ notification.id }}">
+                <div class="notification-content">
+                    <p class="notification-message mb-1">{{ notification.message }}</p>
+                    <p class="notification-date">{{ notification.created_at|date:"Y-m-d" }}</p>
+                </div>
+                <button class="btn-mark-read" onclick="markNotificationAsRead(this.closest('.notification-item'))">
+                    ✓
+                </button>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p class="text-muted">Nėra naujų pranešimų</p>
+    {% endif %}
 </div>
+
+<script>
+function markNotificationAsRead(element) {
+    const notificationId = element.dataset.notificationId;
+    const url = `/dashboard/notifications/${notificationId}/mark-read/`;
+    
+    fetch(url, {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            // Remove the notification item
+            element.style.opacity = '0';
+            setTimeout(() => {
+                element.remove();
+                
+                // Update the notification count
+                const badge = document.querySelector('.badge-notification');
+                const currentCount = parseInt(badge.textContent);
+                badge.textContent = currentCount - 1;
+                
+                // If no more notifications, show the "no notifications" message
+                const notificationsBox = document.querySelector('.notifications-box');
+                if (currentCount - 1 === 0) {
+                    notificationsBox.innerHTML = `
+                        <h5>Recent Notifications <span class="badge-notification">0</span></h5>
+                        <p class="text-muted">Nėra naujų pranešimų</p>
+                    `;
+                }
+            }, 300);
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+</script>
