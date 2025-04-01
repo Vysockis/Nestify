@@ -103,6 +103,17 @@ def item(request):
             assigned_to = None
             if list_obj.list_type == ListType.TASK.name and data.get("assigned_to"):
                 assigned_to = FamilyMember.objects.get(pk=data.get("assigned_to")).user
+                # Create notification for task assignment
+                from Family.models import Notification
+                Notification.create_notification(
+                    family=list_obj.family,
+                    recipient=assigned_to,
+                    notification_type='task_assigned',
+                    title='Naujas užduoties priskyrimas',
+                    message=f'Jums priskirta nauja užduotis: {data.get("name")} ({list_obj.name})',
+                    sender=request.user,
+                    related_object_id=list_obj.id
+                )
 
             models.ListItem.objects.update_or_create(
                 name=data.get("name"),

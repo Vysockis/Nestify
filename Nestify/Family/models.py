@@ -96,6 +96,7 @@ class Notification(models.Model):
         ('request', 'Join Request'),
         ('system', 'System Notification'),
         ('general', 'General Notification'),
+        ('task_assigned', 'Task Assignment'),
     ]
 
     family = models.ForeignKey("Family.Family", on_delete=models.CASCADE, related_name='notifications')
