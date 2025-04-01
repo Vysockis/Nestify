@@ -1,15 +1,20 @@
 <!-- Notifications Box -->
 <div class="notifications-box mt-3">
-    <h5>Recent Notifications <span class="badge-notification">{{ unread_count }}</span></h5>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">Pranešimai</h5>
+        <span class="badge-notification">{{ unread_count }}</span>
+    </div>
     {% if notifications %}
         {% for notification in notifications %}
             <div class="notification-item mb-3" data-notification-id="{{ notification.id }}">
                 <div class="notification-content">
-                    <p class="notification-message mb-1">{{ notification.message }}</p>
-                    <p class="notification-date">{{ notification.created_at|date:"Y-m-d" }}</p>
+                    <div class="notification-text-container">
+                        <p class="notification-message mb-1">{{ notification.message }}</p>
+                        <small class="notification-date text-muted">{{ notification.created_at|date:"Y-m-d H:i" }}</small>
+                    </div>
                 </div>
-                <button class="btn-mark-read" onclick="markNotificationAsRead(this.closest('.notification-item'))">
-                    ✓
+                <button class="btn btn-sm btn-outline-success mark-read-btn" onclick="markNotificationAsRead(this.closest('.notification-item'))">
+                    <i class="fas fa-check"></i>
                 </button>
             </div>
         {% endfor %}
@@ -33,7 +38,7 @@ function markNotificationAsRead(element) {
     .then(response => response.json())
     .then(data => {
         if (data.status === 'success') {
-            // Remove the notification item
+            // Remove the notification item with fade effect
             element.style.opacity = '0';
             setTimeout(() => {
                 element.remove();
@@ -47,7 +52,10 @@ function markNotificationAsRead(element) {
                 const notificationsBox = document.querySelector('.notifications-box');
                 if (currentCount - 1 === 0) {
                     notificationsBox.innerHTML = `
-                        <h5>Recent Notifications <span class="badge-notification">0</span></h5>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0">Pranešimai</h5>
+                            <span class="badge-notification">0</span>
+                        </div>
                         <p class="text-muted">Nėra naujų pranešimų</p>
                     `;
                 }
