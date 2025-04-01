@@ -573,6 +573,11 @@ document.addEventListener("DOMContentLoaded", function() {
                 <td class="${amountClass}">
                     ${amountDisplay} Eur
                 </td>
+                <td class="text-end">
+                    <button class="btn btn-sm btn-outline-danger delete-operation-btn" data-operation-id="${operation.id}">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
             `;
             
             operationsTable.appendChild(row);
@@ -582,11 +587,60 @@ document.addEventListener("DOMContentLoaded", function() {
         document.querySelectorAll('.operation-row').forEach(row => {
             // Make the entire row clickable
             row.addEventListener('click', function(e) {
+                // Don't trigger if clicking delete button
+                if (e.target.closest('.delete-operation-btn')) {
+                    return;
+                }
                 // Get the operation ID from this row
                 const operationId = this.dataset.operationId;
                 if (operationId) {
                     // Show items or add item form
                     showOperationItems(operationId);
+                }
+            });
+        });
+
+        // Add delete button event listeners
+        document.querySelectorAll('.delete-operation-btn').forEach(btn => {
+            btn.addEventListener('click', async function(e) {
+                e.stopPropagation(); // Prevent row click event
+                
+                const operationId = this.dataset.operationId;
+                if (!operationId) {
+                    alert("Klaida: Operacijos ID nerastas");
+                    return;
+                }
+                
+                if (confirm("Ar tikrai norite ištrinti šią operaciją?")) {
+                    try {
+                        const response = await fetch(`/list/api/list/`, {
+                            method: "DELETE",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "X-CSRFToken": csrfToken
+                            },
+                            body: JSON.stringify({ list_id: operationId })
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (data.success) {
+                            // Remove the row with animation
+                            const row = this.closest('tr');
+                            row.style.opacity = '0';
+                            setTimeout(() => {
+                                row.remove();
+                            }, 300);
+                            
+                            // Refresh the charts
+                            processChartData();
+                        } else {
+                            alert("Klaida: " + (data.error || "Nepavyko ištrinti operacijos"));
+                        }
+                    } catch (error) {
+                        console.error("Error deleting operation:", error);
+                        alert("Klaida: Nepavyko ištrinti operacijos");
+                    }
                 }
             });
         });

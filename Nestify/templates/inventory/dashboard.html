@@ -140,8 +140,8 @@ document.addEventListener("DOMContentLoaded", function() {
                 <td>${item.qty}</td>
                 <td>${item.exp_date || 'Nenustatyta'}</td>
                 <td>
-                    <button class="circle-btn red delete-operation" data-operation-id="${item.id}">
-                        &times;
+                    <button class="btn btn-sm btn-outline-danger delete-operation" data-operation-id="${item.id}">
+                        <i class="fas fa-trash"></i>
                     </button>
                 </td>
             `;

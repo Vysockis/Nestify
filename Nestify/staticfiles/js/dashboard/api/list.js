@@ -61,9 +61,9 @@ document.addEventListener("DOMContentLoaded", function () {
                     listElement.setAttribute("data-toggle", `list-${list.id}`);
 
                     const actionButton = document.createElement("button");
-                    actionButton.classList.add("circle-btn", "red");
-                    actionButton.innerHTML = "&times;"; // Default is delete button
-                    actionButton.dataset.type = "delete"; // Track button state
+                    actionButton.classList.add("btn", "btn-sm", "btn-outline-danger");
+                    actionButton.innerHTML = '<i class="fas fa-trash"></i>';
+                    actionButton.dataset.type = "delete";
                     actionButton.addEventListener("click", function (event) {
                         event.stopPropagation(); // Prevent clicking the whole list
                         if (actionButton.dataset.type === "delete") {
@@ -142,8 +142,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     
                         // Create the delete button (Right)
                         const deleteButton = document.createElement("button");
-                        deleteButton.classList.add("circle-btn", "red");
-                        deleteButton.innerHTML = "&times;";
+                        deleteButton.classList.add("btn", "btn-sm", "btn-outline-danger");
+                        deleteButton.innerHTML = '<i class="fas fa-trash"></i>';
                         deleteButton.addEventListener("click", function () {
                             confirmAndDeleteItem(item.id);
                         });
@@ -173,7 +173,7 @@ document.addEventListener("DOMContentLoaded", function () {
             item.addEventListener("click", function () {
                 const targetId = this.getAttribute("data-toggle");
                 const nestedList = document.getElementById(targetId);
-                const actionButton = this.querySelector(".circle-btn"); // Find the button inside the clicked `<li>`
+                const actionButton = this.querySelector(".btn"); // Find the button inside the clicked `<li>`
 
                 if (nestedList) {
                     nestedList.classList.toggle("active");
@@ -181,12 +181,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 if (actionButton) {
                     if (actionButton.dataset.type === "delete") {
-                        actionButton.innerHTML = "+"; // Change to add button
-                        actionButton.classList.remove("red");
+                        actionButton.innerHTML = '<i class="fas fa-plus"></i>'; // Change to add button
+                        actionButton.classList.remove("btn-outline-danger");
+                        actionButton.classList.add("btn-outline-success");
                         actionButton.dataset.type = "add";
                     } else {
-                        actionButton.innerHTML = "&times;"; // Change back to delete button
-                        actionButton.classList.add("red");
+                        actionButton.innerHTML = '<i class="fas fa-trash"></i>'; // Change back to delete button
+                        actionButton.classList.remove("btn-outline-success");
+                        actionButton.classList.add("btn-outline-danger");
                         actionButton.dataset.type = "delete";
                     }
                 }

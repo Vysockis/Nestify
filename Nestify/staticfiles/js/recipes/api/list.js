@@ -189,8 +189,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     
                     // Create delete button
                     const deleteBtn = document.createElement("button");
-                    deleteBtn.classList.add("circle-btn", "red");
-                    deleteBtn.innerHTML = "&times;";
+                    deleteBtn.classList.add("btn", "btn-sm", "btn-outline-danger");
+                    deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
                     deleteBtn.addEventListener("click", function(event) {
                         event.stopPropagation(); // Prevent list item click
                         if (confirm("Ar tikrai norite ištrinti šį receptą?")) {
