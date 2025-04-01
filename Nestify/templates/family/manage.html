@@ -68,7 +68,7 @@
                             </div>
                             {% if is_admin and not member.admin %}
                             <div class="member-actions">
-                                <button class="btn btn-outline-secondary btn-sm me-2 toggle-kid-btn" 
+                                <button class="btn btn-outline-secondary btn-sm me-3 toggle-kid-btn" 
                                         data-member-id="{{ member.id }}"
                                         data-is-kid="{{ member.kid|lower }}">
                                     {% if member.kid %}
@@ -142,11 +142,10 @@
                 </div>
                 <p class="text-muted small">
                     Pasidalinkite šiuo kodu su asmeniu, kurį norite pakviesti į šeimą.
-                    Kodas galios 24 valandas.
                 </p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Uždaryti</button>
+                <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Uždaryti</button>
                 <button type="button" class="btn btn-primary" id="modalGenerateCodeBtn">Generuoti Kodą</button>
             </div>
         </div>

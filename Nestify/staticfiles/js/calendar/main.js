@@ -23,8 +23,19 @@ document.addEventListener('DOMContentLoaded', function () {
             center: 'title',
             right: 'dayGridMonth,timeGridWeek,timeGridDay'
         },
+        eventTimeFormat: {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+        },
+        displayEventTime: true,
+        displayEventEnd: false,
+        eventDisplay: 'block',
         eventClick: function(info) {
-            console.log("Event clicked! ID:", info.event);
+            if (info.event.url) {
+                window.location.href = info.event.url;
+                return false;
+            }
         }
     });
 

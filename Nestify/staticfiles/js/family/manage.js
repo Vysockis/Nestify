@@ -50,8 +50,8 @@ document.addEventListener('DOMContentLoaded', function() {
             codeItem.className = 'invitation-code-item d-flex justify-content-between align-items-center p-2 border-bottom';
             codeItem.innerHTML = `
                 <code>${data.code}</code>
-                <button class="btn btn-danger btn-sm delete-code-btn" data-code-id="${data.id}">
-                    <i class="fas fa-times"></i>
+                <button class="btn btn-sm btn-outline-danger delete-code-btn" data-code-id="${data.id}">
+                    <i class="fas fa-trash"></i>
                 </button>
             `;
             

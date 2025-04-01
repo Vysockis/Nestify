@@ -80,8 +80,9 @@ def calendar_events(request):
 
     list_events = lModels.List.objects.filter(
         family=family,
-        plan__isnull=True
-    ).exclude(list_type='FINANCE')
+        plan__isnull=True,
+        datetime__isnull=False
+    ).exclude(list_type__in=['FINANCE', 'MEAL'])
     
     list_event_list = [{
         "id": event.id,

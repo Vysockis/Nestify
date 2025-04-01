@@ -228,10 +228,15 @@ def remove_family_member(request, member_id):
 @login_required
 def join_family(request):
     if request.method == 'POST':
-        code = request.POST.get('code')
+        code = request.POST.get('invitation_code')
         try:
             # Find the invitation code
-            family_code = fModels.FamilyCode.objects.get(code=code, used=False)
+            family_code = fModels.FamilyCode.objects.get(code=code)
+            
+            # Check if code is already used
+            if family_code.used:
+                messages.error(request, 'Šis pakvietimo kodas jau buvo panaudotas.')
+                return redirect('landing')
             
             # Check if user is already in a family
             if fModels.FamilyMember.objects.filter(user=request.user).exists():
@@ -256,7 +261,10 @@ def join_family(request):
             return redirect('landing')
             
         except fModels.FamilyCode.DoesNotExist:
-            messages.error(request, 'Neteisingas arba nebegaliojantis pakvietimo kodas.')
+            messages.error(request, 'Neteisingas pakvietimo kodas.')
+            return redirect('landing')
+        except Exception:
+            messages.error(request, 'Įvyko klaida bandant prisijungti prie šeimos.')
             return redirect('landing')
     
     return render(request, 'signup/family_choice.html')

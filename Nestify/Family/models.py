@@ -78,6 +78,10 @@ class FamilyCode(models.Model):
             self.code = self.generate_unique_code()
         super().save(*args, **kwargs)
 
+    def is_valid(self):
+        """Check if the code is valid (not used)"""
+        return not self.used
+
     def generate_unique_code(self):
         """Generate a unique 6-character alphanumeric code."""
         while True:

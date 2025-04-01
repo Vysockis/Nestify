@@ -129,18 +129,63 @@ h2 {
     border: none !important;
     border-radius: 6px !important;
     padding: 4px 8px !important;
-    margin: 2px 4px !important;
+    margin: 2px 0 !important;
     transition: transform 0.2s ease;
+    display: block !important;
+    width: 100% !important;
 }
 
-.fc-event:hover {
-    transform: translateY(-1px);
+.fc-event-time {
+    font-weight: 500 !important;
+    color: #1e293b !important;
+    font-size: 0.85rem !important;
+    display: inline-block !important;
+    margin-right: 4px !important;
 }
 
 .fc-event-title {
     color: #1e293b !important;
     font-size: 0.85rem !important;
-    font-weight: 500 !important;
+    font-weight: normal !important;
+    display: inline-block !important;
+}
+
+.fc-daygrid-event-dot {
+    display: none !important;
+}
+
+.fc-daygrid-dot-event {
+    padding: 4px 8px !important;
+    background-color: #f1f5f9 !important;
+    border: none !important;
+    display: block !important;
+}
+
+.fc-daygrid-dot-event:hover {
+    background-color: #e2e8f0 !important;
+}
+
+.fc-daygrid-dot-event.fc-event-selected {
+    background-color: #e2e8f0 !important;
+}
+
+.fc-daygrid-event {
+    white-space: nowrap !important;
+    border-radius: 6px !important;
+    margin: 2px 0 !important;
+    background: #f1f5f9 !important;
+    border: none !important;
+    display: block !important;
+}
+
+/* Day cell styling */
+.fc-daygrid-day-events {
+    margin: 0 4px !important;
+    padding: 0 !important;
+}
+
+.fc-daygrid-day-frame {
+    padding: 4px !important;
 }
 
 /* Event colors based on type */
