@@ -278,10 +278,24 @@ document.addEventListener("DOMContentLoaded", function () {
                     );
                     listElement.setAttribute("data-toggle", `plan-${plan.id}`);
                     
-                    // Create text span for plan name
-                    const nameSpan = document.createElement("span");
+                    // Create text container for name and date
+                    const textContainer = document.createElement("div");
+                    textContainer.classList.add("plan-text-container");
+                    
+                    // Create name span
+                    const nameSpan = document.createElement("div");
+                    nameSpan.classList.add("plan-name");
                     nameSpan.textContent = plan.name;
-                    listElement.appendChild(nameSpan);
+                    
+                    // Create date span
+                    const dateSpan = document.createElement("div");
+                    dateSpan.classList.add("plan-date");
+                    dateSpan.textContent = formatDate(plan.datetime);
+                    
+                    // Append name and date to container
+                    textContainer.appendChild(nameSpan);
+                    textContainer.appendChild(dateSpan);
+                    listElement.appendChild(textContainer);
                     
                     // Create delete button
                     const deleteBtn = document.createElement("button");
@@ -508,6 +522,23 @@ document.addEventListener("DOMContentLoaded", function () {
             })
             .catch(error => console.error("Error deleting list:", error));
         }
+    }
+
+    function formatDate(dateString) {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        if (isNaN(date)) return dateString;
+        
+        const options = { 
+            year: 'numeric', 
+            month: '2-digit', 
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        };
+        return date.toLocaleString('lt-LT', options)
+            .replace(',', '')
+            .replace(/\./g, '-');
     }
 
     fetchPlanList(); // Populate plans on page load

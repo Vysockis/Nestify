@@ -74,7 +74,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
                     planElement.innerHTML = `
                         <span>${plan.name}</span>
-                        <span class="text-muted">${plan.date}</span>
+                        <span class="plan-date">${formatDate(plan.datetime)}</span>
                     `;
 
                     plansContainer.appendChild(planElement);
@@ -91,3 +91,20 @@ document.addEventListener("DOMContentLoaded", function () {
 
     fetchFamilyPlans(); // Initial API call to populate data
 });
+
+function formatDate(dateString) {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    if (isNaN(date)) return dateString; // Return original string if invalid date
+    
+    const options = { 
+        year: 'numeric', 
+        month: '2-digit', 
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+    };
+    return date.toLocaleString('lt-LT', options)
+        .replace(',', '')
+        .replace(/\./g, '-'); // Replace dots with dashes for better readability
+}

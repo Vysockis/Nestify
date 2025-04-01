@@ -127,7 +127,8 @@ def plans(request):
         "name": plan.name,
         "description": plan.description,
         "image": request.build_absolute_uri(plan.image.url) if plan.image else None,
-        "date": format_time_difference_in(timezone.now(), plan.datetime),
+        "date_formatted": format_time_difference_in(timezone.now(), plan.datetime),
+        "datetime": plan.datetime,
         "members": [{
             "id": member.pk,
             "name": member.user.user.first_name
