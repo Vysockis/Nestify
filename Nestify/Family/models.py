@@ -23,6 +23,9 @@ class Family(models.Model):
     def get_family_members(self):
         return FamilyMember.objects.filter(family=self, accepted=True)
 
+    def get_pending_members(self):
+        return FamilyMember.objects.filter(family=self, accepted=False)
+
 
 class FamilyMember(models.Model):
     family = models.ForeignKey("Family.Family", on_delete=models.CASCADE)
@@ -160,3 +163,64 @@ class Notification(models.Model):
         if family:
             queryset = queryset.filter(family=family)
         queryset.update(is_read=True)
+
+
+class FamilySettings(models.Model):
+    NOTIFICATION_RECIPIENTS = [
+        ('all', 'Visi šeimos nariai'),
+        ('parents', 'Tik tėvai'),
+        ('admin', 'Tik administratorius'),
+    ]
+
+    family = models.OneToOneField("Family.Family", on_delete=models.CASCADE, related_name='settings')
+    inventory_notifications = models.CharField(
+        max_length=20,
+        choices=NOTIFICATION_RECIPIENTS,
+        default='all',
+        verbose_name='Turto pranešimai'
+    )
+    task_notifications = models.CharField(
+        max_length=20,
+        choices=NOTIFICATION_RECIPIENTS,
+        default='all',
+        verbose_name='Užduočių pranešimai'
+    )
+
+    class Meta:
+        verbose_name = "Šeimos nustatymai"
+        verbose_name_plural = "Šeimos nustatymai"
+
+    def __str__(self):
+        return f"{self.family.name} nustatymai"
+
+    @classmethod
+    def get_or_create_settings(cls, family):
+        settings, created = cls.objects.get_or_create(family=family)
+        return settings
+
+    def get_notification_recipients(self, notification_type, assigned_user=None):
+        if notification_type == 'inventory':
+            setting = self.inventory_notifications
+            family_members = self.family.get_family_members()
+            
+            if setting == 'all':
+                return [member.user for member in family_members]
+            elif setting == 'parents':
+                return [member.user for member in family_members if not member.kid]
+            else:  # admin
+                return [self.family.creator]
+        elif notification_type == 'task' and assigned_user:
+            setting = self.task_notifications
+            family_members = self.family.get_family_members()
+            recipients = [assigned_user]  # Always include the assigned user
+
+            if setting == 'all':
+                recipients.extend([member.user for member in family_members if member.user != assigned_user])
+            elif setting == 'parents':
+                recipients.extend([member.user for member in family_members if not member.kid and member.user != assigned_user])
+            elif setting == 'admin':
+                if self.family.creator != assigned_user:
+                    recipients.append(self.family.creator)
+
+            return list(set(recipients))  # Remove duplicates
+        return []

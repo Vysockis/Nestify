@@ -5,7 +5,7 @@ import threading
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 from Inventory.models import ItemOperation
-from Family.models import Notification
+from Family.models import Notification, FamilySettings
 
 # Define locks for thread-safe task execution
 task_locks = {
@@ -90,6 +90,12 @@ class Command(BaseCommand):
 
         for item in items:
             family = item.item.family
+            settings = FamilySettings.get_or_create_settings(family)
+            recipients = settings.get_notification_recipients('inventory')
+            
+            if not recipients:  # Skip if no recipients based on settings
+                continue
+                
             days_until_expiry = (item.exp_date - today).days
 
             # Skip if already expired
@@ -100,30 +106,32 @@ class Command(BaseCommand):
                     notification_type='inventory_expired',
                     related_object_id=item.id
                 ).exists():
-                    Notification.create_notification(
-                        family=family,
-                        recipient=family.creator,  # Notify family creator
-                        notification_type='inventory_expired',
-                        title=f'Produktas pasibaigė: {item.item.name}',
-                        message=f'{item.item.name} ({item.qty} vnt.) galiojimo laikas baigėsi {abs(days_until_expiry)} dienų atgal.',
-                        related_object_id=item.id
-                    )
+                    for recipient in recipients:
+                        Notification.create_notification(
+                            family=family,
+                            recipient=recipient,
+                            notification_type='inventory_expired',
+                            title=f'Produktas pasibaigė: {item.item.name}',
+                            message=f'{item.item.name} ({item.qty} vnt.) galiojimas baigėsi.',
+                            related_object_id=item.id
+                        )
 
             # Check for items expiring in 3 days
-            elif days_until_expiry <= 3 or days_until_expiry > 1:
+            elif days_until_expiry <= 3 and days_until_expiry > 1:
                 if not Notification.objects.filter(
                     family=family,
                     notification_type='inventory_expiring',
                     related_object_id=item.id
                 ).exists():
-                    Notification.create_notification(
-                        family=family,
-                        recipient=family.creator,
-                        notification_type='inventory_expiring',
-                        title=f'Produktas baigiasi: {item.item.name}',
-                        message=f'{item.item.name} ({item.qty} vnt.) galiojimo laikas baigsis po 3 dienų.',
-                        related_object_id=item.id
-                    )
+                    for recipient in recipients:
+                        Notification.create_notification(
+                            family=family,
+                            recipient=recipient,
+                            notification_type='inventory_expiring',
+                            title=f'Produktas baigiasi: {item.item.name}',
+                            message=f'{item.item.name} ({item.qty} vnt.) galiojimo laikas baigsis po {days_until_expiry} dienų.',
+                            related_object_id=item.id
+                        )
 
             # Check for items expiring in 1 day
             elif days_until_expiry == 1:
@@ -132,12 +140,13 @@ class Command(BaseCommand):
                     notification_type='inventory_expiring',
                     related_object_id=item.id
                 ).exists():
-                    Notification.create_notification(
-                        family=family,
-                        recipient=family.creator,
-                        notification_type='inventory_expiring',
-                        title=f'Produktas baigiasi: {item.item.name}',
-                        message=f'{item.item.name} ({item.qty} vnt.) galiojimo laikas baigsis rytoj.',
-                        related_object_id=item.id
-                    )
+                    for recipient in recipients:
+                        Notification.create_notification(
+                            family=family,
+                            recipient=recipient,
+                            notification_type='inventory_expiring',
+                            title=f'Produktas baigiasi: {item.item.name}',
+                            message=f'{item.item.name} ({item.qty} vnt.) galiojimo laikas baigsis rytoj.',
+                            related_object_id=item.id
+                        )
                     self.stdout.write(self.style.WARNING(f"Created 1-day notification for {item.item.name}"))

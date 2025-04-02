@@ -322,6 +322,40 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    // Settings form handling
+    const settingsForm = document.getElementById('settingsForm');
+    if (settingsForm) {
+        settingsForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                inventory_notifications: settingsForm.querySelector('[name="inventory_notifications"]').value,
+                task_notifications: settingsForm.querySelector('[name="task_notifications"]').value
+            };
+
+            fetch('/family/api/settings/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert('success', 'Nustatymai sėkmingai išsaugoti');
+                } else {
+                    showAlert('danger', data.error || 'Klaida išsaugant nustatymus');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showAlert('danger', 'Klaida išsaugant nustatymus');
+            });
+        });
+    }
+
     // Helper function to get CSRF token
     function getCookie(name) {
         let cookieValue = null;
@@ -341,12 +375,43 @@ document.addEventListener('DOMContentLoaded', function() {
     // Helper function to show alerts
     function showAlert(type, message) {
         const alertDiv = document.createElement('div');
-        alertDiv.className = `alert alert-${type === 'error' ? 'danger' : 'success'} alert-dismissible fade show`;
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show w-100`;
+        alertDiv.style.borderRadius = '0';
+        alertDiv.style.position = 'relative';
+        alertDiv.style.textAlign = 'center';
+        alertDiv.style.marginBottom = '0';
         alertDiv.innerHTML = `
             ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         `;
-        document.querySelector('.container').insertBefore(alertDiv, document.querySelector('.row'));
-        setTimeout(() => alertDiv.remove(), 5000);
+        
+        // Remove any existing alerts
+        const existingAlerts = document.querySelectorAll('.alert-container');
+        existingAlerts.forEach(alert => alert.remove());
+        
+        // Create a container for the alert with padding
+        const alertContainer = document.createElement('div');
+        alertContainer.className = 'alert-container';
+        alertContainer.style.backgroundColor = '#f8f9fa';
+        alertContainer.style.padding = '1rem 0';
+        alertContainer.style.marginTop = '1rem';
+        alertContainer.appendChild(alertDiv);
+        
+        // Insert after navbar
+        const masterContainer = document.querySelector('.master-container');
+        if (masterContainer) {
+            masterContainer.insertBefore(alertContainer, masterContainer.firstChild);
+        } else {
+            const navbar = document.querySelector('nav');
+            if (navbar && navbar.nextSibling) {
+                document.body.insertBefore(alertContainer, navbar.nextSibling);
+            } else {
+                document.body.insertBefore(alertContainer, document.body.firstChild);
+            }
+        }
+        
+        setTimeout(() => {
+            alertContainer.remove();
+        }, 3000);
     }
 }); 

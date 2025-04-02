@@ -104,16 +104,29 @@ def item(request):
             if list_obj.list_type == ListType.TASK.name and data.get("assigned_to"):
                 assigned_to = FamilyMember.objects.get(pk=data.get("assigned_to")).user
                 # Create notification for task assignment
-                from Family.models import Notification
-                Notification.create_notification(
-                    family=list_obj.family,
-                    recipient=assigned_to,
-                    notification_type='task_assigned',
-                    title='Naujas užduoties priskyrimas',
-                    message=f'Jums priskirta nauja užduotis: {data.get("name")} ({list_obj.name})',
-                    sender=request.user,
-                    related_object_id=list_obj.id
-                )
+                from Family.models import Notification, FamilySettings
+                
+                # Get family settings and notification recipients
+                settings = FamilySettings.get_or_create_settings(list_obj.family)
+                recipients = settings.get_notification_recipients('task', assigned_user=assigned_to)
+                
+                # Create notification for each recipient
+                for recipient in recipients:
+                    # Different message based on whether recipient is the assigned user
+                    if recipient == assigned_to:
+                        message = f'Jums priskirta nauja užduotis: {data.get("name")} ({list_obj.name})'
+                    else:
+                        message = f'{assigned_to.first_name} priskirta nauja užduotis: {data.get("name")} ({list_obj.name})'
+                    
+                    Notification.create_notification(
+                        family=list_obj.family,
+                        recipient=recipient,
+                        notification_type='task_assigned',
+                        title='Naujas užduoties priskyrimas',
+                        message=message,
+                        sender=request.user,
+                        related_object_id=list_obj.id
+                    )
 
             models.ListItem.objects.update_or_create(
                 name=data.get("name"),
