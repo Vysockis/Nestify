@@ -1,11 +1,12 @@
 from django.http import JsonResponse
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 from django.utils import timezone
 from Nestify.decorators import family_member_required
 from List import models as lModels
 from Plan import models as pModels
 from Family.models import Notification
+from .models import SmartDevice
 
 
 @family_member_required
@@ -17,9 +18,13 @@ def dashboard(request):
         is_read=False
     ).order_by('-created_at')[:5]
 
+    # Get smart devices for the family
+    smart_devices = SmartDevice.objects.filter(family=family)
+
     context = {
         'notifications': notifications,
-        'unread_count': notifications.count()
+        'unread_count': notifications.count(),
+        'smart_devices': smart_devices
     }
     
     return render(request, 'dashboard/main.html', context)
@@ -101,3 +106,67 @@ def calendar_events(request):
     } for event in plan_events]
 
     return JsonResponse(list_event_list + plan_event_list, safe=False)
+
+@family_member_required
+def smart_dashboard(request):
+    family = request.user.getFamily()
+    devices = SmartDevice.objects.filter(family=family)
+    context = {
+        'devices': devices,
+    }
+    return render(request, 'dashboard/smart.html', context)
+
+@family_member_required
+def toggle_device(request, device_id):
+    device = get_object_or_404(SmartDevice, id=device_id, family=request.user.getFamily())
+    device.is_on = not device.is_on
+    device.save()
+    return JsonResponse({
+        'status': 'success',
+        'is_on': device.is_on
+    })
+
+@family_member_required
+def update_brightness(request, device_id):
+    device = get_object_or_404(SmartDevice, id=device_id, family=request.user.getFamily())
+    brightness = int(request.POST.get('brightness', 100))
+    brightness = max(0, min(100, brightness))  # Ensure brightness is between 0 and 100
+    device.brightness = brightness
+    device.save()
+    return JsonResponse({
+        'status': 'success',
+        'brightness': device.brightness
+    })
+
+@family_member_required
+def add_device(request):
+    if request.method != 'POST':
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
+
+    name = request.POST.get('name')
+    room = request.POST.get('room')
+    device_type = request.POST.get('device_type')
+
+    if not all([name, room, device_type]):
+        return JsonResponse({'status': 'error', 'message': 'Missing required fields'}, status=400)
+
+    try:
+        device = SmartDevice.objects.create(
+            name=name,
+            room=room,
+            device_type=device_type,
+            family=request.user.getFamily(),
+            is_on=False,
+            brightness=100
+        )
+        return JsonResponse({
+            'status': 'success',
+            'device': {
+                'id': device.id,
+                'name': device.name,
+                'room': device.room,
+                'type': device.device_type
+            }
+        })
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
