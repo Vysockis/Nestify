@@ -73,6 +73,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'Family.context_processors.user_family',
+                'Nestify.context_processors.user_role',
             ],
         },
     },

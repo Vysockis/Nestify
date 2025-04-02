@@ -15,9 +15,11 @@
         <li class="nav-item mx-2">
           <a class="nav-link" href="/">Pagrindinis</a>
         </li>
+        {% if not is_kid %}
         <li class="nav-item mx-2">
           <a class="nav-link" href="/finance/">Financai</a>
         </li>
+        {% endif %}
         <li class="nav-item mx-2">
           <a class="nav-link {% if active_page == 'inventory' %}active{% endif %}" href="/inventory/">Turtas</a>
         </li>

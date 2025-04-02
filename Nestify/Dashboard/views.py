@@ -5,7 +5,7 @@ from django.utils import timezone
 from Nestify.decorators import family_member_required
 from List import models as lModels
 from Plan import models as pModels
-from Family.models import Notification
+from Family.models import Notification, FamilyMember
 from .models import SmartDevice
 
 
@@ -18,13 +18,18 @@ def dashboard(request):
         is_read=False
     ).order_by('-created_at')[:5]
 
+    # Get user's role in the family
+    family_member = FamilyMember.objects.get(family=family, user=request.user)
+    is_kid = family_member.kid
+
     # Get smart devices for the family
     smart_devices = SmartDevice.objects.filter(family=family)
 
     context = {
         'notifications': notifications,
         'unread_count': notifications.count(),
-        'smart_devices': smart_devices
+        'smart_devices': smart_devices,
+        'is_kid': is_kid
     }
     
     return render(request, 'dashboard/main.html', context)
