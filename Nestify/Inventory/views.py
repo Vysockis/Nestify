@@ -5,6 +5,7 @@ from Nestify.decorators import family_member_required
 from django.utils import timezone
 from .models import Item, ItemOperation, ItemType
 from datetime import datetime
+import json
 
 @login_required
 @family_member_required
@@ -245,3 +246,41 @@ def api_expiring_items(request):
                 })
     
     return JsonResponse({"items": items_data}, safe=False)
+
+@login_required
+@family_member_required
+def update_operation(request, operation_id):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+    
+    try:
+        # Get the operation and verify it belongs to user's family
+        operation = get_object_or_404(ItemOperation, id=operation_id)
+        if operation.item.family != request.user.getFamily():
+            return JsonResponse({'error': 'Unauthorized'}, status=403)
+        
+        # Parse the request body
+        data = json.loads(request.body)
+        new_qty = data.get('qty')
+        
+        if not new_qty or new_qty < 1:
+            return JsonResponse({'error': 'Kiekis turi būti teigiamas skaičius'}, status=400)
+        
+        # Calculate the quantity difference
+        qty_difference = new_qty - operation.qty
+        
+        # Update the operation quantity
+        operation.qty = new_qty
+        operation.save()
+        
+        # Update the item's statistics
+        item = operation.item
+        item.statistics_qty += qty_difference
+        item.save()
+        
+        return JsonResponse({'success': True})
+        
+    except (ValueError, json.JSONDecodeError):
+        return JsonResponse({'error': 'Neteisingi duomenys'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
