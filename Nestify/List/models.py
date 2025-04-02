@@ -2,30 +2,21 @@ from django.db import models
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from .enum import ListType
-from django.utils import timezone
-from django.contrib.auth import get_user_model
-
-User = get_user_model()
 
 # Create your models here.
 class List(models.Model):
-    CATEGORY_CHOICES = [
-        ('shopping', 'Shopping'),
-        ('tasks', 'Tasks'),
-    ]
-
     family = models.ForeignKey("Family.Family", on_delete=models.CASCADE)
     name = models.CharField(max_length=50)
     description = models.TextField(blank=True, null=True)
-    creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_lists')
+    creator = models.ForeignKey("Profile.CustomUser", on_delete=models.CASCADE)
     image = models.ImageField(upload_to="recipes/", blank=True, null=True)
     finished = models.BooleanField(default=False)
     plan = models.ForeignKey("Plan.Plan", on_delete=models.CASCADE, null=True, blank=True)
-    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='tasks')
+    category = models.ForeignKey("Finance.Category", on_delete=models.SET_NULL, null=True, blank=True)
     amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     receipt_pdf = models.FileField(upload_to='receipts/', blank=True, null=True)
     list_type = models.CharField(max_length=20, choices=ListType.choices(), default=ListType.OTHER.name)
-    datetime = models.DateTimeField(default=timezone.now)
+    datetime = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         verbose_name = _("FamilyList")

@@ -9,8 +9,6 @@ from Family.models import FamilyMember
 from Nestify.decorators import family_member_required
 from Dashboard.views import format_time_difference_in
 from . import models
-from django.contrib.auth.decorators import login_required
-from django.views.decorators.http import require_http_methods
 
 
 # Create your views here.
@@ -236,52 +234,5 @@ def items(request):
         })
     except ObjectDoesNotExist:
         return JsonResponse({"error": "List not found"}, status=404)
-    except Exception as e:
-        return JsonResponse({"error": str(e)}, status=500)
-
-@require_http_methods(["POST"])
-@login_required
-def create_list(request):
-    try:
-        data = json.loads(request.body)
-        
-        # Validate required fields
-        if "datetime" not in data:
-            return JsonResponse({"error": "Missing datetime field"}, status=400)
-            
-        try:
-            # Parse datetime from string
-            datetime_str = data["datetime"]
-            try:
-                # Try parsing as timestamp
-                datetime_obj = datetime.fromtimestamp(int(datetime_str) / 1000, tz=timezone.get_current_timezone())
-            except ValueError:
-                # Try parsing as ISO format
-                datetime_obj = datetime.fromisoformat(datetime_str.replace('Z', '+00:00'))
-                datetime_obj = timezone.make_aware(datetime_obj)
-        except Exception as e:
-            return JsonResponse({"error": f"Invalid datetime format: {str(e)}"}, status=400)
-
-        # Create the list with the provided datetime
-        new_list = models.List.objects.create(
-            name=data.get("name", ""),
-            description=data.get("description", ""),
-            creator=request.user,
-            family=request.user.family,
-            datetime=datetime_obj,
-            category=data.get("category", "tasks"),
-            list_type=data.get("list_type", ListType.OTHER.name)
-        )
-
-        return JsonResponse({
-            "id": new_list.id,
-            "name": new_list.name,
-            "description": new_list.description,
-            "datetime": new_list.datetime.isoformat(),
-            "category": new_list.category,
-            "list_type": new_list.list_type
-        })
-    except json.JSONDecodeError:
-        return JsonResponse({"error": "Invalid JSON"}, status=400)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
