@@ -2,7 +2,6 @@ import random
 import string
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from django.urls import reverse
 
 
 # Create your models here.
@@ -16,9 +15,6 @@ class Family(models.Model):
 
     def __str__(self):
         return self.name
-
-    def get_absolute_url(self):
-        return reverse("Family_detail", kwargs={"pk": self.pk})
 
     def get_family_members(self):
         return FamilyMember.objects.filter(family=self, accepted=True)
@@ -41,24 +37,6 @@ class FamilyMember(models.Model):
     def __str__(self):
         return f"{self.family.name}: {self.user.first_name}"
 
-    def get_absolute_url(self):
-        return reverse("FamilyMember_detail", kwargs={"pk": self.pk})
-
-
-class FamilyRoom(models.Model):
-    family = models.ForeignKey("Family.Family", on_delete=models.CASCADE)
-    name = models.CharField(max_length=50)
-
-    class Meta:
-        verbose_name = _("Family Room")
-        verbose_name_plural = _("Family Rooms")
-
-    def __str__(self):
-        return self.name
-
-    def get_absolute_url(self):
-        return reverse("FamilyRoom_detail", kwargs={"pk": self.pk})
-
 
 class FamilyCode(models.Model):
     family = models.ForeignKey("Family.Family", on_delete=models.CASCADE)
@@ -72,9 +50,6 @@ class FamilyCode(models.Model):
 
     def __str__(self):
         return self.code
-
-    def get_absolute_url(self):
-        return reverse("FamilyCode_detail", kwargs={"pk": self.pk})
 
     def save(self, *args, **kwargs):
         if not self.code:  # Generate code only if it doesn't already exist
@@ -124,9 +99,6 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"{self.notification_type}: {self.title}"
-
-    def get_absolute_url(self):
-        return reverse("Notification_detail", kwargs={"pk": self.pk})
 
     def mark_as_read(self):
         self.is_read = True

@@ -4,5 +4,3 @@ from . import models
 # Register your models here.
 admin.site.register(models.Item)
 admin.site.register(models.ItemOperation)
-admin.site.register(models.ItemCategory)
-admin.site.register(models.ItemSubCategory)
