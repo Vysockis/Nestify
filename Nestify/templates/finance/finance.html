@@ -13,76 +13,80 @@ Finance | Nestify
 {% block content %}
 <main class="container finance-container">
     <div class="finance-page main-box">
-        <!-- Header Section -->
-        <div class="d-flex justify-content-between align-items-center">
-            <div>
-                <h2>Finansai</h2>
+        {% if user.familymember.kid %}
+            <div class="alert alert-warning" role="alert">
+                <h4 class="alert-heading">Prieigos apribojimas</h4>
+                <p>Finansų puslapis yra prieinamas tik tėvams. Prašome kreiptis į šeimos tėvus, jei reikia peržiūrėti finansinę informaciją.</p>
             </div>
-            <button id="addFinanceBtn" class="btn btn-sm btn-outline-success">
-                <i class="fas fa-plus"></i>
-            </button>
-        </div>
-        
-        <!-- Date Selection Section -->
-        <div class="date-selection">
-            <label>Pradžios data:</label>
-            <input type="month" id="start-date">
-            <label>Pabaigos data:</label>
-            <input type="month" id="end-date">
-            <button id="refreshFinanceBtn" class="btn btn-sm btn-secondary">Atnaujinti</button>
-        </div>
-        
-        <!-- Charts Section - Both charts in one row -->
-        <section class="charts-section">
-            <div class="charts-container">
-                <div class="chart-box">
-                    <h3>Finansai pagal mėnesį</h3>
-                    <div class="chart-wrapper">
-                        <canvas id="financeChart"></canvas>
+        {% else %}
+            <!-- Header Section -->
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2>Finansai</h2>
+                </div>
+                <button id="addFinanceBtn" class="btn btn-sm btn-outline-success">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+            
+            <!-- Date Selection Section -->
+            <div class="date-selection">
+                <label>Pradžios data:</label>
+                <input type="month" id="start-date">
+                <label>Pabaigos data:</label>
+                <input type="month" id="end-date">
+                <button id="refreshFinanceBtn" class="btn btn-sm btn-secondary">Atnaujinti</button>
+            </div>
+            
+            <!-- Charts Section - Both charts in one row -->
+            <section class="charts-section">
+                <div class="charts-container">
+                    <div class="chart-box">
+                        <h3>Finansai pagal mėnesį</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="financeChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-box">
+                        <h3>Išlaidos pagal kategoriją</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="categoryChart"></canvas>
+                        </div>
                     </div>
                 </div>
-                
-                <div class="chart-box">
-                    <h3>Išlaidos pagal kategoriją</h3>
-                    <div class="chart-wrapper">
-                        <canvas id="categoryChart"></canvas>
+            </section>
+            
+            <!-- Operations List Section -->
+            <section class="operations-section">
+                <div class="operations-list">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h3>Operacijos pagal pasirinktą laikotarpį</h3>
+                        <div class="category-filter">
+                            <select id="category-filter" class="form-select form-select-sm" style="width: auto;">
+                                <option value="">Visos kategorijos</option>
+                                <!-- Categories will be populated dynamically -->
+                            </select>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Kategorija</th>
+                                    <th>Suma</th>
+                                    <th class="text-end">Veiksmai</th>
+                                </tr>
+                            </thead>
+                            <tbody id="operations-table">
+                                <!-- Table rows will be added dynamically via JavaScript -->
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-            </div>
-        </section>
-        
-        <!-- Operations List Section -->
-        <section class="operations-section">
-            <div class="operations-list">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h3>Operacijos pagal pasirinktą laikotarpį</h3>
-                    <div class="category-filter">
-                        <select id="category-filter" class="form-select form-select-sm" style="width: auto;">
-                            <option value="">Visos kategorijos</option>
-                            <option value="Maistas">Maistas</option>
-                            <option value="Kita">Kita</option>
-                            <option value="Pramogos">Pramogos</option>
-                            <option value="Sveikata">Sveikata</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Data</th>
-                                <th>Kategorija</th>
-                                <th>Suma</th>
-                                <th class="text-end">Veiksmai</th>
-                            </tr>
-                        </thead>
-                        <tbody id="operations-table">
-                            <!-- Table rows will be added dynamically via JavaScript -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
+            </section>
+        {% endif %}
     </div>
 </main>
 {% endblock %}

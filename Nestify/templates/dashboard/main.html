@@ -16,7 +16,9 @@ Dashboard | Nestify
     
     {% include "dashboard/main_boxes/list.html"  %}
     {% include "dashboard/main_boxes/plans.html"  %}
+    {% if user_familymember and not user_familymember.kid %}
     {% include "dashboard/main_boxes/finance.html"  %}
+    {% endif %}
     {% include "dashboard/main_boxes/inventory.html"  %}
     {% include "dashboard/main_boxes/smart.html"  %}
 
@@ -25,7 +27,9 @@ Dashboard | Nestify
         <div class="dashboard-boxes">
             {% include "dashboard/mini_boxes/list.html"  %}
             {% include "dashboard/mini_boxes/plans.html"  %}
+            {% if user_familymember and not user_familymember.kid %}
             {% include "dashboard/mini_boxes/finance.html"  %}
+            {% endif %}
             {% include "dashboard/mini_boxes/inventory.html"  %}
             {% include "dashboard/mini_boxes/smart.html"  %}
         </div>
@@ -45,6 +49,8 @@ Dashboard | Nestify
 <script src="{% static 'js/dashboard/main.js' %}"></script>
 <script src="{% static 'js/dashboard/api/list.js' %}"></script>
 <script src="{% static 'js/dashboard/api/plans.js' %}"></script>
+{% if user_familymember and not user_familymember.kid %}
 <script src="{% static 'js/dashboard/api/finance.js' %}"></script>
+{% endif %}
 <script src="{% static 'js/dashboard/api/inventory.js' %}"></script>
 {% endblock %}

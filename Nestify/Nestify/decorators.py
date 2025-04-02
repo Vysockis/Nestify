@@ -19,3 +19,21 @@ def family_member_required(view_func):
         return view_func(request, *args, **kwargs)
 
     return _wrapped_view
+
+def parent_required(view_func):
+    """ Custom decorator to check if the user is not a kid. """
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect('/login/')
+
+        try:
+            member = FamilyMember.objects.get(user=request.user, accepted=True)
+            if member.kid:
+                return redirect('/dashboard/')  # Redirect kids to dashboard
+        except ObjectDoesNotExist:
+            return redirect('/')
+
+        return view_func(request, *args, **kwargs)
+
+    return _wrapped_view

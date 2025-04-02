@@ -30,7 +30,16 @@ document.addEventListener("DOMContentLoaded", function() {
         document.head.appendChild(fontAwesomeLink);
     }
 
-    // Fetch categories on page load
+    // Add event listener for category filter changes
+    if (categoryFilter) {
+        categoryFilter.addEventListener('change', function() {
+            if (currentOperations.length > 0) {
+                updateOperationsTable(currentOperations);
+            }
+        });
+    }
+
+    // Fetch categories and populate filter
     function fetchCategories() {
         fetch("../finance/api/categories/", {
             method: "GET",
@@ -42,10 +51,25 @@ document.addEventListener("DOMContentLoaded", function() {
         .then(response => response.json())
         .then(data => {
             finance_categories = data.finance_categories;
+            
+            // Populate category filter dropdown
+            if (categoryFilter) {
+                // Keep the "All categories" option
+                categoryFilter.innerHTML = '<option value="">Visos kategorijos</option>';
+                
+                // Add each category
+                finance_categories.forEach(category => {
+                    const option = document.createElement('option');
+                    option.value = category.name;
+                    option.textContent = category.name;
+                    categoryFilter.appendChild(option);
+                });
+            }
         })
         .catch(error => console.error("Error fetching categories:", error));
     }
 
+    // Call fetchCategories on page load
     fetchCategories();
 
     financeAdd.addEventListener("click", async function () {
@@ -532,84 +556,81 @@ document.addEventListener("DOMContentLoaded", function() {
     
     function updateOperationsTable(operations) {
         currentOperations = operations; // Store operations for filtering
-        const selectedCategory = categoryFilter.value;
+        const selectedCategory = categoryFilter ? categoryFilter.value : '';
         
         // Filter operations if category is selected
         const filteredOperations = selectedCategory 
             ? operations.filter(op => op.category === selectedCategory)
             : operations;
 
-        operationsTable.innerHTML = '';
-        
-        if (filteredOperations.length === 0) {
-            const emptyRow = document.createElement('tr');
-            emptyRow.innerHTML = '<td colspan="4" class="text-center">Nėra operacijų</td>';
-            operationsTable.appendChild(emptyRow);
-            return;
-        }
-
-        filteredOperations.forEach(operation => {
-            const row = document.createElement('tr');
-            const date = new Date(operation.date);
-            const formattedDate = date.toLocaleDateString('lt-LT');
+        if (operationsTable) {
+            operationsTable.innerHTML = '';
             
-            row.innerHTML = `
-                <td>${formattedDate}</td>
-                <td>${operation.category}</td>
-                <td class="${operation.amount < 0 ? 'text-danger' : 'text-success'}">${operation.amount} Eur</td>
-                <td class="text-end">
-                    <div class="btn-group">
-                        <button class="btn btn-sm btn-outline-secondary me-2 view-items" data-operation-id="${operation.id}">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                        <button class="btn btn-sm btn-outline-danger delete-operation" data-operation-id="${operation.id}">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                </td>
-            `;
-            
-            operationsTable.appendChild(row);
-        });
+            if (filteredOperations.length === 0) {
+                const emptyRow = document.createElement('tr');
+                emptyRow.innerHTML = '<td colspan="4" class="text-center">Nėra operacijų</td>';
+                operationsTable.appendChild(emptyRow);
+                return;
+            }
 
-        // Add event listeners for the new buttons
-        document.querySelectorAll('.view-items').forEach(button => {
-            button.addEventListener('click', function() {
-                const operationId = this.dataset.operationId;
-                showOperationItems(operationId);
+            filteredOperations.forEach(operation => {
+                const row = document.createElement('tr');
+                const date = new Date(operation.date);
+                const formattedDate = date.toLocaleDateString('lt-LT');
+                
+                row.innerHTML = `
+                    <td>${formattedDate}</td>
+                    <td>${operation.category}</td>
+                    <td class="${operation.amount < 0 ? 'text-danger' : 'text-success'}">${operation.amount} Eur</td>
+                    <td class="text-end">
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-outline-secondary me-2 view-items" data-operation-id="${operation.id}">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger delete-operation" data-operation-id="${operation.id}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                
+                operationsTable.appendChild(row);
             });
-        });
 
-        document.querySelectorAll('.delete-operation').forEach(button => {
-            button.addEventListener('click', async function() {
-                if (confirm('Ar tikrai norite ištrinti šį įrašą?')) {
+            // Add event listeners for the new buttons
+            document.querySelectorAll('.view-items').forEach(button => {
+                button.addEventListener('click', function() {
                     const operationId = this.dataset.operationId;
-                    try {
-                        const response = await fetch(`/finance/api/operations/${operationId}/delete/`, {
-                            method: 'POST',
-                            headers: {
-                                'X-CSRFToken': csrfToken
+                    showOperationItems(operationId);
+                });
+            });
+
+            document.querySelectorAll('.delete-operation').forEach(button => {
+                button.addEventListener('click', async function() {
+                    if (confirm('Ar tikrai norite ištrinti šį įrašą?')) {
+                        const operationId = this.dataset.operationId;
+                        try {
+                            const response = await fetch(`/finance/api/operations/${operationId}/delete/`, {
+                                method: 'POST',
+                                headers: {
+                                    'X-CSRFToken': csrfToken
+                                }
+                            });
+                            
+                            if (response.ok) {
+                                processChartData(); // Refresh data
+                            } else {
+                                alert('Klaida trinant operaciją');
                             }
-                        });
-                        
-                        if (response.ok) {
-                            processChartData(); // Refresh data
-                        } else {
+                        } catch (error) {
+                            console.error('Error deleting operation:', error);
                             alert('Klaida trinant operaciją');
                         }
-                    } catch (error) {
-                        console.error('Error:', error);
-                        alert('Klaida trinant operaciją');
                     }
-                }
+                });
             });
-        });
+        }
     }
-
-    // Add event listener for category filter
-    categoryFilter.addEventListener('change', function() {
-        updateOperationsTable(currentOperations);
-    });
 
     // Handler for add item button click
     async function handleAddItemClick(event) {

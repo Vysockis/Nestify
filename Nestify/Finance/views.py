@@ -1,5 +1,5 @@
 from django.http import JsonResponse
-from Nestify.decorators import family_member_required
+from Nestify.decorators import family_member_required, parent_required
 from List import models as lModels
 from collections import defaultdict
 from . import models
@@ -17,7 +17,7 @@ import tempfile
 from pdf2image import convert_from_bytes
 
 # Create your views here.
-@family_member_required
+@parent_required
 def dashboard(request):
     """API endpoint to fetch family list and items."""
 
@@ -59,7 +59,7 @@ def dashboard(request):
 
     return JsonResponse({"data": payload}, safe=False)
 
-@family_member_required
+@parent_required
 def scan_receipt(request):
     """API endpoint to scan receipt and extract relevant information."""
     print("\n====== RECEIPT SCANNING STARTED ======")
@@ -391,9 +391,9 @@ def scan_receipt(request):
         print("======================================\n")
         return JsonResponse({"error": str(e)}, status=500)
 
-@family_member_required
+@parent_required
 def finance(request):
-    """View for the finance page."""
+    """Render the finance page."""
     return render(request, 'finance/finance.html')
 
 def get_newest_operations(operation_list):
@@ -462,9 +462,9 @@ def get_pie(operation_list):
     return result
 
 # Create your views here.
-@family_member_required
+@parent_required
 def categories(request):
-    """API endpoint to fetch family list and items."""
+    """API endpoint to fetch finance categories."""
     categories = models.Category.objects.all()
     category_data = []
     for category in categories:
