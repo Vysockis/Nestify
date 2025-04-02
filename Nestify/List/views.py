@@ -132,7 +132,7 @@ def item(request):
                 name=data.get("name"),
                 list_id=data.get("list_id"),
                 defaults={
-                    "qty": data.get("quantity"),
+                    "qty": data.get("qty"),
                     "amount": data.get("price"),
                     "assigned_to": assigned_to
                 }

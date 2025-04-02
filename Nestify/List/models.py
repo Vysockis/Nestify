@@ -1,6 +1,7 @@
 from django.db import models
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
+from django.utils import timezone
 from .enum import ListType
 
 # Create your models here.
@@ -16,7 +17,7 @@ class List(models.Model):
     amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     receipt_pdf = models.FileField(upload_to='receipts/', blank=True, null=True)
     list_type = models.CharField(max_length=20, choices=ListType.choices(), default=ListType.OTHER.name)
-    datetime = models.DateTimeField(auto_now_add=True)
+    datetime = models.DateTimeField(default=timezone.now)
 
     class Meta:
         verbose_name = _("FamilyList")

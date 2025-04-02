@@ -88,7 +88,7 @@ document.addEventListener("DOMContentLoaded", function () {
     async function openAddListItemModal(listId) {
         const fields = [
             { id: "name", label: "Pavadinimas", type: "text", placeholder: "Įveskite pavadinimą", required: true },
-            { id: "quantity", label: "Kiekis", type: "number", placeholder: "Įveskite kiekį", required: true, min: 1, value: 1 }
+            { id: "qty", label: "Kiekis", type: "number", placeholder: "Įveskite kiekį", required: true, min: 1, value: 1 }
         ];
 
         const formData = await openModal({
@@ -268,8 +268,40 @@ document.addEventListener("DOMContentLoaded", function () {
             ingredientsList.innerHTML = "";
             recipe.items.forEach(item => {
                 const li = document.createElement("li");
-                li.className = "list-group-item";
-                li.textContent = item.qty && item.qty != 1 ? `${item.qty}x ${item.name}` : item.name;
+                li.className = "list-group-item d-flex justify-content-between align-items-center";
+                
+                // Create text content
+                const textSpan = document.createElement("span");
+                textSpan.textContent = item.qty && item.qty != 1 ? `${item.qty}x ${item.name}` : item.name;
+                li.appendChild(textSpan);
+                
+                // Create delete button
+                const deleteBtn = document.createElement("button");
+                deleteBtn.classList.add("btn", "btn-sm", "btn-outline-danger");
+                deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+                deleteBtn.addEventListener("click", function() {
+                    if (confirm("Ar tikrai norite ištrinti šį ingredientą?")) {
+                        fetch("../api/item/", {
+                            method: "DELETE",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "X-CSRFToken": csrfToken
+                            },
+                            body: JSON.stringify({ item_id: item.id })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                fetchFamilyList(); // Refresh the list
+                            } else {
+                                alert("Klaida: " + JSON.stringify(data.error));
+                            }
+                        })
+                        .catch(error => console.error("Klaida trinant ingredientą:", error));
+                    }
+                });
+                
+                li.appendChild(deleteBtn);
                 ingredientsList.appendChild(li);
             });
         }
