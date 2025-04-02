@@ -6,6 +6,9 @@ document.addEventListener("DOMContentLoaded", function() {
     const operationsTable = document.getElementById('operations-table');
     const financeAdd = document.getElementById("addFinanceBtn");
     const refreshBtn = document.getElementById("refreshFinanceBtn");
+    const categoryFilter = document.getElementById("category-filter");
+
+    let currentOperations = []; // Store current operations for filtering
 
     const today = new Date();
     const lastYear = new Date();
@@ -528,123 +531,85 @@ document.addEventListener("DOMContentLoaded", function() {
     }
     
     function updateOperationsTable(operations) {
-        operationsTable.innerHTML = "";
+        currentOperations = operations; // Store operations for filtering
+        const selectedCategory = categoryFilter.value;
         
-        if (!operations || operations.length === 0) {
-            const row = document.createElement("tr");
-            row.innerHTML = `<td colspan="3" class="text-center">Nėra operacijų pasirinktame laikotarpyje</td>`;
-            operationsTable.appendChild(row);
+        // Filter operations if category is selected
+        const filteredOperations = selectedCategory 
+            ? operations.filter(op => op.category === selectedCategory)
+            : operations;
+
+        operationsTable.innerHTML = '';
+        
+        if (filteredOperations.length === 0) {
+            const emptyRow = document.createElement('tr');
+            emptyRow.innerHTML = '<td colspan="4" class="text-center">Nėra operacijų</td>';
+            operationsTable.appendChild(emptyRow);
             return;
         }
-        
-        console.log("Operations data:", operations);
-        
-        // Sort operations by date (newest first)
-        operations.sort((a, b) => new Date(b.date) - new Date(a.date));
-        
-        operations.forEach(operation => {
-            // Log each operation to verify ID is present
-            console.log("Processing operation:", operation);
-            
-            const row = document.createElement("tr");
-            row.classList.add('operation-row');
-            row.dataset.operationId = operation.id;
-            row.dataset.hasItems = operation.has_items ? 'true' : 'false';
-            
-            // Format the amount class and display
-            let amountClass = '';
-            let amountDisplay = '0.00';
-            
-            if (operation.amount !== null && operation.amount !== undefined) {
-                const amount = parseFloat(operation.amount);
-                if (!isNaN(amount)) {
-                    amountDisplay = amount.toFixed(2);
-                    if (amount > 0) {
-                        amountClass = 'profit';
-                    } else if (amount < 0) {
-                        amountClass = 'expense';
-                    }
-                }
-            }
+
+        filteredOperations.forEach(operation => {
+            const row = document.createElement('tr');
+            const date = new Date(operation.date);
+            const formattedDate = date.toLocaleDateString('lt-LT');
             
             row.innerHTML = `
-                <td>${operation.date}</td>
+                <td>${formattedDate}</td>
                 <td>${operation.category}</td>
-                <td class="${amountClass}">
-                    ${amountDisplay} Eur
-                </td>
+                <td class="${operation.amount < 0 ? 'text-danger' : 'text-success'}">${operation.amount} Eur</td>
                 <td class="text-end">
-                    <button class="btn btn-sm btn-outline-danger delete-operation-btn" data-operation-id="${operation.id}">
-                        <i class="fas fa-trash"></i>
-                    </button>
+                    <div class="btn-group">
+                        <button class="btn btn-sm btn-outline-secondary me-2 view-items" data-operation-id="${operation.id}">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger delete-operation" data-operation-id="${operation.id}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
                 </td>
             `;
             
             operationsTable.appendChild(row);
         });
-        
-        // Add event listeners to all rows and buttons
-        document.querySelectorAll('.operation-row').forEach(row => {
-            // Make the entire row clickable
-            row.addEventListener('click', function(e) {
-                // Don't trigger if clicking delete button
-                if (e.target.closest('.delete-operation-btn')) {
-                    return;
-                }
-                // Get the operation ID from this row
+
+        // Add event listeners for the new buttons
+        document.querySelectorAll('.view-items').forEach(button => {
+            button.addEventListener('click', function() {
                 const operationId = this.dataset.operationId;
-                if (operationId) {
-                    // Show items or add item form
-                    showOperationItems(operationId);
-                }
+                showOperationItems(operationId);
             });
         });
 
-        // Add delete button event listeners
-        document.querySelectorAll('.delete-operation-btn').forEach(btn => {
-            btn.addEventListener('click', async function(e) {
-                e.stopPropagation(); // Prevent row click event
-                
-                const operationId = this.dataset.operationId;
-                if (!operationId) {
-                    alert("Klaida: Operacijos ID nerastas");
-                    return;
-                }
-                
-                if (confirm("Ar tikrai norite ištrinti šią operaciją?")) {
+        document.querySelectorAll('.delete-operation').forEach(button => {
+            button.addEventListener('click', async function() {
+                if (confirm('Ar tikrai norite ištrinti šį įrašą?')) {
+                    const operationId = this.dataset.operationId;
                     try {
-                        const response = await fetch(`/list/api/list/`, {
-                            method: "DELETE",
+                        const response = await fetch(`/finance/api/operations/${operationId}/delete/`, {
+                            method: 'POST',
                             headers: {
-                                "Content-Type": "application/json",
-                                "X-CSRFToken": csrfToken
-                            },
-                            body: JSON.stringify({ list_id: operationId })
+                                'X-CSRFToken': csrfToken
+                            }
                         });
                         
-                        const data = await response.json();
-                        
-                        if (data.success) {
-                            // Remove the row with animation
-                            const row = this.closest('tr');
-                            row.style.opacity = '0';
-                            setTimeout(() => {
-                                row.remove();
-                            }, 300);
-                            
-                            // Refresh the charts
-                            processChartData();
+                        if (response.ok) {
+                            processChartData(); // Refresh data
                         } else {
-                            alert("Klaida: " + (data.error || "Nepavyko ištrinti operacijos"));
+                            alert('Klaida trinant operaciją');
                         }
                     } catch (error) {
-                        console.error("Error deleting operation:", error);
-                        alert("Klaida: Nepavyko ištrinti operacijos");
+                        console.error('Error:', error);
+                        alert('Klaida trinant operaciją');
                     }
                 }
             });
         });
     }
+
+    // Add event listener for category filter
+    categoryFilter.addEventListener('change', function() {
+        updateOperationsTable(currentOperations);
+    });
 
     // Handler for add item button click
     async function handleAddItemClick(event) {

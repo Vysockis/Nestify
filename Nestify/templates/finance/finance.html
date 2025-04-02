@@ -54,7 +54,18 @@ Finance | Nestify
         <!-- Operations List Section -->
         <section class="operations-section">
             <div class="operations-list">
-                <h3>Operacijos pagal pasirinktą laikotarpį</h3>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3>Operacijos pagal pasirinktą laikotarpį</h3>
+                    <div class="category-filter">
+                        <select id="category-filter" class="form-select form-select-sm" style="width: auto;">
+                            <option value="">Visos kategorijos</option>
+                            <option value="Maistas">Maistas</option>
+                            <option value="Kita">Kita</option>
+                            <option value="Pramogos">Pramogos</option>
+                            <option value="Sveikata">Sveikata</option>
+                        </select>
+                    </div>
+                </div>
                 <div class="table-responsive">
                     <table class="table table-hover">
                         <thead>
