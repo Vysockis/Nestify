@@ -13,4 +13,5 @@ urlpatterns = [
     path('api/operations/<int:operation_id>/delete/', views.delete_operation, name='delete_operation'),
     path('api/operations/<int:operation_id>/update/', views.update_operation, name='update_operation'),
     path('api/expiring-items/', views.api_expiring_items, name='api_expiring_items'),
+    path('api/contracts/<int:item_id>/delete/', views.delete_contract, name='delete_contract'),
 ]

@@ -2,10 +2,11 @@ document.addEventListener("DOMContentLoaded", function() {
     function fetchItems() {
         Promise.all([
             fetch('/inventory/api/items/?type=FOOD').then(response => response.json()),
-            fetch('/inventory/api/items/?type=MEDICINE').then(response => response.json())
-        ]).then(([foodData, medicineData]) => {
+            fetch('/inventory/api/items/?type=MEDICINE').then(response => response.json()),
+            fetch('/inventory/api/items/?type=CONTRACTS').then(response => response.json())
+        ]).then(([foodData, medicineData, contractsData]) => {
             const allContainer = document.querySelector('.all-items-container');
-            const allItems = [...foodData.items, ...medicineData.items];
+            const allItems = [...foodData.items, ...medicineData.items, ...contractsData.items];
             displayItems(allItems, allContainer, 999);
         });
         
@@ -21,6 +22,13 @@ document.addEventListener("DOMContentLoaded", function() {
             .then(data => {
                 const medicineContainer = document.querySelector('.medicine-items-container');
                 displayItems(data.items, medicineContainer, 999);
+            });
+
+        fetch('/inventory/api/items/?type=CONTRACTS')
+            .then(response => response.json())
+            .then(data => {
+                const contractsContainer = document.querySelector('.contracts-items-container');
+                displayItems(data.items, contractsContainer, 999);
             });
     }
     
@@ -62,15 +70,17 @@ document.addEventListener("DOMContentLoaded", function() {
             
             row.innerHTML = `
                 <td>${item.name}</td>
-                <td>${item.type || (item.type_value === 'FOOD' ? 'Maistas' : 'Vaistai')}</td>
-                <td>${item.qty}</td>
+                <td>${item.type || (item.type_value === 'FOOD' ? 'Maistas' : item.type_value === 'MEDICINE' ? 'Vaistai' : 'Sutartys')}</td>
+                ${item.type_value !== 'CONTRACTS' ? `<td>${item.total_qty}</td>` : '</td><td>'}
                 <td>${item.exp_date || 'Nenustatyta'}</td>
                 <td>
                     <div class="btn-group">
-                        <button class="btn btn-sm btn-outline-secondary me-2 edit-operation" data-operation-id="${item.id}">
-                            <i class="fas fa-pencil"></i>
-                        </button>
-                        <button class="btn btn-sm btn-outline-danger delete-operation" data-operation-id="${item.id}">
+                        ${item.type_value !== 'CONTRACTS' ? `
+                            <button class="btn btn-sm btn-outline-secondary me-2 edit-operation" data-operation-id="${item.id}">
+                                <i class="fas fa-pencil"></i>
+                            </button>
+                        ` : ''}
+                        <button class="btn btn-sm btn-outline-danger delete-operation" data-operation-id="${item.id}" data-type="${item.type_value}">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
@@ -87,11 +97,17 @@ document.addEventListener("DOMContentLoaded", function() {
         container.querySelectorAll('.delete-operation').forEach(button => {
             button.addEventListener('click', function() {
                 const operationId = this.dataset.operationId;
+                const itemType = this.dataset.type;
+                
                 if (confirm('Ar tikrai norite ištrinti šį įrašą?')) {
-                    fetch(`/inventory/api/operations/${operationId}/delete/`, {
+                    const url = itemType === 'CONTRACTS' 
+                        ? `/inventory/api/contracts/${operationId}/delete/`
+                        : `/inventory/api/operations/${operationId}/delete/`;
+                    
+                    fetch(url, {
                         method: 'POST',
                         headers: {
-                            'X-CSRFToken': csrfToken
+                            'X-CSRFToken': window.inventoryToken
                         }
                     })
                     .then(response => response.json())
@@ -135,7 +151,7 @@ document.addEventListener("DOMContentLoaded", function() {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'X-CSRFToken': csrfToken
+                            'X-CSRFToken': window.inventoryToken
                         },
                         body: JSON.stringify({
                             qty: parseInt(formData.qty)
@@ -161,7 +177,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const addItemBtn = document.getElementById('addItemBtn');
     if (addItemBtn) {
         addItemBtn.addEventListener('click', async function() {
-            const typeOptions = itemTypes.map(type => ({
+            const typeOptions = window.itemTypes.map(type => ({
                 value: type.value,
                 label: type.label
             }));
@@ -180,14 +196,23 @@ document.addEventListener("DOMContentLoaded", function() {
                         label: "Tipas",
                         type: "select",
                         required: true,
-                        options: typeOptions
+                        options: typeOptions,
+                        onChange: function(value, form) {
+                            const qtyField = form.querySelector('[name="qty"]').closest('.mb-3');
+                            if (value === 'CONTRACTS') {
+                                qtyField.style.display = 'none';
+                            } else {
+                                qtyField.style.display = 'block';
+                            }
+                        }
                     },
                     {
                         id: "qty",
                         label: "Kiekis",
                         type: "number",
                         value: "1",
-                        min: "1"
+                        min: "1",
+                        required: true
                     },
                     {
                         id: "exp_date",
@@ -200,6 +225,9 @@ document.addEventListener("DOMContentLoaded", function() {
             if (formData) {
                 const form = new FormData();
                 for (const key in formData) {
+                    if (key === 'qty' && formData.item_type === 'CONTRACTS') {
+                        continue; // Skip quantity for contracts
+                    }
                     form.append(key, formData[key]);
                 }
                 
@@ -207,7 +235,7 @@ document.addEventListener("DOMContentLoaded", function() {
                     method: 'POST',
                     body: form,
                     headers: {
-                        'X-CSRFToken': csrfToken
+                        'X-CSRFToken': window.inventoryToken
                     }
                 })
                 .then(response => response.json())

@@ -4,14 +4,15 @@ from django.utils.translation import gettext_lazy as _
 class ItemType(models.TextChoices):
     FOOD = 'FOOD', _('Maistas')
     MEDICINE = 'MEDICINE', _('Vaistai')
+    CONTRACTS = 'CONTRACTS', _('Sutartys')
 
 class Item(models.Model):
     family = models.ForeignKey("Family.Family", on_delete=models.CASCADE)
     name = models.CharField(max_length=50)
     description = models.TextField(blank=True, null=True)
-    statistics_qty = models.IntegerField(default=0)
+    statistics_qty = models.IntegerField(default=0, null=True, blank=True)
     item_type = models.CharField(
-        max_length=10,
+        max_length=15,
         choices=ItemType.choices,
         default=ItemType.FOOD
     )

@@ -123,6 +123,18 @@ def delete_item(request, item_id):
 
 @login_required
 @family_member_required
+def delete_contract(request, item_id):
+    # Get the contract item and verify it belongs to user's family
+    item = get_object_or_404(Item, id=item_id, family=request.user.getFamily(), item_type=ItemType.CONTRACTS)
+    
+    if request.method == 'POST':
+        item.delete()
+        return JsonResponse({'success': True})
+    
+    return JsonResponse({'error': 'Neteisingas užklausos metodas'}, status=400)
+
+@login_required
+@family_member_required
 def delete_operation(request, operation_id):
     # Gauti operaciją ir patikrinti, ar ji priklauso vartotojo šeimai
     operation = get_object_or_404(ItemOperation, id=operation_id, item__family=request.user.getFamily())
@@ -146,7 +158,6 @@ def delete_operation(request, operation_id):
         
         return JsonResponse({'success': True})
     
-    # Jei ne POST metodas - grąžinti klaidos žinutę
     return JsonResponse({'error': 'Neteisingas užklausos metodas'}, status=400)
 
 @login_required
@@ -156,7 +167,7 @@ def api_items(request):
     
     # Filtruoti pagal tipą, jei nurodyta
     item_type = request.GET.get('type')
-    if item_type and item_type in [ItemType.FOOD, ItemType.MEDICINE]:
+    if item_type and item_type in [ItemType.FOOD, ItemType.MEDICINE, ItemType.CONTRACTS]:
         base_items = Item.objects.filter(family=family, item_type=item_type)
     else:
         base_items = Item.objects.filter(family=family)
@@ -166,51 +177,63 @@ def api_items(request):
     
     items_data = []
     
-    # Grupuoti operacijas pagal prekę, kad būtų patogu rodyti sąraše
-    grouped_operations = {}
+    # Grupuoti operacijas pagal prekę
+    grouped_items = {}
     for op in operations:
-        if op.item.id not in grouped_operations:
-            grouped_operations[op.item.id] = {
-                'item': op.item,
-                'operations': [],
-                'total_qty': 0
-            }
-        grouped_operations[op.item.id]['operations'].append(op)
-        grouped_operations[op.item.id]['total_qty'] += op.qty
-    
-    # Sukurti duomenis kiekvienai operacijai
-    for item_id, data in grouped_operations.items():
-        item = data['item']
+        item = op.item
+        item_key = f"{item.id}"
         
-        for op in data['operations']:
-            exp_date = op.exp_date
-            
-            # Ar baigiasi galiojimas
-            is_expiring_soon = False
-            is_expired = False
-            is_expiring_very_soon = False
-            
-            if exp_date:
-                today = timezone.now().date()
-                days_until_expiry = (exp_date - today).days
-                is_expiring_soon = days_until_expiry <= 7 and days_until_expiry >= 0
-                is_expired = exp_date < today
-                is_expiring_very_soon = days_until_expiry <= 3 and days_until_expiry >= 0
-            
-            items_data.append({
-                'id': op.id,  # Operacijos ID, ne prekės
-                'item_id': item.id,  # Prekės ID
+        if item_key not in grouped_items:
+            grouped_items[item_key] = {
+                'id': item.id,
                 'name': item.name,
                 'type': item.get_item_type_display(),
                 'type_value': item.item_type,
-                'qty': op.qty,  # Šios konkrečios operacijos kiekis
-                'exp_date': exp_date.strftime('%Y-%m-%d') if exp_date else None,
-                'is_expired': is_expired,
-                'is_expiring_soon': is_expiring_soon,
-                'is_expiring_very_soon': is_expiring_very_soon
+                'total_qty': 0,
+                'operations': [],
+                'earliest_exp_date': None,
+                'is_expired': False,
+                'is_expiring_soon': False,
+                'is_expiring_very_soon': False
+            }
+        
+        # Add operation details
+        if op.exp_date:
+            grouped_items[item_key]['operations'].append({
+                'id': op.id,
+                'qty': op.qty,
+                'exp_date': op.exp_date
             })
+            
+            # Update earliest expiration date if this one is earlier
+            if (not grouped_items[item_key]['earliest_exp_date'] or 
+                op.exp_date < grouped_items[item_key]['earliest_exp_date']):
+                grouped_items[item_key]['earliest_exp_date'] = op.exp_date
+        
+        # Update total quantity
+        if item.item_type != ItemType.CONTRACTS:
+            grouped_items[item_key]['total_qty'] += op.qty
     
-    # Rūšiuoti pagal galiojimo datą (pirmi, kurių galiojimas baigsis greičiausiai)
+    # Process expiration status for each item
+    today = timezone.now().date()
+    for item_data in grouped_items.values():
+        exp_date = item_data['earliest_exp_date']
+        if exp_date:
+            days_until_expiry = (exp_date - today).days
+            item_data['is_expired'] = days_until_expiry < 0
+            item_data['is_expiring_soon'] = days_until_expiry <= 7 and days_until_expiry >= 0
+            item_data['is_expiring_very_soon'] = days_until_expiry <= 3 and days_until_expiry >= 0
+            item_data['exp_date'] = exp_date.strftime('%Y-%m-%d')
+        else:
+            item_data['exp_date'] = None
+        
+        # Clean up the data structure
+        del item_data['operations']
+        del item_data['earliest_exp_date']
+        
+        items_data.append(item_data)
+    
+    # Sort items by expiration date
     items_data.sort(key=lambda x: x.get('exp_date') or '9999-12-31')
     
     return JsonResponse({'items': items_data})
