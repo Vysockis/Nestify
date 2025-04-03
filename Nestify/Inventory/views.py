@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
-from Nestify.decorators import family_member_required
+from Nestify.decorators import family_member_required, parent_required
 from django.utils import timezone
 from .models import Item, ItemOperation, ItemType
 from datetime import datetime
@@ -122,16 +122,54 @@ def delete_item(request, item_id):
     })
 
 @login_required
-@family_member_required
+@parent_required
+def add_contract(request):
+    if request.method == 'POST':
+        family = request.user.getFamily()
+        
+        name = request.POST.get('name')
+        item_type = ItemType.CONTRACTS
+        
+        if not name:
+            return JsonResponse({'error': 'Būtina užpildyti pavadinimą'}, status=400)
+        
+        # Find or create the item (product definition)
+        item, created = Item.objects.get_or_create(
+            family=family,
+            name=name,
+            item_type=item_type,
+            defaults={
+                'statistics_qty': 0
+            }
+        )
+        
+        # Create the item operation
+        ItemOperation.objects.create(
+            item=item,
+            qty=1,
+            price=0
+        )
+        
+        return JsonResponse({'success': True, 'redirect': '/inventory/items/'})
+    
+    return render(request, 'inventory/add_contract.html', {
+        'active_page': 'inventory'
+    })
+
+@login_required
+@parent_required
 def delete_contract(request, item_id):
     # Get the contract item and verify it belongs to user's family
     item = get_object_or_404(Item, id=item_id, family=request.user.getFamily(), item_type=ItemType.CONTRACTS)
     
     if request.method == 'POST':
+        # Delete all operations for this item
+        ItemOperation.objects.filter(item=item).delete()
+        # Delete the item itself
         item.delete()
         return JsonResponse({'success': True})
     
-    return JsonResponse({'error': 'Neteisingas užklausos metodas'}, status=400)
+    return JsonResponse({'error': 'Only POST method is allowed'}, status=405)
 
 @login_required
 @family_member_required

@@ -30,9 +30,11 @@
             <li class="nav-item">
                 <a class="nav-link" id="medicine-tab" data-bs-toggle="tab" href="#medicine-content">Vaistai</a>
             </li>
+            {% if user_familymember and not user_familymember.kid %}
             <li class="nav-item">
                 <a class="nav-link" id="contracts-tab" data-bs-toggle="tab" href="#contracts-content">Sutartys</a>
             </li>
+            {% endif %}
         </ul>
 
         <div class="tab-content">
@@ -60,6 +62,7 @@
                 </div>
             </div>
 
+            {% if user_familymember and not user_familymember.kid %}
             <div class="tab-pane fade" id="contracts-content">
                 <div class="contracts-items-container">
                     <div class="spinner-border text-primary" role="status">
@@ -67,6 +70,7 @@
                     </div>
                 </div>
             </div>
+            {% endif %}
         </div>
         
         <div class="alert alert-info mt-4">
@@ -81,6 +85,10 @@
 </div>
 {% endblock %}
 
+{% block outter_content %}
+{% include "utils/form.html" %}
+{% endblock %}
+
 {% block javascript %}
 <script>
     // Define variables in global scope
@@ -90,6 +98,7 @@
         {% endfor %}
     ];
     window.inventoryToken = "{{ csrf_token }}";
+    window.isKid = {% if user_familymember and user_familymember.kid %}true{% else %}false{% endif %};
 </script>
 <script src="{% static 'js/inventory/main.js' %}"></script>
 {% endblock %} 

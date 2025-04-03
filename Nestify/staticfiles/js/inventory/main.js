@@ -129,17 +129,17 @@ document.addEventListener("DOMContentLoaded", function() {
         container.querySelectorAll('.edit-operation').forEach(button => {
             button.addEventListener('click', async function() {
                 const operationId = this.dataset.operationId;
-                const item = items.find(i => i.id === parseInt(operationId));
-                if (!item) return;
+                const row = this.closest('tr');
+                const currentQty = parseInt(row.querySelector('td:nth-child(3)').textContent);
 
                 const formData = await openModal({
-                    title: `Redaguoti kiekį: ${item.name}`,
+                    title: `Redaguoti kiekį: ${row.querySelector('td:nth-child(1)').textContent}`,
                     fields: [
                         {
                             id: "qty",
                             label: "Kiekis",
                             type: "number",
-                            value: item.qty.toString(),
+                            value: currentQty.toString(),
                             min: "1",
                             required: true
                         }
@@ -256,3 +256,32 @@ document.addEventListener("DOMContentLoaded", function() {
     
     fetchItems();
 }); 
+
+// Function to fetch and display items
+async function fetchAndDisplayItems() {
+    try {
+        const [foodData, medicineData, contractsData] = await Promise.all([
+            fetch('/inventory/api/items/?type=FOOD').then(response => response.json()),
+            fetch('/inventory/api/items/?type=MEDICINE').then(response => response.json()),
+            window.isKid ? Promise.resolve({ items: [] }) : fetch('/inventory/api/items/?type=CONTRACTS').then(response => response.json())
+        ]);
+
+        const allItems = [...foodData.items, ...medicineData.items, ...contractsData.items];
+        
+        // Display items in their respective containers
+        const allContainer = document.querySelector('.all-items-container');
+        const foodContainer = document.querySelector('.food-items-container');
+        const medicineContainer = document.querySelector('.medicine-items-container');
+        const contractsContainer = document.querySelector('.contracts-items-container');
+        
+        displayItems(allItems, allContainer, 999);
+        displayItems(foodData.items, foodContainer, 999);
+        displayItems(medicineData.items, medicineContainer, 999);
+        
+        if (!window.isKid && contractsContainer) {
+            displayItems(contractsData.items, contractsContainer, 999);
+        }
+    } catch (error) {
+        console.error('Error fetching items:', error);
+    }
+} 
