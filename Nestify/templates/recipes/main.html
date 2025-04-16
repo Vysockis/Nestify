@@ -29,6 +29,9 @@ Receptai | Nestify
 {% endblock %}
 
 {% block javascript %}
+<script>
+    window.isKid = {% if user_familymember and user_familymember.kid %}true{% else %}false{% endif %};
+</script>
 <script src="{% static 'js/recipes/main.js' %}"></script>
 <script src="{% static 'js/recipes/api/list.js' %}"></script>
 {% endblock %}

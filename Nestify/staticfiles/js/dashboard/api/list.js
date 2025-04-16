@@ -64,6 +64,10 @@ document.addEventListener("DOMContentLoaded", function () {
                     actionButton.classList.add("btn", "btn-sm", "btn-outline-danger");
                     actionButton.innerHTML = '<i class="fas fa-trash"></i>';
                     actionButton.dataset.type = "delete";
+                    // Hide delete button for kid users
+                    if (window.isKid) {
+                        actionButton.style.display = 'none';
+                    }
                     actionButton.addEventListener("click", function (event) {
                         event.stopPropagation(); // Prevent clicking the whole list
                         if (actionButton.dataset.type === "delete") {
@@ -144,6 +148,10 @@ document.addEventListener("DOMContentLoaded", function () {
                         const deleteButton = document.createElement("button");
                         deleteButton.classList.add("btn", "btn-sm", "btn-outline-danger");
                         deleteButton.innerHTML = '<i class="fas fa-trash"></i>';
+                        // Hide delete button for kid users
+                        if (window.isKid) {
+                            deleteButton.style.display = 'none';
+                        }
                         deleteButton.addEventListener("click", function () {
                             confirmAndDeleteItem(item.id);
                         });

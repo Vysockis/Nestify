@@ -46,6 +46,10 @@ Dashboard | Nestify
 {% block javascript %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+<script>
+    window.isKid = {% if user_familymember and user_familymember.kid %}true{% else %}false{% endif %};
+</script>
+
 <script src="{% static 'js/dashboard/main.js' %}"></script>
 <script src="{% static 'js/dashboard/api/list.js' %}"></script>
 <script src="{% static 'js/dashboard/api/plans.js' %}"></script>

@@ -301,6 +301,10 @@ document.addEventListener("DOMContentLoaded", function () {
                     const deleteBtn = document.createElement("button");
                     deleteBtn.classList.add("btn", "btn-sm", "btn-outline-danger");
                     deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+                    // Hide delete button for kid users
+                    if (window.isKid) {
+                        deleteBtn.style.display = 'none';
+                    }
                     deleteBtn.addEventListener("click", function(event) {
                         event.stopPropagation(); // Prevent plan item click
                         if (confirm("Ar tikrai norite ištrinti šį planą?")) {
@@ -422,6 +426,10 @@ document.addEventListener("DOMContentLoaded", function () {
             const deleteButton = document.createElement("button");
             deleteButton.classList.add("btn", "btn-sm", "btn-outline-danger");
             deleteButton.innerHTML = '<i class="fas fa-trash"></i>';
+            // Hide delete button for kid users
+            if (window.isKid) {
+                deleteButton.style.display = 'none';
+            }
             deleteButton.dataset.listId = item.id;
 
             deleteButton.addEventListener("click", function () {
@@ -458,6 +466,10 @@ document.addEventListener("DOMContentLoaded", function () {
                     const deleteButton = document.createElement("button");
                     deleteButton.classList.add("btn", "btn-sm", "btn-outline-danger");
                     deleteButton.innerHTML = '<i class="fas fa-trash"></i>';
+                    // Hide delete button for kid users
+                    if (window.isKid) {
+                        deleteButton.style.display = 'none';
+                    }
                     deleteButton.dataset.memberId = member.id; // Store member ID in dataset
 
                     deleteButton.addEventListener("click", function () {

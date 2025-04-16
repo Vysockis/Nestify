@@ -196,6 +196,10 @@ document.addEventListener("DOMContentLoaded", function () {
                     const deleteBtn = document.createElement("button");
                     deleteBtn.classList.add("btn", "btn-sm", "btn-outline-danger");
                     deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+                    // Hide delete button for kid users
+                    if (window.isKid) {
+                        deleteBtn.style.display = 'none';
+                    }
                     deleteBtn.addEventListener("click", function(event) {
                         event.stopPropagation();
                         if (confirm("Ar tikrai norite ištrinti šį receptą?")) {
@@ -341,6 +345,10 @@ document.addEventListener("DOMContentLoaded", function () {
                 const deleteBtn = document.createElement("button");
                 deleteBtn.classList.add("btn", "btn-sm", "btn-outline-danger");
                 deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+                // Hide delete button for kid users
+                if (window.isKid) {
+                    deleteBtn.style.display = 'none';
+                }
                 deleteBtn.addEventListener("click", function(e) {
                     e.preventDefault();
                     e.stopPropagation();
