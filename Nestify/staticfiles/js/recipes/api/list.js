@@ -160,18 +160,23 @@ document.addEventListener("DOMContentLoaded", function () {
         fetch("../api/recipes/")
             .then(response => response.json())
             .then(data => {
-                listContainer.innerHTML = ""; // Clear existing content
-                if (data.recipe_list.length === 0) {
-                    listContainer.innerHTML = "<p>No lists found.</p>";
+                if (!data || !data.recipe_list) {
+                    console.error("Invalid data received from API");
                     return;
                 }
 
                 recipesData = data.recipe_list;
+                listContainer.innerHTML = ""; // Clear existing content
 
-                const urlListId = getListIdFromURL(); // Get list_id from URL
+                if (recipesData.length === 0) {
+                    listContainer.innerHTML = "<p>Nėra receptų.</p>";
+                    return;
+                }
+
+                const urlListId = getListIdFromURL();
                 let foundList = false;
 
-                data.recipe_list.forEach((recipe) => {
+                recipesData.forEach((recipe) => {
                     const listElement = document.createElement("li");
                     listElement.classList.add(
                         "list-group-item",
@@ -192,7 +197,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     deleteBtn.classList.add("btn", "btn-sm", "btn-outline-danger");
                     deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
                     deleteBtn.addEventListener("click", function(event) {
-                        event.stopPropagation(); // Prevent list item click
+                        event.stopPropagation();
                         if (confirm("Ar tikrai norite ištrinti šį receptą?")) {
                             fetch("../api/list/", {
                                 method: "DELETE",
@@ -205,7 +210,7 @@ document.addEventListener("DOMContentLoaded", function () {
                             .then(response => response.json())
                             .then(data => {
                                 if (data.success) {
-                                    fetchFamilyList(); // Refresh the list
+                                    fetchFamilyList();
                                 } else {
                                     alert("Klaida: " + JSON.stringify(data.error));
                                 }
@@ -217,23 +222,37 @@ document.addEventListener("DOMContentLoaded", function () {
                     listElement.appendChild(deleteBtn);
                     listContainer.appendChild(listElement);
 
+                    // Add click event to show recipe details
+                    listElement.addEventListener("click", function(event) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        
+                        // Remove active class from all items
+                        document.querySelectorAll('.toggle-list').forEach(item => {
+                            item.classList.remove('active');
+                        });
+                        
+                        // Add active class to clicked item
+                        this.classList.add('active');
+                        
+                        // Update URL without reloading
+                        const newUrl = new URL(window.location.href);
+                        newUrl.searchParams.set("list_id", recipe.id);
+                        window.history.pushState({}, "", newUrl);
+                        
+                        // Update recipe display
+                        updateRecipeDisplay(recipe);
+                    });
+    
                     // Check if this list should be active based on URL
                     if (urlListId && recipe.id.toString() === urlListId) {
                         listElement.classList.add("active");
                         updateRecipeDisplay(recipe);
                         foundList = true;
                     }
-
-                    listElement.addEventListener("click", function () {
-                        const newUrl = new URL(window.location.href);
-                        newUrl.searchParams.set("list_id", recipe.id);
-                        window.history.pushState({}, "", newUrl);
-                        fetchFamilyList(); // Refresh to ensure active state updates
-                    });
                 });
 
-                if (!foundList) {
-                    // If no matching list_id was found, make the first item active
+                if (!foundList && recipesData.length > 0) {
                     const firstItem = listContainer.querySelector(".toggle-list");
                     if (firstItem) {
                         firstItem.classList.add("active");
@@ -269,30 +288,77 @@ document.addEventListener("DOMContentLoaded", function () {
             recipe.items.forEach(item => {
                 const li = document.createElement("li");
                 li.className = "list-group-item d-flex justify-content-between align-items-center";
+                li.setAttribute("data-item-id", item.id);
+                
+                // Create checkbox
+                const checkbox = document.createElement("input");
+                checkbox.type = "checkbox";
+                checkbox.className = "form-check-input me-2";
+                checkbox.checked = item.completed || false;
+                checkbox.addEventListener("change", function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    // Update only this item's state
+                    const itemId = this.closest('li').getAttribute('data-item-id');
+                    fetch("../api/item/", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-CSRFToken": csrfToken
+                        },
+                        body: JSON.stringify({ 
+                            item_id: itemId,
+                            completed: this.checked
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (!data.success) {
+                            alert("Klaida: " + JSON.stringify(data.error));
+                            this.checked = !this.checked;
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Klaida atnaujinant ingredientą:", error);
+                        this.checked = !this.checked;
+                    });
+                });
                 
                 // Create text content
                 const textSpan = document.createElement("span");
                 textSpan.textContent = item.qty && item.qty != 1 ? `${item.qty}x ${item.name}` : item.name;
-                li.appendChild(textSpan);
+                
+                // Create container for checkbox and text
+                const contentDiv = document.createElement("div");
+                contentDiv.className = "d-flex align-items-center";
+                contentDiv.appendChild(checkbox);
+                contentDiv.appendChild(textSpan);
+                
+                li.appendChild(contentDiv);
                 
                 // Create delete button
                 const deleteBtn = document.createElement("button");
                 deleteBtn.classList.add("btn", "btn-sm", "btn-outline-danger");
                 deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
-                deleteBtn.addEventListener("click", function() {
+                deleteBtn.addEventListener("click", function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
                     if (confirm("Ar tikrai norite ištrinti šį ingredientą?")) {
+                        const itemId = this.closest('li').getAttribute('data-item-id');
                         fetch("../api/item/", {
                             method: "DELETE",
                             headers: {
                                 "Content-Type": "application/json",
                                 "X-CSRFToken": csrfToken
                             },
-                            body: JSON.stringify({ item_id: item.id })
+                            body: JSON.stringify({ item_id: itemId })
                         })
                         .then(response => response.json())
                         .then(data => {
                             if (data.success) {
-                                fetchFamilyList(); // Refresh the list
+                                // Remove only this item from the list
+                                this.closest('li').remove();
                             } else {
                                 alert("Klaida: " + JSON.stringify(data.error));
                             }

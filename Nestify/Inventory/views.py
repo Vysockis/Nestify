@@ -34,6 +34,7 @@ def item_list(request):
 
 @login_required
 @family_member_required
+@parent_required
 def add_item(request):
     if request.method == 'POST':
         family = request.user.getFamily()
@@ -85,6 +86,7 @@ def add_item(request):
 
 @login_required
 @family_member_required
+@parent_required
 def edit_item(request, item_id):
     item = get_object_or_404(Item, id=item_id, family=request.user.getFamily())
     
@@ -109,6 +111,7 @@ def edit_item(request, item_id):
 
 @login_required
 @family_member_required
+@parent_required
 def delete_item(request, item_id):
     item = get_object_or_404(Item, id=item_id, family=request.user.getFamily())
     
@@ -122,6 +125,7 @@ def delete_item(request, item_id):
     })
 
 @login_required
+@family_member_required
 @parent_required
 def add_contract(request):
     if request.method == 'POST':
@@ -157,6 +161,7 @@ def add_contract(request):
     })
 
 @login_required
+@family_member_required
 @parent_required
 def delete_contract(request, item_id):
     # Get the contract item and verify it belongs to user's family
@@ -173,6 +178,7 @@ def delete_contract(request, item_id):
 
 @login_required
 @family_member_required
+@parent_required
 def delete_operation(request, operation_id):
     # Gauti operaciją ir patikrinti, ar ji priklauso vartotojo šeimai
     operation = get_object_or_404(ItemOperation, id=operation_id, item__family=request.user.getFamily())
@@ -244,8 +250,8 @@ def api_items(request):
             })
             
             # Update earliest expiration date if this one is earlier
-            if (not grouped_items[item_key]['earliest_exp_date'] or 
-                op.exp_date < grouped_items[item_key]['earliest_exp_date']):
+            if (not grouped_items[item_key]['earliest_exp_date'] or
+                op.exp_date < grouped_items[item_key]['earliest_exp_date']):  # type: ignore
                 grouped_items[item_key]['earliest_exp_date'] = op.exp_date
         
         # Update total quantity
@@ -310,6 +316,7 @@ def api_expiring_items(request):
 
 @login_required
 @family_member_required
+@parent_required
 def update_operation(request, operation_id):
     if request.method != 'POST':
         return JsonResponse({'error': 'Method not allowed'}, status=405)

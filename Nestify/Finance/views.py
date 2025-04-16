@@ -1,5 +1,5 @@
 from django.http import JsonResponse
-from Nestify.decorators import family_member_required, parent_required
+from Nestify.decorators import parent_required
 from List import models as lModels
 from collections import defaultdict
 from . import models

@@ -6,7 +6,7 @@ from datetime import datetime
 from django.core.exceptions import ObjectDoesNotExist
 from List.enum import ListType
 from Family.models import FamilyMember
-from Nestify.decorators import family_member_required
+from Nestify.decorators import family_member_required, parent_required
 from Dashboard.views import format_time_difference_in
 from . import models
 
@@ -84,6 +84,7 @@ def get_family_list(request):
     return JsonResponse({"family_list": data}, safe=False)
 
 @family_member_required
+@parent_required
 def item(request):
     if request.method == "DELETE":
         try:
@@ -146,6 +147,7 @@ def item(request):
     return JsonResponse({"error": "Invalid request method"}, status=400)
 
 @family_member_required
+@parent_required
 def list(request):
     if request.method == "DELETE":
         try:

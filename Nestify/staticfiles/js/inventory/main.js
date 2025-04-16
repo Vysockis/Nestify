@@ -36,28 +36,27 @@ document.addEventListener("DOMContentLoaded", function() {
         container.innerHTML = '';
         
         if (items.length === 0) {
-            container.innerHTML = '<p class="text-muted text-center">Nėra įrašų</p>';
+            container.innerHTML = '<p class="text-center text-muted my-3">No items found</p>';
             return;
         }
         
         const table = document.createElement('table');
-        table.className = 'table table-hover';
+        table.classList.add('table', 'table-hover');
         
         const thead = document.createElement('thead');
         thead.innerHTML = `
             <tr>
-                <th>Pavadinimas</th>
-                <th>Tipas</th>
-                <th>Kiekis</th>
-                <th>Galiojimo data</th>
-                <th>Veiksmai</th>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Quantity</th>
+                <th>Expiry Date</th>
+                <th>Actions</th>
             </tr>
         `;
         
         const tbody = document.createElement('tbody');
-        const itemsToShow = items.slice(0, limit);
         
-        itemsToShow.forEach(item => {
+        items.forEach(item => {
             const row = document.createElement('tr');
             
             if (item.is_expired) {
@@ -75,14 +74,16 @@ document.addEventListener("DOMContentLoaded", function() {
                 <td>${item.exp_date || 'Nenustatyta'}</td>
                 <td>
                     <div class="btn-group">
-                        ${item.type_value !== 'CONTRACTS' ? `
-                            <button class="btn btn-sm btn-outline-secondary me-2 edit-operation" data-operation-id="${item.id}">
-                                <i class="fas fa-pencil"></i>
+                        ${!window.isKid ? `
+                            ${item.type_value !== 'CONTRACTS' ? `
+                                <button class="btn btn-sm btn-outline-secondary me-2 edit-operation" data-operation-id="${item.id}">
+                                    <i class="fas fa-pencil"></i>
+                                </button>
+                            ` : ''}
+                            <button class="btn btn-sm btn-outline-danger delete-operation" data-operation-id="${item.id}" data-type="${item.type_value}">
+                                <i class="fas fa-trash"></i>
                             </button>
                         ` : ''}
-                        <button class="btn btn-sm btn-outline-danger delete-operation" data-operation-id="${item.id}" data-type="${item.type_value}">
-                            <i class="fas fa-trash"></i>
-                        </button>
                     </div>
                 </td>
             `;
@@ -176,6 +177,11 @@ document.addEventListener("DOMContentLoaded", function() {
     
     const addItemBtn = document.getElementById('addItemBtn');
     if (addItemBtn) {
+        // Hide add button for kids
+        if (window.isKid) {
+            addItemBtn.style.display = 'none';
+        }
+
         addItemBtn.addEventListener('click', async function() {
             const typeOptions = window.itemTypes.map(type => ({
                 value: type.value,
