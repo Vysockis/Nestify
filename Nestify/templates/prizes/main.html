@@ -1,0 +1,248 @@
+{% extends 'master.html' %}
+{% load static %}
+
+{% block title %}Prizai{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/prizes/main.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3 mb-0">Prizai</h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Points Overview -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Mano Taškai</h5>
+                </div>
+                <div class="card-body">
+                    <h2 class="points-value" id="userPoints">0 💎</h2>
+                </div>
+            </div>
+        </div>
+
+        <!-- Leaderboard -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Taškų Lentelė</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Narys</th>
+                                    <th>Taškai</th>
+                                    {% if user_familymember.admin %}
+                                    <th class="text-end">Veiksmai</th>
+                                    {% endif %}
+                                </tr>
+                            </thead>
+                            <tbody id="leaderboardTable">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if user_familymember.admin %}
+    <!-- Pending Tasks -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Laukiančios Patvirtinimo Užduotys</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Užduotis</th>
+                                    <th>Narys</th>
+                                    <th>Taškai</th>
+                                    <th>Data</th>
+                                    <th class="text-end">Veiksmai</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pendingTasksTable">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Prizes Management -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Prizai</h5>
+                    <button class="btn btn-sm btn-outline-success square-btn" id="addPrizeBtn">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Prizas</th>
+                                    <th>Reikalingi Taškai</th>
+                                    <th class="text-end">Veiksmai</th>
+                                </tr>
+                            </thead>
+                            <tbody id="prizesTable">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Redeemed Prizes -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Iškeisti Prizai</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Prizas</th>
+                                    <th>Taškai</th>
+                                    {% if user_familymember.admin %}
+                                    <th>Narys</th>
+                                    {% endif %}
+                                    <th>Data</th>
+                                </tr>
+                            </thead>
+                            <tbody id="redeemedPrizesTable">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <!-- Available Prizes for Kids -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Galimi Prizai</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3" id="availablePrizes">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Redeemed Prizes -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Iškeisti Prizai</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Prizas</th>
+                                    <th>Taškai</th>
+                                    {% if user_familymember.admin %}
+                                    <th>Narys</th>
+                                    {% endif %}
+                                    <th>Data</th>
+                                </tr>
+                            </thead>
+                            <tbody id="redeemedPrizesTable">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Add Points Modal -->
+{% if user_familymember.admin %}
+<div class="modal fade" id="addPointsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Koreguoti Taškus</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addPointsForm">
+                    <div class="mb-3">
+                        <label class="form-label">Taškai</label>
+                        <input type="number" class="form-control" name="points" required min="0">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Uždaryti</button>
+                <button type="button" class="btn btn-primary" id="savePointsBtn">Išsaugoti</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Prize Modal -->
+<div class="modal fade" id="addPrizeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Pridėti Prizą</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addPrizeForm">
+                    <div class="mb-3">
+                        <label class="form-label">Pavadinimas</label>
+                        <input type="text" class="form-control" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Reikalingi Taškai</label>
+                        <input type="number" class="form-control" name="points_required" required min="1">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Uždaryti</button>
+                <button type="button" class="btn btn-primary" id="savePrizeBtn">Išsaugoti</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block javascript %}
+<script src="{% static 'js/prizes/main.js' %}"></script>
+{% endblock %} 

@@ -2,7 +2,9 @@ from django.db import models
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
+from django.conf import settings
 from .enum import ListType
+from Family.models import FamilyMember
 
 # Create your models here.
 class List(models.Model):
@@ -61,3 +63,65 @@ class ListItem(models.Model):
     @staticmethod
     def get_list_items(list):
         return ListItem.objects.filter(list=list)
+
+class PrizeTask(models.Model):
+    list_item = models.ForeignKey('ListItem', on_delete=models.CASCADE)
+    family_member = models.ForeignKey('Family.FamilyMember', on_delete=models.CASCADE)
+    points = models.IntegerField()
+    is_approved = models.BooleanField(default=False)
+    approved_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+    approved_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('list_item', 'family_member')
+
+    @staticmethod
+    def get_pending_tasks(family):
+        return PrizeTask.objects.filter(
+            family_member__family=family,
+            is_approved=False
+        ).select_related('list_item', 'family_member', 'family_member__user')
+
+class Prize(models.Model):
+    family = models.ForeignKey('Family.Family', on_delete=models.CASCADE)
+    name = models.CharField(max_length=200)
+    points_required = models.IntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_active = models.BooleanField(default=True)
+
+    @staticmethod
+    def get_family_prizes(family):
+        return Prize.objects.filter(family=family, is_active=True)
+
+class PointsTransaction(models.Model):
+    TASK_COMPLETION = 'TASK'
+    MANUAL_ADDITION = 'MANUAL'
+    PRIZE_REDEMPTION = 'PRIZE'
+    
+    TRANSACTION_TYPES = [
+        (TASK_COMPLETION, 'Task Completion'),
+        (MANUAL_ADDITION, 'Manual Addition'),
+        (PRIZE_REDEMPTION, 'Prize Redemption'),
+    ]
+
+    family_member = models.ForeignKey('Family.FamilyMember', on_delete=models.CASCADE)
+    points = models.IntegerField()  # Can be negative for prize redemptions
+    transaction_type = models.CharField(max_length=10, choices=TRANSACTION_TYPES)
+    reference_id = models.CharField(max_length=100, null=True, blank=True)  # For task_id or prize_id
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    note = models.TextField(null=True, blank=True)
+
+    @staticmethod
+    def get_member_points(family_member):
+        total_points = PointsTransaction.objects.filter(
+            family_member=family_member
+        ).aggregate(total=models.Sum('points'))['total'] or 0
+        return total_points
+
+    @staticmethod
+    def get_family_leaderboard(family):
+        return FamilyMember.objects.filter(family=family).annotate(
+            total_points=models.Sum('pointstransaction__points')
+        ).order_by('-total_points')
