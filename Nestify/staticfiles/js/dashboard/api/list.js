@@ -285,8 +285,20 @@ document.addEventListener("DOMContentLoaded", function () {
                 fields = [
                     { id: "name", label: "Pavadinimas", type: "text", placeholder: "Įveskite pavadinimą", required: true },
                     { 
-                        id: "assigned_to", label: "Atsakingas žmogus", type: "select", required: true, 
+                        id: "assigned_to", 
+                        label: "Atsakingas žmogus", 
+                        type: "select", 
+                        required: true, 
                         options: memberOption
+                    },
+                    { 
+                        id: "amount", 
+                        label: "Taškai", 
+                        type: "number", 
+                        placeholder: "Įveskite taškus", 
+                        required: false,
+                        min: 0,
+                        value: 0
                     }
                 ];
                 break;

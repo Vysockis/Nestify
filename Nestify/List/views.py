@@ -63,8 +63,10 @@ def get_family_list(request):
         if list_type == ListType.GROCERY.name:
             return f"{f"{item.qty}x" if item.qty and item.qty != 1 else ""} {item.name}"
         elif list_type == ListType.TASK.name:
+            points_text = f" - {int(item.amount)}💎" if item.amount and item.amount > 0 else ""
             user_text = f"{item.assigned_to.first_name}: " if item.assigned_to else ""
-            return f"{user_text}{item.name}"
+            text = f"{user_text}{item.name}{points_text}"
+            return text
         elif list_type == ListType.MEAL.name:
             return f"{item.qty or 0}x {item.name}"
         return item.name
@@ -134,7 +136,7 @@ def item(request):
                 list_id=data.get("list_id"),
                 defaults={
                     "qty": data.get("qty"),
-                    "amount": data.get("price"),
+                    "amount": data.get("price") if data.get("price") is not None else data.get("amount"),
                     "assigned_to": assigned_to
                 }
             )
