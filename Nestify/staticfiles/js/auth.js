@@ -13,4 +13,18 @@ document.addEventListener('DOMContentLoaded', function() {
             alert('Šeimos sukūrimas bus įgyvendintas netrukus!');
         });
     }
+
+    // Password validation messages
+    const passwordInputs = document.querySelectorAll('input[type="password"]');
+    passwordInputs.forEach(input => {
+        input.addEventListener('invalid', function() {
+            if (this.validity.valueMissing) {
+                this.setCustomValidity('Slaptažodis yra privalomas');
+            } else if (this.validity.tooShort) {
+                this.setCustomValidity('Slaptažodis per trumpas');
+            } else {
+                this.setCustomValidity('');
+            }
+        });
+    });
 }); 

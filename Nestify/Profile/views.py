@@ -48,7 +48,7 @@ def login_view(request):
                 # If not a family member, redirect to family choice page
                 return redirect('landing')
         else:
-            return render(request, 'signup/login.html', {'error': 'Invalid username or password'})
+            return render(request, 'signup/login.html', {'error': 'Neteisingas vartotojo vardas arba slaptažodis'})
     else:
         return render(request, 'signup/login.html', {'error': ''})
 
