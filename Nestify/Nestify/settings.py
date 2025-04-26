@@ -10,23 +10,27 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
+import json
 import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Load config from JSON file
+with open(os.path.join(BASE_DIR, 'config.json')) as f:
+    config = json.load(f)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-r0^0llamp2ilmv)npivj2*!hp7+h)0^1j)2ai#d!z_u-u53eox'
+SECRET_KEY = config['django']['secret_key']
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config['django']['debug']
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = config['django']['allowed_hosts']
 
 AUTH_USER_MODEL = 'Profile.CustomUser'
 # Application definition
@@ -49,6 +53,15 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 ]
 
+
+
+# Stripe Configuration
+STRIPE_SECRET_KEY = config['stripe']['secret_key']
+STRIPE_PUBLISHABLE_KEY = config['stripe']['publishable_key']
+STRIPE_WEBHOOK_SECRET = config['stripe']['webhook_secret']
+SITE_URL = config['site']['url']
+
+# Middleware Configuration
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -57,6 +70,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'Nestify.middleware.PaymentRequiredMiddleware',  # Add our new middleware
 ]
 
 ROOT_URLCONF = 'Nestify.urls'

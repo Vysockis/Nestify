@@ -329,11 +329,14 @@ def create_family(request):
                 accepted=True
             )
 
-            messages.success(request, f'Šeima "{family_name}" sėkmingai sukurta!')
-            return redirect('manage_family')
+            # Redirect to create Stripe session
+            return redirect('create_stripe_session', family_id=family.id)
 
-        except Exception:
-            messages.error(request, 'Įvyko klaida kuriant šeimą. Bandykite dar kartą.')
+            messages.success(request, f'Šeima "{family_name}" sėkmingai sukurta!')
+            return redirect('payment_required')
+
+        except Exception as e:
+            messages.error(request, f'Įvyko klaida kuriant šeimą: {str(e)}')
             return redirect('landing')
 
     return render(request, 'signup/create_family.html')

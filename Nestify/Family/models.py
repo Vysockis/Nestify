@@ -2,12 +2,16 @@ import random
 import string
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from django.utils import timezone
 
 
 # Create your models here.
 class Family(models.Model):
     name = models.CharField(max_length=50, blank=False, null=False)
     creator = models.ForeignKey("Profile.CustomUser", on_delete=models.CASCADE)
+    is_paid = models.BooleanField(default=False)
+    checkout_url = models.CharField(max_length=500, blank=True, null=True)
+    created_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
         verbose_name = _("Family")
@@ -29,6 +33,7 @@ class FamilyMember(models.Model):
     admin = models.BooleanField(default=False)
     kid = models.BooleanField(default=False)
     accepted = models.BooleanField(default=False)
+    points = models.IntegerField(default=0)
 
     class Meta:
         verbose_name = _("Family member")
