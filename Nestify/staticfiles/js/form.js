@@ -174,14 +174,34 @@ window.openModal = function(options) {
                             // Handle today property for datetime-local fields
                             if (inputType === 'datetime-local') {
                                 fieldValue = getCurrentDateTime();
-                            }
-                            
-                            fieldHtml = `
+                                fieldHtml = `
                                 <div class="mb-3">
                                     <label for="${fieldId}" class="form-label">${field.label}${field.required ? ' *' : ''}</label>
-                                    <input type="${inputType}" class="form-control${field.required ? ' required' : ''}" id="${fieldId}" name="${field.id}" placeholder="${field.placeholder || ''}" value="${fieldValue || ''}" ${field.min ? `min="${field.min}"` : ''} ${field.max ? `max="${field.max}"` : ''} ${field.step ? `step="${field.step}"` : ''} ${field.required ? 'required' : ''}>
+                                    <div class="row">
+                                        <div class="col">
+                                            <input type="date" class="form-control${field.required ? ' required' : ''}" 
+                                                id="${fieldId}-date" name="${field.id}-date" 
+                                                value="${fieldValue.split('T')[0]}" 
+                                                ${field.required ? 'required' : ''}>
+                                        </div>
+                                        <div class="col">
+                                            <input type="time" class="form-control${field.required ? ' required' : ''}" 
+                                                id="${fieldId}-time" name="${field.id}-time" 
+                                                value="${fieldValue.split('T')[1]}" 
+                                                ${field.required ? 'required' : ''}>
+                                        </div>
+                                        <input type="hidden" id="${fieldId}" name="${field.id}" value="${fieldValue}">
+                                    </div>
                                 </div>
-                            `;
+                                `;
+                            } else {
+                                fieldHtml = `
+                                    <div class="mb-3">
+                                        <label for="${fieldId}" class="form-label">${field.label}${field.required ? ' *' : ''}</label>
+                                        <input type="${inputType}" class="form-control${field.required ? ' required' : ''}" id="${fieldId}" name="${field.id}" placeholder="${field.placeholder || ''}" value="${fieldValue || ''}" ${field.min ? `min="${field.min}"` : ''} ${field.max ? `max="${field.max}"` : ''} ${field.step ? `step="${field.step}"` : ''} ${field.required ? 'required' : ''}>
+                                    </div>
+                                `;
+                            }
                         }
                         
                         formHtml += fieldHtml;
@@ -262,15 +282,30 @@ window.openModal = function(options) {
                 
                 // Set up save button click handler
                 saveButton.addEventListener('click', () => {
+                    // Trigger HTML5 validation
+                    const submitEvent = new Event('submit', {
+                        'bubbles': true,
+                        'cancelable': true
+                    });
+                    form.dispatchEvent(submitEvent);
+
                     if (form.checkValidity()) {
                         const formData = {};
                         
                         // Include all fields, even those with visible: false
                         options.fields.forEach(field => {
                             if (field.type === 'datetime-local') {
-                                // For datetime fields, always ensure we have a value
-                                const fieldElement = document.getElementById(`modal-field-${field.id}`);
-                                formData[field.id] = fieldElement ? fieldElement.value : getCurrentDateTime();
+                                // For datetime fields, combine date and time inputs
+                                const dateElement = document.getElementById(`modal-field-${field.id}-date`);
+                                const timeElement = document.getElementById(`modal-field-${field.id}-time`);
+                                const dateValue = dateElement ? dateElement.value : '';
+                                const timeValue = timeElement ? timeElement.value : '';
+                                
+                                if (dateValue && timeValue) {
+                                    formData[field.id] = `${dateValue}T${timeValue}`;
+                                } else {
+                                    formData[field.id] = getCurrentDateTime();
+                                }
                             } else {
                                 const fieldElement = document.getElementById(`modal-field-${field.id}`);
                                 if (fieldElement) {
@@ -293,13 +328,6 @@ window.openModal = function(options) {
                         
                         cleanupModals(firstRun); // Use firstRun flag to give special handling
                         resolve(formData);
-                    } else {
-                        // Trigger HTML5 validation
-                        const submitEvent = new Event('submit', {
-                            'bubbles': true,
-                            'cancelable': true
-                        });
-                        form.dispatchEvent(submitEvent);
                     }
                 });
                 

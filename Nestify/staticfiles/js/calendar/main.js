@@ -23,14 +23,32 @@ document.addEventListener('DOMContentLoaded', function () {
             center: 'title',
             right: 'dayGridMonth,timeGridWeek,timeGridDay'
         },
+        buttonText: {
+            today: 'Šiandien',
+            month: 'Mėnesis',
+            week: 'Savaitė',
+            day: 'Diena'
+        },
         eventTimeFormat: {
             hour: '2-digit',
             minute: '2-digit',
+            meridiem: false,
             hour12: false
         },
         displayEventTime: true,
-        displayEventEnd: false,
+        displayEventEnd: true,
         eventDisplay: 'block',
+        eventContent: function(arg) {
+            let timeText = arg.timeText;
+            let title = arg.event.title;
+            
+            return {
+                html: '<div class="fc-event-main-content">' +
+                     '<span class="fc-event-time">' + timeText + '</span>' +
+                     '<span class="fc-event-title">' + title + '</span>' +
+                     '</div>'
+            };
+        },
         eventClick: function(info) {
             if (info.event.url) {
                 window.location.href = info.event.url;

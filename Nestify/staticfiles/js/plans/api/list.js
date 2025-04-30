@@ -379,8 +379,8 @@ document.addEventListener("DOMContentLoaded", function () {
         if (!plan) return;
 
         const imageDiv = planDisplay.querySelector(".plans-image-content");
-        if (imageDiv && plan.image) {
-            imageDiv.style.backgroundImage = `url('${plan.image}')`;
+        if (imageDiv) {
+            imageDiv.style.backgroundImage = plan.image ? `url('${plan.image}')` : 'none';
         }
 
         const nameEl = planDisplay.querySelector(".plans-image-text");

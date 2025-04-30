@@ -46,11 +46,11 @@ document.addEventListener("DOMContentLoaded", function() {
         const thead = document.createElement('thead');
         thead.innerHTML = `
             <tr>
-                <th>Name</th>
-                <th>Type</th>
-                <th>Quantity</th>
-                <th>Expiry Date</th>
-                <th>Actions</th>
+                <th>Pavadinimas</th>
+                <th>Tipas</th>
+                <th>Kiekis</th>
+                <th>Galiojimo data</th>
+                <th>Veiksmai</th>
             </tr>
         `;
         

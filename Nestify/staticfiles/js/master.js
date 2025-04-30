@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", async function () {
     try {
-        const response = await fetch("/family/api/members/", {
+        const response = await fetch("/family/members/", {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",

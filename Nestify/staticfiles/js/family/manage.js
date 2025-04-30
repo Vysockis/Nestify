@@ -333,7 +333,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 task_notifications: settingsForm.querySelector('[name="task_notifications"]').value
             };
 
-            fetch('/family/api/settings/', {
+            fetch('/family/settings/api/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", function () {
     const listContainer = document.getElementById("listContainer");
-    const recipeDisplay = document.getElementById("list"); // Main recipe display container
+    const recipeDisplay = document.getElementById("recipeDetails"); // Main recipe display container
     const addListItemBtn = document.getElementById("addListItemBtn");
     const editListBtn = document.getElementById("editListBtn");
     const addListBtn = document.getElementById("addListBtn");
@@ -286,7 +286,7 @@ document.addEventListener("DOMContentLoaded", function () {
             descriptionEl.innerHTML = recipe.description.replace(/\n/g, "<br>");
         }
 
-        const ingredientsList = recipeDisplay.querySelector("ul");
+        const ingredientsList = document.getElementById("ingredientsList");
         if (ingredientsList) {
             ingredientsList.innerHTML = "";
             recipe.items.forEach(item => {
@@ -294,52 +294,11 @@ document.addEventListener("DOMContentLoaded", function () {
                 li.className = "list-group-item d-flex justify-content-between align-items-center";
                 li.setAttribute("data-item-id", item.id);
                 
-                // Create checkbox
-                const checkbox = document.createElement("input");
-                checkbox.type = "checkbox";
-                checkbox.className = "form-check-input me-2";
-                checkbox.checked = item.completed || false;
-                checkbox.addEventListener("change", function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    
-                    // Update only this item's state
-                    const itemId = this.closest('li').getAttribute('data-item-id');
-                    fetch("../api/item/", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                            "X-CSRFToken": csrfToken
-                        },
-                        body: JSON.stringify({ 
-                            item_id: itemId,
-                            completed: this.checked
-                        })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (!data.success) {
-                            alert("Klaida: " + JSON.stringify(data.error));
-                            this.checked = !this.checked;
-                        }
-                    })
-                    .catch(error => {
-                        console.error("Klaida atnaujinant ingredientą:", error);
-                        this.checked = !this.checked;
-                    });
-                });
-                
                 // Create text content
                 const textSpan = document.createElement("span");
                 textSpan.textContent = item.qty && item.qty != 1 ? `${item.qty}x ${item.name}` : item.name;
                 
-                // Create container for checkbox and text
-                const contentDiv = document.createElement("div");
-                contentDiv.className = "d-flex align-items-center";
-                contentDiv.appendChild(checkbox);
-                contentDiv.appendChild(textSpan);
-                
-                li.appendChild(contentDiv);
+                li.appendChild(textSpan);
                 
                 // Create delete button
                 const deleteBtn = document.createElement("button");

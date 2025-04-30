@@ -130,7 +130,7 @@ def plans(request):
         "date_formatted": format_time_difference_in(timezone.now(), plan.datetime),
         "datetime": plan.datetime,
         "members": [{
-            "id": member.pk,
+            "id": member.user.pk,
             "name": member.user.user.first_name
         } for member in models.PlanMember.get_plan_members(plan)],
         "listId": plan.get_list().pk if plan.get_list() else 0,
