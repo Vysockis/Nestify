@@ -145,10 +145,24 @@ document.addEventListener("DOMContentLoaded", function() {
                         
                         const extractedData = await response.json();
                         
+                        // Find the category to check if it's income
+                        const categoryId = extractedData.category_id || finance_categories[0].id;
+                        const selectedCategory = finance_categories.find(cat => cat.id === categoryId);
+                        
+                        // Determine the sign based on the category type
+                        let finalAmount = Math.abs(extractedData.total_amount);
+                        if (selectedCategory && selectedCategory.income) {
+                            // Income category - amount should be positive
+                            finalAmount = Math.abs(finalAmount);
+                        } else {
+                            // Expense category - amount should be negative
+                            finalAmount = -Math.abs(finalAmount);
+                        }
+                        
                         // Now use the extracted data to create a finance operation
                         const data = await createFinanceOperation({
-                            category: extractedData.category_id || finance_categories[0].id,
-                            amount: -Math.abs(extractedData.total_amount), // Negative for expense
+                            category: categoryId,
+                            amount: finalAmount,
                             date: new Date().toISOString()
                         });
                         
@@ -232,6 +246,20 @@ document.addEventListener("DOMContentLoaded", function() {
         document.body.appendChild(loadingIndicator);
 
         try {
+            // Find the selected category to check if it's income
+            const selectedCategoryId = parseInt(formData.category);
+            const selectedCategory = finance_categories.find(cat => cat.id === selectedCategoryId);
+            
+            // Determine the correct sign for the amount
+            let finalAmount = Math.abs(amount);
+            if (selectedCategory && selectedCategory.income) {
+                // Income category - amount should be positive
+                finalAmount = Math.abs(finalAmount);
+            } else {
+                // Expense category - amount should be negative
+                finalAmount = -Math.abs(finalAmount);
+            }
+
             const response = await fetch("../list/api/list/", {
                 method: "POST",
                 headers: {
@@ -242,7 +270,7 @@ document.addEventListener("DOMContentLoaded", function() {
                     name: `Finance Operation ${new Date().toLocaleString()}`,
                     list_type: "FINANCE",
                     datetime: formData.date ? new Date(formData.date).getTime() : new Date().getTime(),
-                    amount: amount,
+                    amount: finalAmount,
                     category: formData.category
                 })
             });

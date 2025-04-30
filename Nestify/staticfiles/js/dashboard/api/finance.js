@@ -16,6 +16,26 @@ document.addEventListener("DOMContentLoaded", function() {
     // Store chart instances so we can destroy them later
     let financeChartInstance;
     let categoryChartInstance;
+    let finance_categories = [];
+    
+    // Fetch categories when the page loads
+    function fetchCategories() {
+        fetch("../finance/api/categories/", {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrfToken
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            finance_categories = data.finance_categories;
+        })
+        .catch(error => console.error("Error fetching categories:", error));
+    }
+    
+    // Call fetchCategories on page load
+    fetchCategories();
 
     financeAdd.addEventListener("click", async function () {
         fields = [
@@ -67,6 +87,20 @@ document.addEventListener("DOMContentLoaded", function() {
             document.body.appendChild(loadingIndicator);
 
             try {
+                // Find the selected category to check if it's income
+                const selectedCategoryId = parseInt(formData.category);
+                const selectedCategory = finance_categories.find(cat => cat.id === selectedCategoryId);
+                
+                // Determine the correct sign for the amount
+                let finalAmount = Math.abs(amount);
+                if (selectedCategory && selectedCategory.income) {
+                    // Income category - amount should be positive
+                    finalAmount = Math.abs(finalAmount);
+                } else {
+                    // Expense category - amount should be negative
+                    finalAmount = -Math.abs(finalAmount);
+                }
+                
                 const response = await fetch("../list/api/list/", {
                     method: "POST",
                     headers: {
@@ -77,7 +111,7 @@ document.addEventListener("DOMContentLoaded", function() {
                         name: `Finance Operation ${new Date().toLocaleString()}`,
                         list_type: "FINANCE",
                         datetime: new Date(formData.date).getTime(),
-                        amount: amount,
+                        amount: finalAmount,
                         category: formData.category
                     })
                 });

@@ -470,7 +470,9 @@ def categories(request):
     for category in categories:
         category_data.append({
             "id": category.pk,
-            "name": category.name
+            "name": category.name,
+            "income": category.income,
+            "color": category.color
         })
 
     return JsonResponse({"finance_categories": category_data}, safe=False)
@@ -492,3 +494,17 @@ def get_all_operations(operation_list):
         })
 
     return result
+
+@parent_required
+def delete_operation(request, operation_id):
+    """API endpoint to delete finance operation."""
+    if request.method == 'POST':
+        try:
+            operation = lModels.List.objects.get(id=operation_id, list_type='FINANCE')
+            operation.delete()
+            return JsonResponse({"success": True})
+        except lModels.List.DoesNotExist:
+            return JsonResponse({"error": "Operation not found"}, status=404)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+    return JsonResponse({"error": "Invalid request method"}, status=400)
