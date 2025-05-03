@@ -2,7 +2,6 @@ import json
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.utils import timezone
-from datetime import datetime
 from django.core.exceptions import ObjectDoesNotExist
 from List.enum import ListType
 from Family.models import FamilyMember
@@ -15,6 +14,25 @@ from . import models
 @family_member_required
 def recipes_view(request):
     return render(request, 'recipes/main.html')
+
+@family_member_required
+def recipes(request):
+    family = request.user.getFamily()
+    recipes = models.List.objects.filter(family=family, list_type=ListType.MEAL.name)
+    
+    recipe_list = [{
+        "id": recipe.pk,
+        "name": recipe.name,
+        "image": request.build_absolute_uri(recipe.image.url) if recipe.image else None,
+        "description": recipe.description,
+        "items": [{
+            "id": item.pk,
+            "name": item.name,
+            "qty": item.qty
+        } for item in models.ListItem.get_list_items(recipe)]
+    } for recipe in recipes]
+
+    return JsonResponse({"recipe_list": recipe_list}, safe=False)
 
 @family_member_required
 def recipes(request):
@@ -162,7 +180,6 @@ def item(request):
     return JsonResponse({"error": "Invalid request method"}, status=400)
 
 @family_member_required
-@parent_required
 def list(request):
     if request.method == "DELETE":
         try:
@@ -174,39 +191,28 @@ def list(request):
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
 
-    elif request.method == "POST":
+    if request.method == "POST":
         try:
-            if request.content_type.startswith("multipart/form-data"):
-                data = request.POST.dict()
-                image_file = request.FILES.get("image")
-            else:
-                data = json.loads(request.body)
-                image_file = None
+            data = request.POST
+            image_file = request.FILES.get("image")
 
-            if "datetime" not in data:
-                return JsonResponse({"error": "Missing datetime field"}, status=400)
+            # Check if a recipe with the same name already exists
+            existing_recipe = models.List.objects.filter(
+                family=request.user.getFamily(),
+                list_type=ListType.MEAL.name,
+                name=data.get("name")
+            ).first()
 
-            try:
-                datetime_str = data["datetime"]
-                try:
-                    datetime_obj = datetime.fromtimestamp(int(datetime_str) / 1000, tz=timezone.get_current_timezone())
-                except (ValueError, TypeError):
-                    datetime_obj = datetime.fromisoformat(datetime_str.replace('Z', '+00:00'))
-                    if datetime_obj.tzinfo is None:
-                        datetime_obj = timezone.make_aware(datetime_obj)
-            except Exception as e:
-                return JsonResponse({"error": f"Invalid datetime format: {str(e)}"}, status=400)
+            if existing_recipe:
+                return JsonResponse({
+                    "error": "Toks receptas jau egzistuoja",
+                    "success": False
+                }, status=400)
 
             defaults = {
-                "datetime": datetime_obj,
-                "description": data.get("description")
+                "description": data.get("description"),
+                "datetime": data.get("datetime")
             }
-
-            if data.get("list_type") == ListType.FINANCE.name:
-                defaults.update({
-                    "amount": data.get("amount"),
-                    "category_id": data.get("category")
-                })
 
             obj, _ = models.List.objects.update_or_create(
                 name=data.get("name"),

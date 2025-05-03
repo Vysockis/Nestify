@@ -9,5 +9,6 @@ urlpatterns = [
     path('smart/', views.smart_dashboard, name='smart-dashboard'),
     path('smart/device/<int:device_id>/toggle/', views.toggle_device, name='toggle-device'),
     path('smart/device/<int:device_id>/brightness/', views.update_brightness, name='update-brightness'),
+    path('smart/device/<int:device_id>/delete/', views.delete_device, name='delete-device'),
     path('smart/device/add/', views.add_device, name='add-device'),
 ]

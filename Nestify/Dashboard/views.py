@@ -170,3 +170,12 @@ def add_device(request):
         })
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+@family_member_required
+def delete_device(request, device_id):
+    device = get_object_or_404(SmartDevice, id=device_id, family=request.user.getFamily())
+    device.delete()
+    return JsonResponse({
+        'status': 'success',
+        'message': 'Device deleted successfully'
+    })

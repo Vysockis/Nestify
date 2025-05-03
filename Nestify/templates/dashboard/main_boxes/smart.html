@@ -133,7 +133,7 @@
                 </div>
                 <small class="text-muted">({{ device.room }})</small>
             </div>
-            <div>
+            <div class="d-flex align-items-center gap-2">
                 <input type="range" 
                        id="brightness-{{ device.id }}"
                        class="form-range"
@@ -141,6 +141,9 @@
                        min="0" max="100" value="{{ device.brightness }}"
                        data-device-id="{{ device.id }}">
                 <small class="brightness-value">{{ device.brightness }}%</small>
+                <button type="button" class="btn btn-sm btn-outline-danger delete-device" data-device-id="{{ device.id }}">
+                    <i class="fas fa-trash"></i>
+                </button>
             </div>
         </li>
         {% empty %}
@@ -325,6 +328,34 @@ document.addEventListener('DOMContentLoaded', function() {
         .catch(error => {
             console.error('Klaida:', error);
             alert('Klaida pridedant įrenginį');
+        });
+    });
+
+    // Handle device deletion
+    document.querySelectorAll('.delete-device').forEach(button => {
+        button.addEventListener('click', function() {
+            const deviceId = this.dataset.deviceId;
+            
+            if (confirm('Ar tikrai norite ištrinti šį įrenginį?')) {
+                fetch(`/dashboard/smart/device/${deviceId}/delete/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        window.location.reload();
+                    } else {
+                        alert('Klaida trinant įrenginį: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Klaida:', error);
+                    alert('Klaida trinant įrenginį');
+                });
+            }
         });
     });
 });
