@@ -290,7 +290,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     // Create date span
                     const dateSpan = document.createElement("div");
                     dateSpan.classList.add("plan-date");
-                    dateSpan.textContent = formatDate(plan.datetime);
+                    dateSpan.textContent = plan.date_formatted;
                     
                     // Append name and date to container
                     textContainer.appendChild(nameSpan);

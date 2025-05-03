@@ -62,21 +62,38 @@ def format_time_difference_in(dt1, dt2):
     hours = (total_seconds % 86400) // 3600
     minutes = (total_seconds % 3600) // 60
 
-    def lietuviskai(number, word_singular, word_plural_2_9, word_plural_10_plus):
-        if number == 1:
-            return f"{number} {word_singular}"
-        elif 2 <= number <= 9:
-            return f"{number} {word_plural_2_9}"
-        return f"{number} {word_plural_10_plus}"
+    def lietuviskai(number, word_forms, is_future=False):
+        # word_forms should be (singular, plural_2_9, plural_10_plus) for past
+        # or (genitive_singular, genitive_plural) for future
+        if is_future:
+            singular, plural = word_forms
+            return f"{number} {singular if number == 1 else plural}"
+        else:
+            singular, plural_2_9, plural_10_plus = word_forms
+            if number == 1:
+                return f"{number} {singular}"
+            elif 2 <= number <= 9:
+                return f"{number} {plural_2_9}"
+            return f"{number} {plural_10_plus}"
 
-    prefix = "prieš" if dt1 > dt2 else "po"
+    is_future = dt1 < dt2
+    prefix = "po" if is_future else "prieš"
 
     if days > 0:
-        return f"{prefix} {lietuviskai(days, 'dieną', 'dienas', 'dienų')}"
+        if is_future:
+            return f"{prefix} {lietuviskai(days, ('dienos', 'dienų'), True)}"
+        else:
+            return f"{prefix} {lietuviskai(days, ('dieną', 'dienas', 'dienų'))}"
     elif hours > 0:
-        return f"{prefix} {lietuviskai(hours, 'valandą', 'valandas', 'valandų')}"
+        if is_future:
+            return f"{prefix} {lietuviskai(hours, ('valandos', 'valandų'), True)}"
+        else:
+            return f"{prefix} {lietuviskai(hours, ('valandą', 'valandas', 'valandų'))}"
     elif minutes > 0:
-        return f"{prefix} {lietuviskai(minutes, 'minutes', 'minučių', 'minučių')}"
+        if is_future:
+            return f"{prefix} {lietuviskai(minutes, ('minutės', 'minučių'), True)}"
+        else:
+            return f"{prefix} {lietuviskai(minutes, ('minutę', 'minutes', 'minučių'))}"
     return "ką tik"
 
 @family_member_required

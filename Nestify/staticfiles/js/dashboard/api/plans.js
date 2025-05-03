@@ -74,7 +74,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
                     planElement.innerHTML = `
                         <span>${plan.name}</span>
-                        <span class="plan-date">${formatDate(plan.datetime)}</span>
+                        <span class="plan-date">${plan.date_formatted}</span>
                     `;
 
                     plansContainer.appendChild(planElement);
