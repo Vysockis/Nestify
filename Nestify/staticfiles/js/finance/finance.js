@@ -457,7 +457,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 tableHtml += `
                     <tr>
                         <td>${item.name || '-'}</td>
-                        <td>${item.quantity !== null && item.quantity !== undefined ? item.quantity : 1}</td>
+                        <td>${item.qty !== null && item.qty !== undefined ? item.qty : 1}</td>
                         <td>${priceDisplay}</td>
                         <td class="text-end">
                             <div class="btn-group">
@@ -585,6 +585,15 @@ document.addEventListener("DOMContentLoaded", function() {
                                 type: "text", 
                                 required: true,
                                 value: item.name || ''
+                            },
+                            { 
+                                id: "quantity", 
+                                label: "Kiekis", 
+                                type: "number", 
+                                required: true,
+                                min: "1",
+                                step: "1",
+                                value: item.qty || 1
                             },
                             { 
                                 id: "amount", 
