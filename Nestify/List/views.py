@@ -193,7 +193,7 @@ def list(request):
 
     if request.method == "POST":
         try:
-            data = request.POST
+            data = json.loads(request.body)
             image_file = request.FILES.get("image")
 
             # Check if a recipe with the same name already exists
@@ -209,9 +209,31 @@ def list(request):
                     "success": False
                 }, status=400)
 
+            # Get datetime from data or use current time
+            datetime_str = data.get("datetime")
+            if datetime_str:
+                try:
+                    datetime_value = timezone.datetime.fromisoformat(datetime_str)
+                except (ValueError, TypeError):
+                    datetime_value = timezone.now()
+            else:
+                datetime_value = timezone.now()
+
+            # Get category if provided
+            category_id = data.get("category")
+            category = None
+            if category_id:
+                try:
+                    from Finance.models import Category
+                    category = Category.objects.get(pk=category_id)
+                except Category.DoesNotExist:
+                    return JsonResponse({"error": "Category not found"}, status=404)
+
             defaults = {
                 "description": data.get("description"),
-                "datetime": data.get("datetime")
+                "datetime": datetime_value,
+                "amount": data.get("amount"),
+                "category": category
             }
 
             obj, _ = models.List.objects.update_or_create(
