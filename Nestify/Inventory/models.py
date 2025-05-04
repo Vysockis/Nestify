@@ -28,13 +28,14 @@ class Item(models.Model):
 class ItemOperation(models.Model):
     item = models.ForeignKey("Inventory.Item", on_delete=models.CASCADE)
     qty = models.IntegerField(default=1)
-    buy_date = models.DateField(auto_now=False, auto_now_add=True)
-    exp_date = models.DateField(auto_now=False, auto_now_add=False, null=True, blank=True)
+    buy_date = models.DateField()
+    exp_date = models.DateField(null=True, blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
 
     class Meta:
         verbose_name = _("ItemOperation")
         verbose_name_plural = _("ItemOperations")
+        unique_together = ('item', 'exp_date')
 
     def __str__(self):
         return f"{self.item.name} - {self.qty}"

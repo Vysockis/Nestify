@@ -6,6 +6,7 @@ from django.utils import timezone
 from .models import Item, ItemOperation, ItemType
 from datetime import datetime
 import json
+from django.db import IntegrityError
 
 @login_required
 @family_member_required
@@ -43,6 +44,7 @@ def add_item(request):
         item_type = request.POST.get('item_type')
         qty = int(request.POST.get('qty', 1))
         exp_date_str = request.POST.get('exp_date')
+        buy_date_str = request.POST.get('buy_date')
         
         if not name or not item_type:
             return JsonResponse({'error': 'Būtina užpildyti pavadinimą ir tipą'}, status=400)
@@ -61,6 +63,15 @@ def add_item(request):
         item.statistics_qty += qty
         item.save()
         
+        # Parse buy_date
+        if not buy_date_str:
+            buy_date = timezone.now().date()
+        else:
+            try:
+                buy_date = datetime.strptime(buy_date_str, '%Y-%m-%d').date()
+            except ValueError:
+                return JsonResponse({'error': 'Neteisingas pirkimo datos formatas'}, status=400)
+        
         # Create the item operation (actual inventory instance with its own expiry date)
         exp_date = None
         if exp_date_str:
@@ -69,13 +80,20 @@ def add_item(request):
             except ValueError:
                 return JsonResponse({'error': 'Neteisingas galiojimo datos formatas'}, status=400)
         
-        # Always create a new inventory operation - this allows same product with different exp dates
-        ItemOperation.objects.create(
-            item=item,
-            qty=qty,
-            exp_date=exp_date,
-            price=0
-        )
+        try:
+            print(buy_date)
+            print(exp_date)
+            ItemOperation.objects.create(
+                item=item,
+                qty=qty,
+                buy_date=buy_date,
+                exp_date=exp_date,
+                price=0
+            )
+        except IntegrityError:
+            return JsonResponse({'error': 'Toks turto įrašas jau egzistuoja šiai datai'}, status=400)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=400)
         
         return JsonResponse({'success': True, 'redirect': '/inventory/items/'})
     
@@ -220,62 +238,22 @@ def api_items(request):
     operations = ItemOperation.objects.filter(item__in=base_items).order_by('-exp_date')
     
     items_data = []
-    
-    # Grupuoti operacijas pagal prekę
-    grouped_items = {}
-    for op in operations:
-        item = op.item
-        item_key = f"{item.id}"
-        
-        if item_key not in grouped_items:
-            grouped_items[item_key] = {
-                'id': item.id,
-                'name': item.name,
-                'type': item.get_item_type_display(),
-                'type_value': item.item_type,
-                'total_qty': 0,
-                'operations': [],
-                'earliest_exp_date': None,
-                'is_expired': False,
-                'is_expiring_soon': False,
-                'is_expiring_very_soon': False
-            }
-        
-        # Add operation details
-        if op.exp_date:
-            grouped_items[item_key]['operations'].append({
-                'id': op.id,
-                'qty': op.qty,
-                'exp_date': op.exp_date
-            })
-            
-            # Update earliest expiration date if this one is earlier
-            if (not grouped_items[item_key]['earliest_exp_date'] or
-                op.exp_date < grouped_items[item_key]['earliest_exp_date']):  # type: ignore
-                grouped_items[item_key]['earliest_exp_date'] = op.exp_date
-        
-        # Update total quantity
-        if item.item_type != ItemType.CONTRACTS:
-            grouped_items[item_key]['total_qty'] += op.qty
-    
-    # Process expiration status for each item
     today = timezone.now().date()
-    for item_data in grouped_items.values():
-        exp_date = item_data['earliest_exp_date']
-        if exp_date:
-            days_until_expiry = (exp_date - today).days
-            item_data['is_expired'] = days_until_expiry < 0
-            item_data['is_expiring_soon'] = days_until_expiry <= 7 and days_until_expiry >= 0
-            item_data['is_expiring_very_soon'] = days_until_expiry <= 3 and days_until_expiry >= 0
-            item_data['exp_date'] = exp_date.strftime('%Y-%m-%d')
-        else:
-            item_data['exp_date'] = None
-        
-        # Clean up the data structure
-        del item_data['operations']
-        del item_data['earliest_exp_date']
-        
-        items_data.append(item_data)
+    for op in operations:
+        exp_date = op.exp_date
+        days_until_expiry = (exp_date - today).days if exp_date else None
+        items_data.append({
+            'id': op.id,
+            'name': op.item.name,
+            'type': op.item.get_item_type_display(),
+            'type_value': op.item.item_type,
+            'total_qty': op.qty,
+            'exp_date': exp_date.strftime('%Y-%m-%d') if exp_date else None,
+            'days_left': days_until_expiry,
+            'is_expired': days_until_expiry is not None and days_until_expiry < 0,
+            'is_expiring_soon': days_until_expiry is not None and days_until_expiry <= 7 and days_until_expiry >= 0,
+            'is_expiring_very_soon': days_until_expiry is not None and days_until_expiry <= 3 and days_until_expiry >= 0
+        })
     
     # Sort items by expiration date
     items_data.sort(key=lambda x: x.get('exp_date') or '9999-12-31')
