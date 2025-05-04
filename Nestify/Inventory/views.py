@@ -48,6 +48,9 @@ def add_item(request):
         
         if not name or not item_type:
             return JsonResponse({'error': 'Būtina užpildyti pavadinimą ir tipą'}, status=400)
+            
+        if not exp_date_str:
+            return JsonResponse({'error': 'Būtina nurodyti galiojimo datą'}, status=400)
         
         # Find or create the item (product definition)
         item, created = Item.objects.get_or_create(
