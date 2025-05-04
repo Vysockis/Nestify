@@ -15,6 +15,8 @@ from PIL import Image
 import io
 import tempfile
 from pdf2image import convert_from_bytes
+import json
+from decimal import Decimal
 
 # Create your views here.
 @parent_required
@@ -505,6 +507,57 @@ def delete_operation(request, operation_id):
             return JsonResponse({"success": True})
         except lModels.List.DoesNotExist:
             return JsonResponse({"error": "Operation not found"}, status=404)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+    return JsonResponse({"error": "Invalid request method"}, status=400)
+
+@parent_required
+def edit_operation(request, operation_id):
+    """API endpoint to edit finance operation."""
+    if request.method == 'POST':
+        try:
+            operation = lModels.List.objects.get(id=operation_id, list_type='FINANCE')
+            data = json.loads(request.body)
+            
+            if 'date' in data:
+                try:
+                    operation.datetime = datetime.fromisoformat(data['date'].replace('Z', '+00:00'))
+                except ValueError:
+                    try:
+                        operation.datetime = datetime.strptime(data['date'], '%Y-%m-%dT%H:%M:%S')
+                    except ValueError:
+                        operation.datetime = datetime.strptime(data['date'], '%Y-%m-%dT%H:%M')
+            
+            # Update amount if provided
+            if 'amount' in data:
+                operation.amount = Decimal(data['amount'])
+            
+            operation.save()
+            return JsonResponse({"success": True})
+        except lModels.List.DoesNotExist:
+            return JsonResponse({"error": "Operation not found"}, status=404)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+    return JsonResponse({"error": "Invalid request method"}, status=400)
+
+@parent_required
+def edit_operation_item(request, item_id):
+    """API endpoint to edit operation item."""
+    if request.method == 'POST':
+        try:
+            item = lModels.ListItem.objects.get(id=item_id)
+            data = json.loads(request.body)
+            
+            if 'name' in data:
+                item.name = data['name']
+            
+            if 'amount' in data:
+                item.price = Decimal(data['amount'])
+            
+            item.save()
+            return JsonResponse({"success": True})
+        except lModels.ListItem.DoesNotExist:
+            return JsonResponse({"error": "Item not found"}, status=404)
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
     return JsonResponse({"error": "Invalid request method"}, status=400)

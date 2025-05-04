@@ -460,9 +460,14 @@ document.addEventListener("DOMContentLoaded", function() {
                         <td>${item.quantity !== null && item.quantity !== undefined ? item.quantity : 1}</td>
                         <td>${priceDisplay}</td>
                         <td class="text-end">
-                            <button class="btn btn-sm btn-outline-danger delete-item-btn" data-item-id="${item.id}">
-                                <i class="fas fa-trash"></i>
-                            </button>
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-outline-secondary me-2 edit-item-btn" data-item-id="${item.id}">
+                                    <i class="fas fa-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger delete-item-btn" data-item-id="${item.id}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
                         </td>
                     </tr>
                 `;
@@ -566,6 +571,69 @@ document.addEventListener("DOMContentLoaded", function() {
                 });
             });
             
+            // Add event listeners for edit buttons
+            document.querySelectorAll('.edit-item-btn').forEach(button => {
+                button.addEventListener('click', async function() {
+                    const itemId = this.dataset.itemId;
+                    const item = data.items.find(i => i.id === parseInt(itemId));
+                    
+                    if (item) {
+                        const fields = [
+                            { 
+                                id: "name", 
+                                label: "Pavadinimas", 
+                                type: "text", 
+                                required: true,
+                                value: item.name || ''
+                            },
+                            { 
+                                id: "amount", 
+                                label: "Suma", 
+                                type: "number", 
+                                required: true,
+                                step: "0.01",
+                                value: item.price || ''
+                            }
+                        ];
+                        
+                        const formData = await openModal({
+                            title: "Redaguoti operacijos elementą",
+                            fields: fields
+                        });
+                        
+                        if (formData) {
+                            try {
+                                const response = await fetch(`/finance/api/operation-items/${itemId}/edit/`, {
+                                    method: "POST",
+                                    headers: {
+                                        "Content-Type": "application/json",
+                                        "X-CSRFToken": csrfToken
+                                    },
+                                    body: JSON.stringify(formData)
+                                });
+                                
+                                const data = await response.json();
+                                
+                                if (data.success) {
+                                    // Close the current modal
+                                    bsModal.hide();
+                                    
+                                    // Refresh the data and reshow the modal with updated items
+                                    setTimeout(() => {
+                                        showOperationItems(operationId);
+                                    }, 300);
+                                } else {
+                                    alert("Klaida: " + (data.error || "Nepavyko atnaujinti elemento"));
+                                }
+                            } catch (error) {
+                                console.error("Error editing operation item:", error);
+                                alert("Klaida: Nepavyko atnaujinti elemento. Bandykite dar kartą.");
+                            }
+                        }
+                    }
+                });
+            });
+            
             // Clean up when modal is hidden
             modal.addEventListener('hidden.bs.modal', () => {
                 document.body.removeChild(modal);
@@ -615,6 +683,9 @@ document.addEventListener("DOMContentLoaded", function() {
                             <button class="btn btn-sm btn-outline-secondary me-2 view-items" data-operation-id="${operation.id}">
                                 <i class="fas fa-eye"></i>
                             </button>
+                            <button class="btn btn-sm btn-outline-secondary me-2 edit-operation" data-operation-id="${operation.id}">
+                                <i class="fas fa-pencil"></i>
+                            </button>
                             <button class="btn btn-sm btn-outline-danger delete-operation" data-operation-id="${operation.id}">
                                 <i class="fas fa-trash"></i>
                             </button>
@@ -653,6 +724,63 @@ document.addEventListener("DOMContentLoaded", function() {
                         } catch (error) {
                             console.error('Error deleting operation:', error);
                             alert('Klaida trinant operaciją');
+                        }
+                    }
+                });
+            });
+
+            // Add event listeners for edit buttons
+            document.querySelectorAll('.edit-operation').forEach(button => {
+                button.addEventListener('click', async function() {
+                    const operationId = this.dataset.operationId;
+                    const operation = currentOperations.find(op => op.id === parseInt(operationId));
+                    
+                    if (operation) {
+                        const fields = [
+                            { 
+                                id: "date", 
+                                label: "Data", 
+                                type: "datetime-local", 
+                                required: true,
+                                value: new Date(operation.date).toISOString().slice(0, 16)
+                            },
+                            { 
+                                id: "amount", 
+                                label: "Suma", 
+                                type: "number", 
+                                required: true,
+                                step: "0.01",
+                                value: operation.amount
+                            }
+                        ];
+                        
+                        const formData = await openModal({
+                            title: "Redaguoti operaciją",
+                            fields: fields
+                        });
+                        
+                        if (formData) {
+                            try {
+                                const response = await fetch(`/finance/api/operations/${operationId}/edit/`, {
+                                    method: "POST",
+                                    headers: {
+                                        "Content-Type": "application/json",
+                                        "X-CSRFToken": csrfToken
+                                    },
+                                    body: JSON.stringify(formData)
+                                });
+                                
+                                const data = await response.json();
+                                
+                                if (data.success) {
+                                    processChartData();
+                                } else {
+                                    alert("Klaida: " + (data.error || "Nepavyko atnaujinti operacijos"));
+                                }
+                            } catch (error) {
+                                console.error("Error editing operation:", error);
+                                alert("Klaida: Nepavyko atnaujinti operacijos. Bandykite dar kartą.");
+                            }
                         }
                     }
                 });
