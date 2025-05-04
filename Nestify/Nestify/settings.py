@@ -38,6 +38,7 @@ AUTH_USER_MODEL = 'Profile.CustomUser'
 LOGIN_URL  = '/login/'  # Redirect users to the dashboard after login
 
 INSTALLED_APPS = [
+    "django_prometheus",
     'Profile',
     'Family',
     'Finance',
@@ -63,6 +64,7 @@ SITE_URL = config['site']['url']
 
 # Middleware Configuration
 MIDDLEWARE = [
+    'django_prometheus.middleware.PrometheusBeforeMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -71,6 +73,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'Nestify.middleware.PaymentRequiredMiddleware',  # Add our new middleware
+    'django_prometheus.middleware.PrometheusAfterMiddleware',
 ]
 
 ROOT_URLCONF = 'Nestify.urls'
