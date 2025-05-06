@@ -1,6 +1,7 @@
 from enum import Enum
 from django.utils.translation import gettext_lazy as _
 
+
 class ListType(Enum):
     GROCERY = _("Grocery")
     TASK = _("Task")

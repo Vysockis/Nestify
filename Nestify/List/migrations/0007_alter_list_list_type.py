@@ -13,6 +13,19 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='list',
             name='list_type',
-            field=models.CharField(choices=[('GROCERY', 'Grocery'), ('TASK', 'Task'), ('MEAL', 'Meal'), ('FINANCE', 'Finance'), ('OTHER', 'Other')], default='OTHER', max_length=20),
+            field=models.CharField(
+                choices=[
+                    ('GROCERY',
+                     'Grocery'),
+                    ('TASK',
+                     'Task'),
+                    ('MEAL',
+                     'Meal'),
+                    ('FINANCE',
+                     'Finance'),
+                    ('OTHER',
+                     'Other')],
+                default='OTHER',
+                max_length=20),
         ),
     ]

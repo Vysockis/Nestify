@@ -2,19 +2,64 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('recipes/', views.recipes_view, name="recipe-view"),
-    path('api/recipes/', views.recipes, name="recipe"),
-    path('api/update-item-status/', views.update_item_status, name="update_item_status"),
-    path('api/family-list/', views.get_family_list, name="get_family_list"),
-    path('api/item/', views.item, name="item"),
-    path('api/list/', views.list, name="list"),
-    path('api/items/', views.items, name="items"),
-    path('prizes/', views.prizes_view, name='prizes'),
-    path('api/points/', views.get_points_data, name='get_points_data'),
-    path('api/pending-tasks/', views.get_pending_tasks, name='get_pending_tasks'),
-    path('api/approve-task/<int:task_id>/', views.approve_task, name='approve_task'),
-    path('api/pending-task/<int:task_id>/', views.delete_pending_task, name='delete_pending_task'),
-    path('api/prize/', views.manage_prize, name='manage_prize'),
-    path('api/redeem-prize/<int:prize_id>/', views.redeem_prize, name='redeem_prize'),
-    path('api/add-points/', views.add_points, name='add_points'),
+    path(
+        'recipes/',
+        views.recipes_view,
+        name="recipe-view"),
+    path(
+        'api/recipes/',
+        views.recipes,
+        name="recipe"),
+    path(
+        'api/update-item-status/',
+        views.update_item_status,
+        name="update_item_status"),
+    path(
+        'api/family-list/',
+        views.get_family_list,
+        name="get_family_list"),
+    path(
+        'api/item/',
+        views.item,
+        name="item"),
+    path(
+        'api/list/',
+        views.list,
+        name="list"),
+    path(
+        'api/items/',
+        views.items,
+        name="items"),
+    path(
+        'prizes/',
+        views.prizes_view,
+        name='prizes'),
+    path(
+        'api/points/',
+        views.get_points_data,
+        name='get_points_data'),
+    path(
+        'api/pending-tasks/',
+        views.get_pending_tasks,
+        name='get_pending_tasks'),
+    path(
+        'api/approve-task/<int:task_id>/',
+        views.approve_task,
+        name='approve_task'),
+    path(
+        'api/pending-task/<int:task_id>/',
+        views.delete_pending_task,
+        name='delete_pending_task'),
+    path(
+        'api/prize/',
+        views.manage_prize,
+        name='manage_prize'),
+    path(
+        'api/redeem-prize/<int:prize_id>/',
+        views.redeem_prize,
+        name='redeem_prize'),
+    path(
+        'api/add-points/',
+        views.add_points,
+        name='add_points'),
 ]

@@ -6,8 +6,7 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('Finance', '0004_remove_operationitem_operation_delete_operation_and_more'),
-    ]
+        ('Finance', '0004_remove_operationitem_operation_delete_operation_and_more'), ]
 
     operations = [
         migrations.RemoveField(

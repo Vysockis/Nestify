@@ -15,11 +15,13 @@ from . import models
 def recipes_view(request):
     return render(request, 'recipes/main.html')
 
+
 @family_member_required
 def recipes(request):
     family = request.user.getFamily()
-    recipes = models.List.objects.filter(family=family, list_type=ListType.MEAL.name)
-    
+    recipes = models.List.objects.filter(
+        family=family, list_type=ListType.MEAL.name)
+
     recipe_list = [{
         "id": recipe.pk,
         "name": recipe.name,
@@ -34,11 +36,13 @@ def recipes(request):
 
     return JsonResponse({"recipe_list": recipe_list}, safe=False)
 
+
 @family_member_required
 def recipes(request):
     family = request.user.getFamily()
-    recipes = models.List.objects.filter(family=family, list_type=ListType.MEAL.name)
-    
+    recipes = models.List.objects.filter(
+        family=family, list_type=ListType.MEAL.name)
+
     recipe_list = [{
         "id": recipe.pk,
         "name": recipe.name,
@@ -52,12 +56,13 @@ def recipes(request):
     } for recipe in recipes]
 
     return JsonResponse({"recipe_list": recipe_list}, safe=False)
+
 
 @family_member_required
 def update_item_status(request):
     if request.method != "POST":
         return JsonResponse({"error": "Invalid request method"}, status=400)
-        
+
     try:
         data = json.loads(request.body)
         item = models.ListItem.objects.get(pk=data.get("item_id"))
@@ -76,11 +81,13 @@ def update_item_status(request):
                 }
             )
 
-        return JsonResponse({"success": True, "message": "Item status updated successfully"})
+        return JsonResponse({"success": True,
+                             "message": "Item status updated successfully"})
     except ObjectDoesNotExist:
         return JsonResponse({"error": "Item not found"}, status=404)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
+
 
 @family_member_required
 def get_family_list(request):
@@ -89,13 +96,15 @@ def get_family_list(request):
         return JsonResponse({"error": "No family found"}, status=400)
 
     family_lists = models.List.get_family_list(family).order_by("datetime")
-    
+
     def format_item_name(item, list_type):
         if list_type == ListType.GROCERY.name:
-            return f"{f"{item.qty}x" if item.qty and item.qty != 1 else ""} {item.name}"
+            return f"{f"{item.qty}x" if item.qty and item.qty !=
+                      1 else ""} {item.name}"
         elif list_type == ListType.TASK.name:
             points_text = f" - {int(item.amount)}💎" if item.amount and item.amount > 0 else ""
-            user_text = f"{item.assigned_to.first_name}: " if item.assigned_to else ""
+            user_text = f"{
+                item.assigned_to.first_name}: " if item.assigned_to else ""
             text = f"{user_text}{item.name}{points_text}"
             return text
         elif list_type == ListType.MEAL.name:
@@ -116,6 +125,7 @@ def get_family_list(request):
 
     return JsonResponse({"family_list": data}, safe=False)
 
+
 @family_member_required
 @parent_required
 def item(request):
@@ -123,7 +133,8 @@ def item(request):
         try:
             data = json.loads(request.body)
             models.ListItem.objects.get(pk=data.get("item_id")).delete()
-            return JsonResponse({"success": True, "message": "Item deleted successfully"})
+            return JsonResponse(
+                {"success": True, "message": "Item deleted successfully"})
         except ObjectDoesNotExist:
             return JsonResponse({"error": "Item not found"}, status=404)
         except Exception as e:
@@ -133,25 +144,35 @@ def item(request):
         try:
             data = json.loads(request.body)
             list_obj = models.List.objects.get(id=data.get("list_id"))
-            
+
             assigned_to = None
-            if list_obj.list_type == ListType.TASK.name and data.get("assigned_to"):
-                assigned_to = FamilyMember.objects.get(pk=data.get("assigned_to")).user
+            if list_obj.list_type == ListType.TASK.name and data.get(
+                    "assigned_to"):
+                assigned_to = FamilyMember.objects.get(
+                    pk=data.get("assigned_to")).user
                 # Create notification for task assignment
                 from Family.models import Notification, FamilySettings
-                
+
                 # Get family settings and notification recipients
-                settings = FamilySettings.get_or_create_settings(list_obj.family)
-                recipients = settings.get_notification_recipients('task', assigned_user=assigned_to)
-                
+                settings = FamilySettings.get_or_create_settings(
+                    list_obj.family)
+                recipients = settings.get_notification_recipients(
+                    'task', assigned_user=assigned_to)
+
                 # Create notification for each recipient
                 for recipient in recipients:
-                    # Different message based on whether recipient is the assigned user
+                    # Different message based on whether recipient is the
+                    # assigned user
                     if recipient == assigned_to:
-                        message = f'Jums priskirta nauja užduotis: {data.get("name")} ({list_obj.name})'
+                        message = f'Jums priskirta nauja užduotis: {
+                            data.get("name")} ({
+                            list_obj.name})'
                     else:
-                        message = f'{assigned_to.first_name} priskirta nauja užduotis: {data.get("name")} ({list_obj.name})'
-                    
+                        message = f'{
+                            assigned_to.first_name} priskirta nauja užduotis: {
+                            data.get("name")} ({
+                            list_obj.name})'
+
                     Notification.create_notification(
                         family=list_obj.family,
                         recipient=recipient,
@@ -168,9 +189,7 @@ def item(request):
                 defaults={
                     "qty": data.get("qty"),
                     "amount": data.get("price") if data.get("price") is not None else data.get("amount"),
-                    "assigned_to": assigned_to
-                }
-            )
+                    "assigned_to": assigned_to})
             return JsonResponse({"success": True})
         except ObjectDoesNotExist:
             return JsonResponse({"error": "List not found"}, status=404)
@@ -179,13 +198,15 @@ def item(request):
 
     return JsonResponse({"error": "Invalid request method"}, status=400)
 
+
 @family_member_required
 def list(request):
     if request.method == "DELETE":
         try:
             data = json.loads(request.body)
             models.List.objects.get(pk=data.get("list_id")).delete()
-            return JsonResponse({"success": True, "message": "List deleted successfully"})
+            return JsonResponse(
+                {"success": True, "message": "List deleted successfully"})
         except ObjectDoesNotExist:
             return JsonResponse({"error": "List not found"}, status=404)
         except Exception as e:
@@ -196,11 +217,16 @@ def list(request):
             data = json.loads(request.body)
             image_file = request.FILES.get("image")
             list_obj = models.List.objects.get(pk=data.get("list_id"))
-            list_obj.name = data.get("name") if data.get("name") else list_obj.name
-            list_obj.description = data.get("description") if data.get("description") else list_obj.description
-            list_obj.datetime = data.get("datetime") if data.get("datetime") else list_obj.datetime
-            list_obj.amount = data.get("amount") if data.get("amount") else list_obj.amount
-            list_obj.category = data.get("category") if data.get("category") else list_obj.category
+            list_obj.name = data.get("name") if data.get(
+                "name") else list_obj.name
+            list_obj.description = data.get("description") if data.get(
+                "description") else list_obj.description
+            list_obj.datetime = data.get("datetime") if data.get(
+                "datetime") else list_obj.datetime
+            list_obj.amount = data.get("amount") if data.get(
+                "amount") else list_obj.amount
+            list_obj.category = data.get("category") if data.get(
+                "category") else list_obj.category
             if image_file:
                 list_obj.image.save(image_file.name, image_file)
             list_obj.save()
@@ -231,7 +257,8 @@ def list(request):
             datetime_str = data.get("datetime")
             if datetime_str:
                 try:
-                    datetime_value = timezone.datetime.fromisoformat(datetime_str)
+                    datetime_value = timezone.datetime.fromisoformat(
+                        datetime_str)
                 except (ValueError, TypeError):
                     datetime_value = timezone.now()
             else:
@@ -245,7 +272,8 @@ def list(request):
                     from Finance.models import Category
                     category = Category.objects.get(pk=category_id)
                 except Category.DoesNotExist:
-                    return JsonResponse({"error": "Category not found"}, status=404)
+                    return JsonResponse(
+                        {"error": "Category not found"}, status=404)
 
             defaults = {
                 "description": data.get("description"),
@@ -271,6 +299,7 @@ def list(request):
             return JsonResponse({"error": str(e)}, status=400)
 
     return JsonResponse({"error": "Invalid request method"}, status=400)
+
 
 @family_member_required
 def items(request):
@@ -300,18 +329,20 @@ def items(request):
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
 
+
 @family_member_required
 def prizes_view(request):
     return render(request, 'prizes/main.html')
+
 
 @family_member_required
 def get_points_data(request):
     family = request.user.getFamily()
     family_member = FamilyMember.objects.get(user=request.user, family=family)
-    
+
     # Get user's points
     user_points = models.PointsTransaction.get_member_points(family_member)
-    
+
     # Get leaderboard
     leaderboard = models.PointsTransaction.get_family_leaderboard(family)
     leaderboard_data = [{
@@ -320,7 +351,7 @@ def get_points_data(request):
         "points": member.total_points or 0,
         "is_current_user": member.user == request.user
     } for member in leaderboard]
-    
+
     # Get available prizes
     prizes = models.Prize.get_family_prizes(family)
     prizes_data = [{
@@ -329,7 +360,7 @@ def get_points_data(request):
         "points_required": prize.points_required,
         "is_available": user_points >= prize.points_required
     } for prize in prizes]
-    
+
     # Get redeemed prizes
     if family_member.admin:
         # For admin, get all family members' redeemed prizes
@@ -343,14 +374,14 @@ def get_points_data(request):
             family_member=family_member,
             transaction_type=models.PointsTransaction.PRIZE_REDEMPTION
         ).order_by('-created_at')
-    
+
     redeemed_prizes_data = [{
         "name": models.Prize.objects.get(id=int(t.reference_id.split('_')[1])).name,
         "points": abs(t.points),
         "date": t.created_at.strftime("%Y-%m-%d %H:%M"),
         "member_name": t.family_member.user.first_name if family_member.admin else None
     } for t in redeemed_prizes]
-    
+
     return JsonResponse({
         "points": user_points,
         "leaderboard": leaderboard_data,
@@ -359,12 +390,13 @@ def get_points_data(request):
         "is_admin": family_member.admin
     })
 
+
 @family_member_required
 @parent_required
 def get_pending_tasks(request):
     family = request.user.getFamily()
     pending_tasks = models.PrizeTask.get_pending_tasks(family)
-    
+
     tasks_data = [{
         "id": task.id,
         "task_name": task.list_item.name,
@@ -372,18 +404,19 @@ def get_pending_tasks(request):
         "points": task.points,
         "created_at": task.created_at.isoformat()
     } for task in pending_tasks]
-    
+
     return JsonResponse({"pending_tasks": tasks_data})
+
 
 @family_member_required
 @parent_required
 def approve_task(request, task_id):
     if request.method != "POST":
         return JsonResponse({"error": "Invalid request method"}, status=400)
-        
+
     try:
         task = models.PrizeTask.objects.get(pk=task_id)
-        
+
         # Create points transaction
         models.PointsTransaction.objects.create(
             family_member=task.family_member,
@@ -393,18 +426,19 @@ def approve_task(request, task_id):
             created_by=request.user,
             note=f"Task completion: {task.list_item.name}"
         )
-        
+
         # Update task status
         task.is_approved = True
         task.approved_by = request.user
         task.approved_at = timezone.now()
         task.save()
-        
+
         return JsonResponse({"success": True})
     except models.PrizeTask.DoesNotExist:
         return JsonResponse({"error": "Task not found"}, status=404)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=400)
+
 
 @family_member_required
 @parent_required
@@ -413,19 +447,20 @@ def manage_prize(request):
         try:
             data = json.loads(request.body)
             family = request.user.getFamily()
-            
+
             models.Prize.objects.create(
                 family=family,
                 name=data["name"],
                 points_required=data["points_required"]
             )
-            
+
             return JsonResponse({"success": True})
         except KeyError:
-            return JsonResponse({"error": "Missing required fields"}, status=400)
+            return JsonResponse(
+                {"error": "Missing required fields"}, status=400)
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=400)
-            
+
     elif request.method == "DELETE":
         try:
             data = json.loads(request.body)
@@ -437,20 +472,21 @@ def manage_prize(request):
             return JsonResponse({"error": "Prize not found"}, status=404)
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=400)
-    
+
     return JsonResponse({"error": "Invalid request method"}, status=400)
+
 
 @family_member_required
 @parent_required
 def add_points(request):
     if request.method != "POST":
         return JsonResponse({"error": "Invalid request method"}, status=400)
-        
+
     try:
         data = json.loads(request.body)
         family = request.user.getFamily()
         member = FamilyMember.objects.get(pk=data["member_id"], family=family)
-        
+
         models.PointsTransaction.objects.create(
             family_member=member,
             points=data["points"],
@@ -458,7 +494,7 @@ def add_points(request):
             created_by=request.user,
             note=data.get("note", "Manual points addition")
         )
-        
+
         return JsonResponse({"success": True})
     except FamilyMember.DoesNotExist:
         return JsonResponse({"error": "Member not found"}, status=404)
@@ -467,12 +503,13 @@ def add_points(request):
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=400)
 
+
 @family_member_required
 @parent_required
 def delete_pending_task(request, task_id):
     if request.method != "DELETE":
         return JsonResponse({"error": "Invalid request method"}, status=400)
-        
+
     try:
         task = models.PrizeTask.objects.get(pk=task_id)
         task.delete()
@@ -482,21 +519,26 @@ def delete_pending_task(request, task_id):
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=400)
 
+
 @family_member_required
 def redeem_prize(request, prize_id):
     if request.method != "POST":
         return JsonResponse({"error": "Invalid request method"}, status=400)
-        
+
     try:
         family = request.user.getFamily()
-        family_member = FamilyMember.objects.get(user=request.user, family=family)
-        prize = models.Prize.objects.get(pk=prize_id, family=family, is_active=True)
-        
+        family_member = FamilyMember.objects.get(
+            user=request.user, family=family)
+        prize = models.Prize.objects.get(
+            pk=prize_id, family=family, is_active=True)
+
         # Check if user has enough points
-        current_points = models.PointsTransaction.get_member_points(family_member)
+        current_points = models.PointsTransaction.get_member_points(
+            family_member)
         if current_points < prize.points_required:
-            return JsonResponse({"error": "Nepakanka taškų prizui iškeisti"}, status=400)
-            
+            return JsonResponse(
+                {"error": "Nepakanka taškų prizui iškeisti"}, status=400)
+
         # Create negative points transaction for prize redemption
         models.PointsTransaction.objects.create(
             family_member=family_member,
@@ -506,7 +548,7 @@ def redeem_prize(request, prize_id):
             created_by=request.user,
             note=f"Prizas iškeistas: {prize.name}"
         )
-        
+
         return JsonResponse({"success": True})
     except models.Prize.DoesNotExist:
         return JsonResponse({"error": "Prizas nerastas"}, status=404)

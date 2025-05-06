@@ -26,7 +26,7 @@ def dashboard(request):
         'unread_count': notifications.count(),
         'smart_devices': smart_devices
     }
-    
+
     return render(request, 'dashboard/main.html', context)
 
 
@@ -42,12 +42,14 @@ def mark_notification_read(request, notification_id):
         notification.save()
         return JsonResponse({'status': 'success'})
     except Notification.DoesNotExist:
-        return JsonResponse({'status': 'error', 'message': 'Notification not found'}, status=404)
+        return JsonResponse(
+            {'status': 'error', 'message': 'Notification not found'}, status=404)
 
 
 @family_member_required
 def calendar(request):
     return render(request, 'calendar/main.html')
+
 
 def format_time_difference_in(dt1, dt2):
     if timezone.is_naive(dt1):
@@ -83,18 +85,29 @@ def format_time_difference_in(dt1, dt2):
         if is_future:
             return f"{prefix} {lietuviskai(days, ('dienos', 'dienų'), True)}"
         else:
-            return f"{prefix} {lietuviskai(days, ('dieną', 'dienas', 'dienų'))}"
+            return f"{prefix} {
+                lietuviskai(
+                    days, ('dieną', 'dienas', 'dienų'))}"
     elif hours > 0:
         if is_future:
-            return f"{prefix} {lietuviskai(hours, ('valandos', 'valandų'), True)}"
+            return f"{prefix} {
+                lietuviskai(
+                    hours, ('valandos', 'valandų'), True)}"
         else:
-            return f"{prefix} {lietuviskai(hours, ('valandą', 'valandas', 'valandų'))}"
+            return f"{prefix} {
+                lietuviskai(
+                    hours, ('valandą', 'valandas', 'valandų'))}"
     elif minutes > 0:
         if is_future:
-            return f"{prefix} {lietuviskai(minutes, ('minutės', 'minučių'), True)}"
+            return f"{prefix} {
+                lietuviskai(
+                    minutes, ('minutės', 'minučių'), True)}"
         else:
-            return f"{prefix} {lietuviskai(minutes, ('minutę', 'minutes', 'minučių'))}"
+            return f"{prefix} {
+                lietuviskai(
+                    minutes, ('minutę', 'minutes', 'minučių'))}"
     return "ką tik"
+
 
 @family_member_required
 def calendar_events(request):
@@ -105,7 +118,7 @@ def calendar_events(request):
         plan__isnull=True,
         datetime__isnull=False
     ).exclude(list_type__in=['FINANCE', 'MEAL'])
-    
+
     list_event_list = [{
         "id": event.id,
         "title": event.name,
@@ -124,6 +137,7 @@ def calendar_events(request):
 
     return JsonResponse(list_event_list + plan_event_list, safe=False)
 
+
 @family_member_required
 def smart_dashboard(request):
     family = request.user.getFamily()
@@ -133,9 +147,13 @@ def smart_dashboard(request):
     }
     return render(request, 'dashboard/smart.html', context)
 
+
 @family_member_required
 def toggle_device(request, device_id):
-    device = get_object_or_404(SmartDevice, id=device_id, family=request.user.getFamily())
+    device = get_object_or_404(
+        SmartDevice,
+        id=device_id,
+        family=request.user.getFamily())
     device.is_on = not device.is_on
     device.save()
     return JsonResponse({
@@ -143,11 +161,16 @@ def toggle_device(request, device_id):
         'is_on': device.is_on
     })
 
+
 @family_member_required
 def update_brightness(request, device_id):
-    device = get_object_or_404(SmartDevice, id=device_id, family=request.user.getFamily())
+    device = get_object_or_404(
+        SmartDevice,
+        id=device_id,
+        family=request.user.getFamily())
     brightness = int(request.POST.get('brightness', 100))
-    brightness = max(0, min(100, brightness))  # Ensure brightness is between 0 and 100
+    # Ensure brightness is between 0 and 100
+    brightness = max(0, min(100, brightness))
     device.brightness = brightness
     device.save()
     return JsonResponse({
@@ -155,17 +178,20 @@ def update_brightness(request, device_id):
         'brightness': device.brightness
     })
 
+
 @family_member_required
 def add_device(request):
     if request.method != 'POST':
-        return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
+        return JsonResponse(
+            {'status': 'error', 'message': 'Invalid request method'}, status=405)
 
     name = request.POST.get('name')
     room = request.POST.get('room')
     device_type = request.POST.get('device_type')
 
     if not all([name, room, device_type]):
-        return JsonResponse({'status': 'error', 'message': 'Missing required fields'}, status=400)
+        return JsonResponse(
+            {'status': 'error', 'message': 'Missing required fields'}, status=400)
 
     try:
         device = SmartDevice.objects.create(
@@ -188,9 +214,13 @@ def add_device(request):
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
+
 @family_member_required
 def delete_device(request, device_id):
-    device = get_object_or_404(SmartDevice, id=device_id, family=request.user.getFamily())
+    device = get_object_or_404(
+        SmartDevice,
+        id=device_id,
+        family=request.user.getFamily())
     device.delete()
     return JsonResponse({
         'status': 'success',

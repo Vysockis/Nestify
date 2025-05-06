@@ -13,11 +13,30 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='notification',
             name='related_object_type',
-            field=models.CharField(blank=True, max_length=50, null=True),
+            field=models.CharField(
+                blank=True,
+                max_length=50,
+                null=True),
         ),
         migrations.AlterField(
             model_name='notification',
             name='notification_type',
-            field=models.CharField(choices=[('invite', 'Family Invitation'), ('request', 'Join Request'), ('system', 'System Notification'), ('general', 'General Notification'), ('inventory_expiring', 'Item Expiring Soon'), ('inventory_expired', 'Item Expired'), ('inventory_low', 'Item Low Stock')], max_length=20),
+            field=models.CharField(
+                choices=[
+                    ('invite',
+                     'Family Invitation'),
+                    ('request',
+                     'Join Request'),
+                    ('system',
+                     'System Notification'),
+                    ('general',
+                     'General Notification'),
+                    ('inventory_expiring',
+                     'Item Expiring Soon'),
+                    ('inventory_expired',
+                     'Item Expired'),
+                    ('inventory_low',
+                     'Item Low Stock')],
+                max_length=20),
         ),
     ]

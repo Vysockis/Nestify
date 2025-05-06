@@ -45,7 +45,11 @@ class FamilyMember(models.Model):
 
 class FamilyCode(models.Model):
     family = models.ForeignKey("Family.Family", on_delete=models.CASCADE)
-    user = models.ForeignKey("Profile.CustomUser", on_delete=models.CASCADE, blank=True, null=True)
+    user = models.ForeignKey(
+        "Profile.CustomUser",
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True)
     code = models.CharField(max_length=6, unique=True, editable=False)
     used = models.BooleanField(default=False)
 
@@ -68,7 +72,11 @@ class FamilyCode(models.Model):
     def generate_unique_code(self):
         """Generate a unique 6-character alphanumeric code."""
         while True:
-            code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+            code = ''.join(
+                random.choices(
+                    string.ascii_uppercase +
+                    string.digits,
+                    k=6))
             if not FamilyCode.objects.filter(code=code).exists():
                 return code
 
@@ -82,10 +90,22 @@ class Notification(models.Model):
         ('task_assigned', 'Task Assignment'),
     ]
 
-    family = models.ForeignKey("Family.Family", on_delete=models.CASCADE, related_name='notifications')
-    recipient = models.ForeignKey("Profile.CustomUser", on_delete=models.CASCADE, related_name='received_notifications')
-    sender = models.ForeignKey("Profile.CustomUser", on_delete=models.CASCADE, related_name='sent_notifications', null=True, blank=True)
-    notification_type = models.CharField(max_length=20, choices=NOTIFICATION_TYPES)
+    family = models.ForeignKey(
+        "Family.Family",
+        on_delete=models.CASCADE,
+        related_name='notifications')
+    recipient = models.ForeignKey(
+        "Profile.CustomUser",
+        on_delete=models.CASCADE,
+        related_name='received_notifications')
+    sender = models.ForeignKey(
+        "Profile.CustomUser",
+        on_delete=models.CASCADE,
+        related_name='sent_notifications',
+        null=True,
+        blank=True)
+    notification_type = models.CharField(
+        max_length=20, choices=NOTIFICATION_TYPES)
     title = models.CharField(max_length=100)
     message = models.TextField(default='')
     is_read = models.BooleanField(default=False)
@@ -110,7 +130,15 @@ class Notification(models.Model):
         self.save()
 
     @classmethod
-    def create_notification(cls, family, recipient, notification_type, title, message, sender=None, related_object_id=None):
+    def create_notification(
+            cls,
+            family,
+            recipient,
+            notification_type,
+            title,
+            message,
+            sender=None,
+            related_object_id=None):
         """
         Create a new notification with the given parameters.
         """
@@ -149,7 +177,10 @@ class FamilySettings(models.Model):
         ('admin', 'Tik administratorius'),
     ]
 
-    family = models.OneToOneField("Family.Family", on_delete=models.CASCADE, related_name='settings')
+    family = models.OneToOneField(
+        "Family.Family",
+        on_delete=models.CASCADE,
+        related_name='settings')
     inventory_notifications = models.CharField(
         max_length=20,
         choices=NOTIFICATION_RECIPIENTS,
@@ -175,15 +206,19 @@ class FamilySettings(models.Model):
         settings, created = cls.objects.get_or_create(family=family)
         return settings
 
-    def get_notification_recipients(self, notification_type, assigned_user=None):
+    def get_notification_recipients(
+            self,
+            notification_type,
+            assigned_user=None):
         if notification_type == 'inventory':
             setting = self.inventory_notifications
             family_members = self.family.get_family_members()
-            
+
             if setting == 'all':
                 return [member.user for member in family_members]
             elif setting == 'parents':
-                return [member.user for member in family_members if not member.kid]
+                return [
+                    member.user for member in family_members if not member.kid]
             else:  # admin
                 return [self.family.creator]
         elif notification_type == 'task' and assigned_user:
@@ -192,9 +227,11 @@ class FamilySettings(models.Model):
             recipients = [assigned_user]  # Always include the assigned user
 
             if setting == 'all':
-                recipients.extend([member.user for member in family_members if member.user != assigned_user])
+                recipients.extend(
+                    [member.user for member in family_members if member.user != assigned_user])
             elif setting == 'parents':
-                recipients.extend([member.user for member in family_members if not member.kid and member.user != assigned_user])
+                recipients.extend(
+                    [member.user for member in family_members if not member.kid and member.user != assigned_user])
             elif setting == 'admin':
                 if self.family.creator != assigned_user:
                     recipients.append(self.family.creator)

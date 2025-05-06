@@ -15,21 +15,38 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='list',
             name='amount',
-            field=models.DecimalField(blank=True, decimal_places=2, max_digits=10, null=True),
+            field=models.DecimalField(
+                blank=True,
+                decimal_places=2,
+                max_digits=10,
+                null=True),
         ),
         migrations.AddField(
             model_name='list',
             name='category',
-            field=models.ForeignKey(blank=True, default=None, null=True, on_delete=django.db.models.deletion.SET_DEFAULT, to='Finance.category', verbose_name=''),
+            field=models.ForeignKey(
+                blank=True,
+                default=None,
+                null=True,
+                on_delete=django.db.models.deletion.SET_DEFAULT,
+                to='Finance.category',
+                verbose_name=''),
         ),
         migrations.AddField(
             model_name='list',
             name='receipt_pdf',
-            field=models.FileField(blank=True, null=True, upload_to='receipts/'),
+            field=models.FileField(
+                blank=True,
+                null=True,
+                upload_to='receipts/'),
         ),
         migrations.AddField(
             model_name='listitem',
             name='amount',
-            field=models.DecimalField(blank=True, decimal_places=2, max_digits=10, null=True),
+            field=models.DecimalField(
+                blank=True,
+                decimal_places=2,
+                max_digits=10,
+                null=True),
         ),
     ]

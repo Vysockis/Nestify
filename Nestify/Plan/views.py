@@ -8,13 +8,16 @@ from django.core.exceptions import ObjectDoesNotExist
 from . import models
 
 # Create your views here.
+
+
 @family_member_required
 def plan(request):
     if request.method == "DELETE":
         try:
             data = json.loads(request.body)
             models.Plan.objects.get(pk=data.get("plan_id")).delete()
-            return JsonResponse({"success": True, "message": "Plan deleted successfully"})
+            return JsonResponse(
+                {"success": True, "message": "Plan deleted successfully"})
         except ObjectDoesNotExist:
             return JsonResponse({"error": "Plan not found"}, status=404)
         except Exception as e:
@@ -30,19 +33,21 @@ def plan(request):
                 image_file = None
 
             if "datetime" not in data:
-                return JsonResponse({"error": "Missing datetime field"}, status=400)
+                return JsonResponse(
+                    {"error": "Missing datetime field"}, status=400)
 
             datetime_str = data.pop("datetime")
             try:
-                datetime_obj = datetime.fromisoformat(datetime_str.replace('Z', '+00:00'))
+                datetime_obj = datetime.fromisoformat(
+                    datetime_str.replace('Z', '+00:00'))
             except ValueError:
                 try:
                     datetime_int = int(datetime_str)
                     datetime_obj = datetime.fromtimestamp(
-                        datetime_int / 1000 if datetime_int > 1e10 else datetime_int
-                    )
+                        datetime_int / 1000 if datetime_int > 1e10 else datetime_int)
                 except ValueError:
-                    return JsonResponse({"error": "Invalid datetime format"}, status=400)
+                    return JsonResponse(
+                        {"error": "Invalid datetime format"}, status=400)
 
             datetime_obj = datetime_obj.replace(tzinfo=tzlocal.get_localzone())
 
@@ -77,6 +82,7 @@ def plan(request):
 
     return JsonResponse({"error": "Invalid request method"}, status=400)
 
+
 @family_member_required
 def member(request):
     if request.method == "DELETE":
@@ -85,9 +91,11 @@ def member(request):
             member = FamilyMember.objects.get(pk=data.get("member_id"))
             plan = models.Plan.objects.get(pk=data.get("plan_id"))
             models.PlanMember.objects.get(user=member, plan=plan).delete()
-            return JsonResponse({"success": True, "message": "Member removed successfully"})
+            return JsonResponse({"success": True,
+                                 "message": "Member removed successfully"})
         except ObjectDoesNotExist:
-            return JsonResponse({"error": "Member or plan not found"}, status=404)
+            return JsonResponse(
+                {"error": "Member or plan not found"}, status=404)
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
 
@@ -96,23 +104,26 @@ def member(request):
             data = json.loads(request.body)
             member = FamilyMember.objects.get(pk=data.get("member_id"))
             plan = models.Plan.objects.get(pk=data.get("plan_id"))
-            
+
             obj, _ = models.PlanMember.objects.update_or_create(
                 plan=plan,
                 user=member
             )
             return JsonResponse({"success": True, "plan_member_id": obj.pk})
         except ObjectDoesNotExist:
-            return JsonResponse({"error": "Member or plan not found"}, status=404)
+            return JsonResponse(
+                {"error": "Member or plan not found"}, status=404)
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=400)
 
     return JsonResponse({"error": "Invalid request method"}, status=400)
 
+
 @family_member_required
 def plan_view(request):
     plan_id = request.GET.get("planId") or request.POST.get("planId")
     return render(request, 'plans/main.html', {"plan_id": plan_id})
+
 
 @family_member_required
 def plans(request):

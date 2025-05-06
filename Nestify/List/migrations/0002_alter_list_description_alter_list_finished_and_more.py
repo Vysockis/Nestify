@@ -16,36 +16,53 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='list',
             name='description',
-            field=models.TextField(blank=True, null=True),
+            field=models.TextField(
+                blank=True,
+                null=True),
         ),
         migrations.AlterField(
             model_name='list',
             name='finished',
-            field=models.BooleanField(default=False),
+            field=models.BooleanField(
+                default=False),
         ),
         migrations.AlterField(
             model_name='list',
             name='photo',
-            field=models.ImageField(blank=True, null=True, upload_to=''),
+            field=models.ImageField(
+                blank=True,
+                null=True,
+                upload_to=''),
         ),
         migrations.AlterField(
             model_name='list',
             name='plan',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='Plan.plan'),
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                to='Plan.plan'),
         ),
         migrations.AlterField(
             model_name='listitem',
             name='completed',
-            field=models.BooleanField(default=False),
+            field=models.BooleanField(
+                default=False),
         ),
         migrations.AlterField(
             model_name='listitem',
             name='item',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.DO_NOTHING, to='Inventory.item'),
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.DO_NOTHING,
+                to='Inventory.item'),
         ),
         migrations.AlterField(
             model_name='listitem',
             name='qty',
-            field=models.IntegerField(blank=True, null=True),
+            field=models.IntegerField(
+                blank=True,
+                null=True),
         ),
     ]

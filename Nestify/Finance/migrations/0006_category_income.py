@@ -6,7 +6,8 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('Finance', '0005_remove_transaction_pocket_remove_transaction_wallet_and_more'),
+        ('Finance',
+         '0005_remove_transaction_pocket_remove_transaction_wallet_and_more'),
     ]
 
     operations = [

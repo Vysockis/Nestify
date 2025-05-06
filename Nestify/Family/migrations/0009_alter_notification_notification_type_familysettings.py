@@ -14,16 +14,70 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='notification',
             name='notification_type',
-            field=models.CharField(choices=[('invite', 'Family Invitation'), ('request', 'Join Request'), ('system', 'System Notification'), ('general', 'General Notification'), ('task_assigned', 'Task Assignment')], max_length=20),
+            field=models.CharField(
+                choices=[
+                    ('invite',
+                     'Family Invitation'),
+                    ('request',
+                     'Join Request'),
+                    ('system',
+                     'System Notification'),
+                    ('general',
+                     'General Notification'),
+                    ('task_assigned',
+                     'Task Assignment')],
+                max_length=20),
         ),
         migrations.CreateModel(
             name='FamilySettings',
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('inventory_notifications', models.CharField(choices=[('all', 'Visi šeimos nariai'), ('parents', 'Tik tėvai'), ('admin', 'Tik administratorius')], default='all', max_length=20, verbose_name='Turto pranešimai')),
-                ('task_notifications', models.CharField(choices=[('all', 'Visi šeimos nariai'), ('parents', 'Tik tėvai'), ('admin', 'Tik administratorius')], default='all', max_length=20, verbose_name='Užduočių pranešimai')),
-                ('finance_notifications', models.CharField(choices=[('all', 'Visi šeimos nariai'), ('parents', 'Tik tėvai'), ('admin', 'Tik administratorius')], default='parents', max_length=20, verbose_name='Finansų pranešimai')),
-                ('family', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='settings', to='Family.family')),
+                ('id',
+                 models.BigAutoField(
+                     auto_created=True,
+                     primary_key=True,
+                     serialize=False,
+                     verbose_name='ID')),
+                ('inventory_notifications',
+                 models.CharField(
+                     choices=[
+                                 ('all',
+                                  'Visi šeimos nariai'),
+                                 ('parents',
+                                  'Tik tėvai'),
+                                 ('admin',
+                                  'Tik administratorius')],
+                     default='all',
+                     max_length=20,
+                     verbose_name='Turto pranešimai')),
+                ('task_notifications',
+                 models.CharField(
+                     choices=[
+                                 ('all',
+                                  'Visi šeimos nariai'),
+                                 ('parents',
+                                  'Tik tėvai'),
+                                 ('admin',
+                                  'Tik administratorius')],
+                     default='all',
+                     max_length=20,
+                     verbose_name='Užduočių pranešimai')),
+                ('finance_notifications',
+                 models.CharField(
+                     choices=[
+                                 ('all',
+                                  'Visi šeimos nariai'),
+                                 ('parents',
+                                  'Tik tėvai'),
+                                 ('admin',
+                                  'Tik administratorius')],
+                     default='parents',
+                     max_length=20,
+                     verbose_name='Finansų pranešimai')),
+                ('family',
+                 models.OneToOneField(
+                     on_delete=django.db.models.deletion.CASCADE,
+                     related_name='settings',
+                     to='Family.family')),
             ],
             options={
                 'verbose_name': 'Šeimos nustatymai',

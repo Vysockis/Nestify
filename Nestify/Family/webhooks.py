@@ -6,6 +6,7 @@ from .models import Family
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
+
 @csrf_exempt
 def stripe_webhook(request):
     payload = request.body
@@ -43,4 +44,4 @@ def stripe_webhook(request):
             except Family.DoesNotExist:
                 pass
 
-    return HttpResponse(status=200) 
+    return HttpResponse(status=200)

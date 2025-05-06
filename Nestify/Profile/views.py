@@ -7,6 +7,8 @@ from Family import models as fModels
 from Profile.forms import CustomUserCreationForm
 
 # Create your views here.
+
+
 @login_required
 def landing(request):
     try:
@@ -22,17 +24,19 @@ def landing(request):
     except fModels.FamilyMember.DoesNotExist:
         return render(request, 'signup/family_choice.html')
 
+
 @login_required
 def logout_view(request):
     logout(request)
     return redirect('login')
+
 
 def login_view(request):
     if request.method == "POST":
         username = request.POST.get('username')
         password = request.POST.get('password')
         user = authenticate(request, username=username, password=password)
-        
+
         if user is not None:
             auth_login(request, user)
             try:
@@ -42,17 +46,22 @@ def login_view(request):
             except ObjectDoesNotExist:
                 # If not a family member, redirect to family choice page
                 return redirect('landing')
-        return render(request, 'signup/login.html', {'error': 'Neteisingas vartotojo vardas arba slaptažodis'})
-    
+        return render(request, 'signup/login.html',
+                      {'error': 'Neteisingas vartotojo vardas arba slaptažodis'})
+
     return render(request, 'signup/login.html', {'error': ''})
+
 
 def register(request):
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             form.save()
-            messages.success(request, 'Registracija sėkminga! Galite prisijungti.')
+            messages.success(
+                request, 'Registracija sėkminga! Galite prisijungti.')
             return redirect('login')
-        return render(request, 'signup/register.html', {'form': form, 'error_message': 'Neteisingi duomenys'})
-    
-    return render(request, 'signup/register.html', {'form': CustomUserCreationForm()})
+        return render(request, 'signup/register.html',
+                      {'form': form, 'error_message': 'Neteisingi duomenys'})
+
+    return render(request, 'signup/register.html',
+                  {'form': CustomUserCreationForm()})

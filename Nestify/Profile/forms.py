@@ -2,6 +2,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from .models import CustomUser as User
 
+
 class CustomUserCreationForm(UserCreationForm):
     first_name = forms.CharField(max_length=150, required=True, label='Vardas')
     last_name = forms.CharField(max_length=150, required=True, label='Pavardė')
@@ -15,7 +16,13 @@ class CustomUserCreationForm(UserCreationForm):
 
     class Meta:
         model = User
-        fields = ['username', 'first_name', 'last_name', 'email', 'password1', 'password2']
+        fields = [
+            'username',
+            'first_name',
+            'last_name',
+            'email',
+            'password1',
+            'password2']
         labels = {
             'password1': 'Slaptažodis',
             'password2': 'Pakartokite slaptažodį'

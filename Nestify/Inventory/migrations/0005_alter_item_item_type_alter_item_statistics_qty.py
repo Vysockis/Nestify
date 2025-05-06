@@ -13,11 +13,23 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='item',
             name='item_type',
-            field=models.CharField(choices=[('FOOD', 'Maistas'), ('MEDICINE', 'Vaistai'), ('CONTRACTS', 'Sutartys')], default='FOOD', max_length=15),
+            field=models.CharField(
+                choices=[
+                    ('FOOD',
+                     'Maistas'),
+                    ('MEDICINE',
+                     'Vaistai'),
+                    ('CONTRACTS',
+                     'Sutartys')],
+                default='FOOD',
+                max_length=15),
         ),
         migrations.AlterField(
             model_name='item',
             name='statistics_qty',
-            field=models.IntegerField(blank=True, default=0, null=True),
+            field=models.IntegerField(
+                blank=True,
+                default=0,
+                null=True),
         ),
     ]

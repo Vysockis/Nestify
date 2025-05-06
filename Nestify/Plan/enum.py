@@ -1,6 +1,7 @@
 from enum import Enum
 from django.utils.translation import gettext_lazy as _
 
+
 class ActivityType(Enum):
     MEAL = _("Meal")
     VACATION = _("Vacation")

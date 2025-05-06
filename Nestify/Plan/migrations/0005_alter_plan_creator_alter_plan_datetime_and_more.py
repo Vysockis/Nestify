@@ -18,21 +18,31 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='plan',
             name='creator',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL),
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                to=settings.AUTH_USER_MODEL),
         ),
         migrations.AlterField(
             model_name='plan',
             name='datetime',
-            field=models.DateTimeField(default=django.utils.timezone.now),
+            field=models.DateTimeField(
+                default=django.utils.timezone.now),
         ),
         migrations.AlterField(
             model_name='plan',
             name='image',
-            field=models.ImageField(blank=True, null=True, upload_to='plans/'),
+            field=models.ImageField(
+                blank=True,
+                null=True,
+                upload_to='plans/'),
         ),
         migrations.AlterField(
             model_name='planmember',
             name='user',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='Family.familymember'),
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                to='Family.familymember'),
         ),
     ]

@@ -1,10 +1,12 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
+
 class ItemType(models.TextChoices):
     FOOD = 'FOOD', _('Maistas')
     MEDICINE = 'MEDICINE', _('Vaistai')
     CONTRACTS = 'CONTRACTS', _('Sutartys')
+
 
 class Item(models.Model):
     family = models.ForeignKey("Family.Family", on_delete=models.CASCADE)

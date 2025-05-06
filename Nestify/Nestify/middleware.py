@@ -1,5 +1,6 @@
 from django.shortcuts import redirect
 
+
 class PaymentRequiredMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
@@ -8,7 +9,8 @@ class PaymentRequiredMiddleware:
         if not request.user.is_authenticated:
             return self.get_response(request)
 
-        if request.path.startswith('/family/payment/') or request.path.startswith('/family/webhook/'):
+        if request.path.startswith(
+                '/family/payment/') or request.path.startswith('/family/webhook/'):
             return self.get_response(request)
 
         try:
@@ -18,4 +20,4 @@ class PaymentRequiredMiddleware:
         except AttributeError:
             pass
 
-        return self.get_response(request) 
+        return self.get_response(request)

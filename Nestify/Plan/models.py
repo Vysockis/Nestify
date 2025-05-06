@@ -6,14 +6,23 @@ from List import models as lModels
 from django.utils import timezone
 
 # Create your models here.
+
+
 class Plan(models.Model):
     family = models.ForeignKey("Family.Family", on_delete=models.CASCADE)
     name = models.CharField(max_length=50)
     description = models.TextField(blank=True, null=True)
     datetime = models.DateTimeField(default=timezone.now)
     image = models.ImageField(upload_to="plans/", blank=True, null=True)
-    creator = models.ForeignKey("Profile.CustomUser", on_delete=models.CASCADE, null=True, blank=True)
-    plan_type = models.CharField(max_length=20, choices=ActivityType.choices(), default=ActivityType.OTHER.name)
+    creator = models.ForeignKey(
+        "Profile.CustomUser",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True)
+    plan_type = models.CharField(
+        max_length=20,
+        choices=ActivityType.choices(),
+        default=ActivityType.OTHER.name)
 
     class Meta:
         verbose_name = _("Plan")
@@ -34,6 +43,7 @@ class Plan(models.Model):
 
     def get_list_item(self):
         return lModels.ListItem.get_list_items(self.get_list())
+
 
 class PlanMember(models.Model):
     plan = models.ForeignKey("Plan.Plan", on_delete=models.CASCADE)

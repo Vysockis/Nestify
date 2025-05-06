@@ -13,6 +13,8 @@ from django.contrib import messages
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
 # Create your views here.
+
+
 @family_member_required
 def members(request):
     """API endpoint to fetch family list and items."""
@@ -32,10 +34,12 @@ def members(request):
 
     return JsonResponse({"family_members": members}, safe=False)
 
+
 @family_member_required
 def family_settings(request):
     if not request.user.getFamily().creator == request.user:
-        return JsonResponse({"error": "Only family admin can access settings"}, status=403)
+        return JsonResponse(
+            {"error": "Only family admin can access settings"}, status=403)
 
     family = request.user.getFamily()
     settings = models.FamilySettings.get_or_create_settings(family)
@@ -43,9 +47,12 @@ def family_settings(request):
     if request.method == "POST":
         try:
             data = json.loads(request.body)
-            settings.inventory_notifications = data.get('inventory_notifications', settings.inventory_notifications)
-            settings.task_notifications = data.get('task_notifications', settings.task_notifications)
-            settings.finance_notifications = data.get('finance_notifications', settings.finance_notifications)
+            settings.inventory_notifications = data.get(
+                'inventory_notifications', settings.inventory_notifications)
+            settings.task_notifications = data.get(
+                'task_notifications', settings.task_notifications)
+            settings.finance_notifications = data.get(
+                'finance_notifications', settings.finance_notifications)
             settings.save()
             return JsonResponse({"success": True})
         except Exception as e:
@@ -56,6 +63,7 @@ def family_settings(request):
         'notification_choices': models.FamilySettings.NOTIFICATION_RECIPIENTS
     })
 
+
 @family_member_required
 def manage(request):
     user = request.user
@@ -63,8 +71,9 @@ def manage(request):
     is_admin = family.creator == user
     members = family.get_family_members()
     pending_members = family.get_pending_members() if is_admin else []
-    invitation_codes = models.FamilyCode.objects.filter(family=family, used=False) if is_admin else []
-    
+    invitation_codes = models.FamilyCode.objects.filter(
+        family=family, used=False) if is_admin else []
+
     # Always create settings for admin
     if is_admin:
         settings = models.FamilySettings.get_or_create_settings(family)
@@ -81,24 +90,29 @@ def manage(request):
 
     return render(request, 'family/manage.html', context)
 
+
 @family_member_required
 def settings_api(request):
     if not request.user.getFamily().creator == request.user:
-        return JsonResponse({"error": "Only family admin can access settings"}, status=403)
+        return JsonResponse(
+            {"error": "Only family admin can access settings"}, status=403)
 
     if request.method == "POST":
         try:
             data = json.loads(request.body)
             family = request.user.getFamily()
             settings = models.FamilySettings.get_or_create_settings(family)
-            settings.inventory_notifications = data.get('inventory_notifications', settings.inventory_notifications)
-            settings.task_notifications = data.get('task_notifications', settings.task_notifications)
+            settings.inventory_notifications = data.get(
+                'inventory_notifications', settings.inventory_notifications)
+            settings.task_notifications = data.get(
+                'task_notifications', settings.task_notifications)
             settings.save()
             return JsonResponse({"success": True})
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=400)
 
     return JsonResponse({"error": "Invalid request method"}, status=400)
+
 
 def create_stripe_session(request, family_id):
     try:
@@ -126,26 +140,29 @@ def create_stripe_session(request, family_id):
             },
             expires_at=int(time.time() + 1800)  # 30 minutes from now
         )
-        
+
         family.checkout_url = session.url
         family.save()
-        
+
         return redirect(session.url)
     except models.Family.DoesNotExist:
         return redirect('family_manage')
+
 
 @family_member_required
 def payment_required(request):
     family = request.user.getFamily()
     if family.is_paid:
         return redirect('family_manage')
-    
+
     return render(request, 'family/payment_required.html', {
         'family': family,
         'checkout_url': family.checkout_url
     })
 
 # Family management views
+
+
 @login_required
 def create_family(request):
     if request.method == 'POST':
@@ -157,7 +174,8 @@ def create_family(request):
         try:
             # Check if user already has a family
             if models.FamilyMember.objects.filter(user=request.user).exists():
-                messages.error(request, 'Jūs jau priklausote šeimai arba turite aktyvų prašymą.')
+                messages.error(
+                    request, 'Jūs jau priklausote šeimai arba turite aktyvų prašymą.')
                 return redirect('landing')
 
             # Create new family
@@ -166,7 +184,8 @@ def create_family(request):
                 creator=request.user
             )
 
-            # Create family member (creator is automatically admin and accepted)
+            # Create family member (creator is automatically admin and
+            # accepted)
             models.FamilyMember.objects.create(
                 user=request.user,
                 family=family,
@@ -184,6 +203,7 @@ def create_family(request):
 
     return render(request, 'signup/create_family.html')
 
+
 @login_required
 def join_family(request):
     if request.method == 'POST':
@@ -191,17 +211,19 @@ def join_family(request):
         try:
             # Find the invitation code
             family_code = models.FamilyCode.objects.get(code=code)
-            
+
             # Check if code is already used
             if family_code.used:
-                messages.error(request, 'Šis pakvietimo kodas jau buvo panaudotas.')
+                messages.error(
+                    request, 'Šis pakvietimo kodas jau buvo panaudotas.')
                 return redirect('landing')
-            
+
             # Check if user is already in a family
             if models.FamilyMember.objects.filter(user=request.user).exists():
-                messages.error(request, 'Jūs jau priklausote šeimai arba turite aktyvų prašymą.')
+                messages.error(
+                    request, 'Jūs jau priklausote šeimai arba turite aktyvų prašymą.')
                 return redirect('landing')
-            
+
             # Create family member with accepted=False
             models.FamilyMember.objects.create(
                 user=request.user,
@@ -210,23 +232,27 @@ def join_family(request):
                 kid=False,
                 accepted=False
             )
-            
+
             # Mark code as used
             family_code.used = True
             family_code.user = request.user
             family_code.save()
-            
-            messages.success(request, 'Prašymas prisijungti prie šeimos išsiųstas. Laukite administratoriaus patvirtinimo.')
+
+            messages.success(
+                request,
+                'Prašymas prisijungti prie šeimos išsiųstas. Laukite administratoriaus patvirtinimo.')
             return redirect('landing')
-            
+
         except models.FamilyCode.DoesNotExist:
             messages.error(request, 'Neteisingas pakvietimo kodas.')
             return redirect('landing')
         except Exception:
-            messages.error(request, 'Įvyko klaida bandant prisijungti prie šeimos.')
+            messages.error(
+                request, 'Įvyko klaida bandant prisijungti prie šeimos.')
             return redirect('landing')
-    
+
     return render(request, 'signup/family_choice.html')
+
 
 @login_required
 def cancel_join_request(request):
@@ -237,44 +263,48 @@ def cancel_join_request(request):
                 user=request.user,
                 accepted=False
             )
-            
+
             # Get the family code associated with this request
             family_code = models.FamilyCode.objects.get(
                 user=request.user,
                 family=family_member.family,
                 used=True
             )
-            
+
             # Delete the family member request
             family_member.delete()
-            
+
             # Mark the code as unused so it can be used again
             family_code.used = False
             family_code.user = None
             family_code.save()
-            
-            messages.success(request, 'Prašymas prisijungti prie šeimos atšauktas.')
+
+            messages.success(
+                request, 'Prašymas prisijungti prie šeimos atšauktas.')
         except (models.FamilyMember.DoesNotExist, models.FamilyCode.DoesNotExist):
             messages.error(request, 'Prašymas nerastas.')
-            
+
     return redirect('landing')
+
 
 @login_required
 @require_http_methods(['POST'])
 def generate_invitation_code(request):
     try:
         # Get the family member and check admin status
-        family_member = models.FamilyMember.objects.get(user=request.user, accepted=True)
+        family_member = models.FamilyMember.objects.get(
+            user=request.user, accepted=True)
         if not family_member.admin:
-            return JsonResponse({'error': 'Unauthorized - must be admin'}, status=403)
-        
+            return JsonResponse(
+                {'error': 'Unauthorized - must be admin'}, status=403)
+
         # Create new code
         try:
             code = models.FamilyCode.objects.create(
                 family=family_member.family,
                 user=None  # Leave user empty until code is used
             )
-            
+
             return JsonResponse({
                 'id': code.id,
                 'code': code.code
@@ -282,23 +312,26 @@ def generate_invitation_code(request):
         except Exception as e:
             print(f"Error creating code: {str(e)}")  # Server-side logging
             return JsonResponse({'error': 'Failed to create code'}, status=500)
-            
+
     except models.FamilyMember.DoesNotExist:
         return JsonResponse({'error': 'Not a family member'}, status=403)
     except Exception as e:
         print(f"Unexpected error: {str(e)}")  # Server-side logging
         return JsonResponse({'error': 'Server error'}, status=500)
 
+
 @login_required
 @require_http_methods(['DELETE'])
 def delete_invitation_code(request, code_id):
     try:
-        family_member = models.FamilyMember.objects.get(user=request.user, accepted=True)
+        family_member = models.FamilyMember.objects.get(
+            user=request.user, accepted=True)
         if not family_member.admin:
             return JsonResponse({'error': 'Unauthorized'}, status=403)
-        
+
         try:
-            code = models.FamilyCode.objects.get(id=code_id, family=family_member.family)
+            code = models.FamilyCode.objects.get(
+                id=code_id, family=family_member.family)
             code.delete()
             return JsonResponse({'status': 'success'})
         except models.FamilyCode.DoesNotExist:
@@ -306,67 +339,77 @@ def delete_invitation_code(request, code_id):
     except models.FamilyMember.DoesNotExist:
         return JsonResponse({'error': 'Not a family member'}, status=403)
 
+
 @login_required
 @require_http_methods(['POST'])
 def approve_member(request, member_id):
     try:
         # Check if user is admin
-        admin_member = models.FamilyMember.objects.get(user=request.user, accepted=True, admin=True)
-        
+        admin_member = models.FamilyMember.objects.get(
+            user=request.user, accepted=True, admin=True)
+
         # Get pending member
         pending_member = models.FamilyMember.objects.get(
             id=member_id,
             family=admin_member.family,
             accepted=False
         )
-        
+
         # Approve member
         pending_member.accepted = True
         pending_member.save()
-        
+
         return JsonResponse({'status': 'success'})
     except models.FamilyMember.DoesNotExist:
-        return JsonResponse({'error': 'Unauthorized or member not found'}, status=403)
+        return JsonResponse(
+            {'error': 'Unauthorized or member not found'}, status=403)
+
 
 @login_required
 @require_http_methods(['DELETE'])
 def reject_member(request, member_id):
     try:
         # Check if user is admin
-        admin_member = models.FamilyMember.objects.get(user=request.user, accepted=True, admin=True)
-        
+        admin_member = models.FamilyMember.objects.get(
+            user=request.user, accepted=True, admin=True)
+
         # Get pending member
         pending_member = models.FamilyMember.objects.get(
             id=member_id,
             family=admin_member.family,
             accepted=False
         )
-        
+
         # Delete the pending member
         pending_member.delete()
-        
+
         return JsonResponse({'status': 'success'})
     except models.FamilyMember.DoesNotExist:
-        return JsonResponse({'error': 'Unauthorized or member not found'}, status=403)
+        return JsonResponse(
+            {'error': 'Unauthorized or member not found'}, status=403)
+
 
 @login_required
 @require_http_methods(['POST'])
 def toggle_kid_status(request, member_id):
     try:
-        family_member = models.FamilyMember.objects.get(user=request.user, accepted=True)
+        family_member = models.FamilyMember.objects.get(
+            user=request.user, accepted=True)
         if not family_member.admin:
             return JsonResponse({'error': 'Unauthorized'}, status=403)
-        
+
         try:
             data = json.loads(request.body)
-            target_member = models.FamilyMember.objects.get(id=member_id, family=family_member.family, accepted=True)
-            
+            target_member = models.FamilyMember.objects.get(
+                id=member_id, family=family_member.family, accepted=True)
+
             if target_member.admin:
-                return JsonResponse({'error': 'Cannot modify admin status'}, status=400)
-            
+                return JsonResponse(
+                    {'error': 'Cannot modify admin status'}, status=400)
+
             target_member.kid = data.get('is_kid', False)
             target_member.save()
-            
+
             return JsonResponse({'status': 'success'})
         except models.FamilyMember.DoesNotExist:
             return JsonResponse({'error': 'Member not found'}, status=404)
@@ -375,20 +418,24 @@ def toggle_kid_status(request, member_id):
     except models.FamilyMember.DoesNotExist:
         return JsonResponse({'error': 'Not a family member'}, status=403)
 
+
 @login_required
 @require_http_methods(['DELETE'])
 def remove_family_member(request, member_id):
     try:
-        family_member = models.FamilyMember.objects.get(user=request.user, accepted=True)
+        family_member = models.FamilyMember.objects.get(
+            user=request.user, accepted=True)
         if not family_member.admin:
             return JsonResponse({'error': 'Unauthorized'}, status=403)
-        
+
         try:
-            target_member = models.FamilyMember.objects.get(id=member_id, family=family_member.family, accepted=True)
-            
+            target_member = models.FamilyMember.objects.get(
+                id=member_id, family=family_member.family, accepted=True)
+
             if target_member.admin:
-                return JsonResponse({'error': 'Cannot remove admin'}, status=400)
-            
+                return JsonResponse(
+                    {'error': 'Cannot remove admin'}, status=400)
+
             target_member.delete()
             return JsonResponse({'status': 'success'})
         except models.FamilyMember.DoesNotExist:

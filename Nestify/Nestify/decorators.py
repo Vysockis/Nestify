@@ -4,12 +4,14 @@ from functools import wraps
 from Family.models import FamilyMember  # Import your model
 from django.contrib import messages
 
+
 def family_member_required(view_func):
     """ Custom decorator to check if the user is in FamilyMember model. """
     @wraps(view_func)
     def _wrapped_view(request, *args, **kwargs):
         if not request.user.is_authenticated:  # Check if user is logged in
-            return redirect('/login/')  # Redirect unauthenticated users to login
+            # Redirect unauthenticated users to login
+            return redirect('/login/')
 
         try:
             # Check if user exists in FamilyMember model
@@ -21,6 +23,7 @@ def family_member_required(view_func):
         return view_func(request, *args, **kwargs)
 
     return _wrapped_view
+
 
 def parent_required(view_func):
     """ Custom decorator to check if the user is not a kid. """

@@ -16,22 +16,76 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Notification',
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('notification_type', models.CharField(choices=[('invite', 'Family Invitation'), ('request', 'Join Request'), ('system', 'System Notification'), ('general', 'General Notification')], max_length=20)),
-                ('title', models.CharField(max_length=100)),
-                ('message', models.TextField(default='')),
-                ('is_read', models.BooleanField(default=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('related_object_id', models.IntegerField(blank=True, null=True)),
-                ('family', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='notifications', to='Family.family')),
-                ('recipient', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='received_notifications', to=settings.AUTH_USER_MODEL)),
-                ('sender', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='sent_notifications', to=settings.AUTH_USER_MODEL)),
+                ('id',
+                 models.BigAutoField(
+                     auto_created=True,
+                     primary_key=True,
+                     serialize=False,
+                     verbose_name='ID')),
+                ('notification_type',
+                 models.CharField(
+                     choices=[
+                         ('invite',
+                          'Family Invitation'),
+                         ('request',
+                          'Join Request'),
+                         ('system',
+                          'System Notification'),
+                         ('general',
+                          'General Notification')],
+                     max_length=20)),
+                ('title',
+                 models.CharField(
+                     max_length=100)),
+                ('message',
+                 models.TextField(
+                     default='')),
+                ('is_read',
+                 models.BooleanField(
+                     default=False)),
+                ('created_at',
+                 models.DateTimeField(
+                     auto_now_add=True)),
+                ('related_object_id',
+                 models.IntegerField(
+                     blank=True,
+                     null=True)),
+                ('family',
+                 models.ForeignKey(
+                     on_delete=django.db.models.deletion.CASCADE,
+                     related_name='notifications',
+                     to='Family.family')),
+                ('recipient',
+                 models.ForeignKey(
+                     on_delete=django.db.models.deletion.CASCADE,
+                     related_name='received_notifications',
+                     to=settings.AUTH_USER_MODEL)),
+                ('sender',
+                 models.ForeignKey(
+                     blank=True,
+                     null=True,
+                     on_delete=django.db.models.deletion.CASCADE,
+                     related_name='sent_notifications',
+                     to=settings.AUTH_USER_MODEL)),
             ],
             options={
                 'verbose_name': 'Notification',
                 'verbose_name_plural': 'Notifications',
                 'ordering': ['-created_at'],
-                'indexes': [models.Index(fields=['recipient', 'is_read'], name='Family_noti_recipie_6520e1_idx'), models.Index(fields=['family', 'notification_type'], name='Family_noti_family__6b49da_idx'), models.Index(fields=['created_at'], name='Family_noti_created_05ea62_idx')],
+                'indexes': [
+                    models.Index(
+                        fields=[
+                            'recipient',
+                            'is_read'],
+                        name='Family_noti_recipie_6520e1_idx'),
+                    models.Index(
+                        fields=[
+                            'family',
+                            'notification_type'],
+                        name='Family_noti_family__6b49da_idx'),
+                    models.Index(
+                        fields=['created_at'],
+                        name='Family_noti_created_05ea62_idx')],
             },
         ),
     ]

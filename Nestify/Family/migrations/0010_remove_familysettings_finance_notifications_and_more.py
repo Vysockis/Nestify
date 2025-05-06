@@ -17,6 +17,16 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='familysettings',
             name='task_notifications',
-            field=models.CharField(choices=[('all', 'Visi šeimos nariai'), ('parents', 'Tik tėvai'), ('admin', 'Tik administratorius')], default='all', max_length=20, verbose_name='Turto pranešimai'),
+            field=models.CharField(
+                choices=[
+                    ('all',
+                     'Visi šeimos nariai'),
+                    ('parents',
+                     'Tik tėvai'),
+                    ('admin',
+                     'Tik administratorius')],
+                default='all',
+                max_length=20,
+                verbose_name='Turto pranešimai'),
         ),
     ]

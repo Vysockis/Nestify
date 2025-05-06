@@ -17,16 +17,23 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='list',
             name='category',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='Finance.category'),
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                to='Finance.category'),
         ),
         migrations.AlterField(
             model_name='list',
             name='creator',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL),
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                to=settings.AUTH_USER_MODEL),
         ),
         migrations.AlterField(
             model_name='list',
             name='datetime',
-            field=models.DateTimeField(auto_now_add=True),
+            field=models.DateTimeField(
+                auto_now_add=True),
         ),
     ]

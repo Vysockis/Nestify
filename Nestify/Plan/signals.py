@@ -4,6 +4,7 @@ from . import models
 from List import models as lModels
 from List.enum import ListType
 
+
 @receiver(post_save, sender=models.Plan)
 def create_list_for_plan(sender, instance, created, **kwargs):
     if created:

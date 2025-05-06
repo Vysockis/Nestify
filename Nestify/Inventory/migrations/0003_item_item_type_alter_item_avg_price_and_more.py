@@ -14,21 +14,37 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='item',
             name='item_type',
-            field=models.CharField(choices=[('FOOD', 'Maistas'), ('MEDICINE', 'Vaistai')], default='FOOD', max_length=10),
+            field=models.CharField(
+                choices=[
+                    ('FOOD',
+                     'Maistas'),
+                    ('MEDICINE',
+                     'Vaistai')],
+                default='FOOD',
+                max_length=10),
         ),
         migrations.AlterField(
             model_name='item',
             name='avg_price',
-            field=models.DecimalField(decimal_places=2, default=0, max_digits=10),
+            field=models.DecimalField(
+                decimal_places=2,
+                default=0,
+                max_digits=10),
         ),
         migrations.AlterField(
             model_name='item',
             name='description',
-            field=models.TextField(blank=True, null=True),
+            field=models.TextField(
+                blank=True,
+                null=True),
         ),
         migrations.AlterField(
             model_name='item',
             name='subcategory',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.DO_NOTHING, to='Inventory.itemsubcategory'),
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.DO_NOTHING,
+                to='Inventory.itemsubcategory'),
         ),
     ]

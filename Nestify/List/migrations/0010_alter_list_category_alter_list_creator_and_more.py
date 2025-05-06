@@ -17,16 +17,27 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='list',
             name='category',
-            field=models.CharField(choices=[('shopping', 'Shopping'), ('tasks', 'Tasks')], default='tasks', max_length=20),
+            field=models.CharField(
+                choices=[
+                    ('shopping',
+                     'Shopping'),
+                    ('tasks',
+                     'Tasks')],
+                default='tasks',
+                max_length=20),
         ),
         migrations.AlterField(
             model_name='list',
             name='creator',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='created_lists', to=settings.AUTH_USER_MODEL),
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name='created_lists',
+                to=settings.AUTH_USER_MODEL),
         ),
         migrations.AlterField(
             model_name='list',
             name='datetime',
-            field=models.DateTimeField(default=django.utils.timezone.now),
+            field=models.DateTimeField(
+                default=django.utils.timezone.now),
         ),
     ]

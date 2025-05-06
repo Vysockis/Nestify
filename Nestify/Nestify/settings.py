@@ -35,7 +35,7 @@ ALLOWED_HOSTS = config['django']['allowed_hosts']
 AUTH_USER_MODEL = 'Profile.CustomUser'
 # Application definition
 
-LOGIN_URL  = '/login/'  # Redirect users to the dashboard after login
+LOGIN_URL = '/login/'  # Redirect users to the dashboard after login
 
 INSTALLED_APPS = [
     "django_prometheus",
@@ -53,7 +53,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 ]
-
 
 
 # Stripe Configuration

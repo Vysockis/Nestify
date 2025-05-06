@@ -1,6 +1,7 @@
 from django.db import models
 from Family.models import Family
 
+
 class SmartDevice(models.Model):
     DEVICE_TYPES = [
         ('LIGHT', 'Light Bulb'),

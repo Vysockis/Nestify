@@ -17,6 +17,16 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='notification',
             name='notification_type',
-            field=models.CharField(choices=[('invite', 'Family Invitation'), ('request', 'Join Request'), ('system', 'System Notification'), ('general', 'General Notification')], max_length=20),
+            field=models.CharField(
+                choices=[
+                    ('invite',
+                     'Family Invitation'),
+                    ('request',
+                     'Join Request'),
+                    ('system',
+                     'System Notification'),
+                    ('general',
+                     'General Notification')],
+                max_length=20),
         ),
     ]

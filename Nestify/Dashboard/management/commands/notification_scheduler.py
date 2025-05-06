@@ -12,17 +12,20 @@ task_locks = {
     "run_notification_task_safely": threading.Lock(),
 }
 
+
 class Command(BaseCommand):
     help = 'Run notification scheduled tasks'
 
     def handle(self, *args, **options):
         # Ensure single instance with a lock file
         if not self.ensure_single_instance():
-            self.stdout.write(self.style.WARNING("Another instance is already running. Exiting."))
+            self.stdout.write(self.style.WARNING(
+                "Another instance is already running. Exiting."))
             return
 
-        self.stdout.write(self.style.SUCCESS("Starting notification scheduler..."))
-        
+        self.stdout.write(self.style.SUCCESS(
+            "Starting notification scheduler..."))
+
         # Schedule tasks directly in the main thread
         schedule.every(5).minutes.do(self.run_notification_task_safely)
 
@@ -32,7 +35,8 @@ class Command(BaseCommand):
                 schedule.run_pending()
                 time.sleep(1)
         except KeyboardInterrupt:
-            self.stdout.write(self.style.SUCCESS("Stopping notification scheduler..."))
+            self.stdout.write(self.style.SUCCESS(
+                "Stopping notification scheduler..."))
             # Clean up the flag file
             flag_file = '/tmp/django_scheduler_started.flag' if os.name != 'nt' else 'django_scheduler_started.flag'
             try:
@@ -52,7 +56,8 @@ class Command(BaseCommand):
                 # If the file exists, check if the process is alive
                 with open(lock_file, 'r') as f:
                     pid = int(f.read())
-                # On Unix-based systems, /proc/<pid> will exist if process is alive
+                # On Unix-based systems, /proc/<pid> will exist if process is
+                # alive
                 if os.name != 'nt' and os.path.exists(f"/proc/{pid}"):
                     return False
                 else:
@@ -62,7 +67,9 @@ class Command(BaseCommand):
                 f.write(str(os.getpid()))
             return True
         except Exception as e:
-            self.stdout.write(self.style.ERROR(f"Error creating lock file: {e}"))
+            self.stdout.write(
+                self.style.ERROR(
+                    f"Error creating lock file: {e}"))
             return False
 
     def run_notification_task_safely(self):
@@ -72,12 +79,14 @@ class Command(BaseCommand):
         lock = task_locks.get("run_notification_task_safely")
         if lock and lock.acquire(blocking=False):
             try:
-                self.stdout.write(self.style.SUCCESS("Executing notification task..."))
+                self.stdout.write(self.style.SUCCESS(
+                    "Executing notification task..."))
                 self.notification_task()
             finally:
                 lock.release()
         else:
-            self.stdout.write(self.style.WARNING("Task is already running, skipping."))
+            self.stdout.write(self.style.WARNING(
+                "Task is already running, skipping."))
 
     def notification_task(self):
         """
@@ -92,10 +101,10 @@ class Command(BaseCommand):
             family = item.item.family
             settings = FamilySettings.get_or_create_settings(family)
             recipients = settings.get_notification_recipients('inventory')
-            
+
             if not recipients:  # Skip if no recipients based on settings
                 continue
-                
+
             days_until_expiry = (item.exp_date - today).days
 
             # Skip if already expired
@@ -111,10 +120,12 @@ class Command(BaseCommand):
                             family=family,
                             recipient=recipient,
                             notification_type='inventory_expired',
-                            title=f'Produktas pasibaigė: {item.item.name}',
-                            message=f'{item.item.name} ({item.qty} vnt.) galiojimas baigėsi.',
-                            related_object_id=item.id
-                        )
+                            title=f'Produktas pasibaigė: {
+                                item.item.name}',
+                            message=f'{
+                                item.item.name} ({
+                                item.qty} vnt.) galiojimas baigėsi.',
+                            related_object_id=item.id)
 
             # Check for items expiring in 3 days
             elif days_until_expiry <= 3 and days_until_expiry > 1:
@@ -128,10 +139,12 @@ class Command(BaseCommand):
                             family=family,
                             recipient=recipient,
                             notification_type='inventory_expiring',
-                            title=f'Produktas baigiasi: {item.item.name}',
-                            message=f'{item.item.name} ({item.qty} vnt.) galiojimo laikas baigsis po {days_until_expiry} dienų.',
-                            related_object_id=item.id
-                        )
+                            title=f'Produktas baigiasi: {
+                                item.item.name}',
+                            message=f'{
+                                item.item.name} ({
+                                item.qty} vnt.) galiojimo laikas baigsis po {days_until_expiry} dienų.',
+                            related_object_id=item.id)
 
             # Check for items expiring in 1 day
             elif days_until_expiry == 1:
@@ -145,8 +158,11 @@ class Command(BaseCommand):
                             family=family,
                             recipient=recipient,
                             notification_type='inventory_expiring',
-                            title=f'Produktas baigiasi: {item.item.name}',
-                            message=f'{item.item.name} ({item.qty} vnt.) galiojimo laikas baigsis rytoj.',
-                            related_object_id=item.id
-                        )
-                    self.stdout.write(self.style.WARNING(f"Created 1-day notification for {item.item.name}"))
+                            title=f'Produktas baigiasi: {
+                                item.item.name}',
+                            message=f'{
+                                item.item.name} ({
+                                item.qty} vnt.) galiojimo laikas baigsis rytoj.',
+                            related_object_id=item.id)
+                    self.stdout.write(self.style.WARNING(
+                        f"Created 1-day notification for {item.item.name}"))
