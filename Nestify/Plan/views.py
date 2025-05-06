@@ -4,11 +4,8 @@ from django.shortcuts import render
 import tzlocal
 from Family.models import FamilyMember
 from Nestify.decorators import family_member_required
-from django.utils import timezone
-from datetime import datetime
 from django.core.exceptions import ObjectDoesNotExist
 from . import models
-from Dashboard.views import format_time_difference_in
 
 # Create your views here.
 @family_member_required
@@ -127,7 +124,7 @@ def plans(request):
         "name": plan.name,
         "description": plan.description,
         "image": request.build_absolute_uri(plan.image.url) if plan.image else None,
-        "date_formatted": format_time_difference_in(timezone.now(), plan.datetime),
+        "date_formatted": plan.datetime.strftime('%Y-%m-%d %H:%M'),
         "datetime": plan.datetime,
         "members": [{
             "id": member.user.pk,

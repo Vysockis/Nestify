@@ -237,6 +237,10 @@ def api_items(request):
     else:
         base_items = Item.objects.filter(family=family)
     
+    # If user is a kid, exclude contracts
+    if request.user.familymember_set.first() and request.user.familymember_set.first().kid:
+        base_items = base_items.exclude(item_type=ItemType.CONTRACTS)
+    
     # Gauti visas operacijas
     operations = ItemOperation.objects.filter(item__in=base_items).order_by('-exp_date')
     
@@ -268,10 +272,13 @@ def api_items(request):
 def api_expiring_items(request):
     family = request.user.getFamily()
     base_items = Item.objects.filter(family=family)
+    if request.user.familymember_set.first() and request.user.familymember_set.first().kid:
+        base_items = base_items.exclude(item_type=ItemType.CONTRACTS)
     
     # Get all operations
     operations = ItemOperation.objects.filter(item__in=base_items).order_by('exp_date')
     
+
     items_data = []
     today = timezone.now().date()
     

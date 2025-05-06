@@ -191,6 +191,24 @@ def list(request):
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
 
+    if request.method == "PUT":
+        try:
+            data = json.loads(request.body)
+            image_file = request.FILES.get("image")
+            list_obj = models.List.objects.get(pk=data.get("list_id"))
+            list_obj.name = data.get("name") if data.get("name") else list_obj.name
+            list_obj.description = data.get("description") if data.get("description") else list_obj.description
+            list_obj.datetime = data.get("datetime") if data.get("datetime") else list_obj.datetime
+            list_obj.amount = data.get("amount") if data.get("amount") else list_obj.amount
+            list_obj.category = data.get("category") if data.get("category") else list_obj.category
+            if image_file:
+                list_obj.image.save(image_file.name, image_file)
+            list_obj.save()
+            return JsonResponse({"success": True})
+        except ObjectDoesNotExist:
+            return JsonResponse({"error": "List not found"}, status=404)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=400)
     if request.method == "POST":
         try:
             data = json.loads(request.body)

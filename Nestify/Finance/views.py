@@ -552,10 +552,10 @@ def edit_operation_item(request, item_id):
                 item.name = data['name']
             
             if 'amount' in data:
-                item.price = Decimal(data['amount'])
+                item.amount = Decimal(data['amount'])
             if 'quantity' in data:
                 item.qty = int(data['quantity'])
-
+                
             item.save()
             return JsonResponse({"success": True})
         except lModels.ListItem.DoesNotExist:

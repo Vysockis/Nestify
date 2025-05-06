@@ -132,17 +132,19 @@ document.addEventListener("DOMContentLoaded", function () {
         });
 
         if (formData) {
-            const fd = new FormData();
-            for (const key in formData) {
-                fd.append(key, formData[key]);
-            }
+            // Convert form data to JSON object
+            const jsonData = {
+                list_id: recipe.id,
+                ...formData
+            };
             
             fetch("../api/list/", {
-                method: "POST",
+                method: "PUT",
                 headers: {
+                    "Content-Type": "application/json",
                     "X-CSRFToken": csrfToken
                 },
-                body: fd
+                body: JSON.stringify(jsonData)
             })
             .then(response => response.json())
             .then(data => {
