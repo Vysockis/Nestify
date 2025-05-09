@@ -80,7 +80,7 @@ document.addEventListener("DOMContentLoaded", function() {
                                     <i class="fas fa-pencil"></i>
                                 </button>
                             ` : ''}
-                            <button class="btn btn-sm btn-outline-danger delete-operation" data-operation-id="${item.id}" data-type="${item.type_value}">
+                            <button class="btn btn-sm btn-outline-danger delete-operation" data-operation-id="${item.id}" data-item-id="${item.item_id || item.id}" data-type="${item.type_value}">
                                 <i class="fas fa-trash"></i>
                             </button>
                         ` : ''}
@@ -98,11 +98,12 @@ document.addEventListener("DOMContentLoaded", function() {
         container.querySelectorAll('.delete-operation').forEach(button => {
             button.addEventListener('click', function() {
                 const operationId = this.dataset.operationId;
+                const itemId = this.dataset.itemId;
                 const itemType = this.dataset.type;
                 
                 if (confirm('Ar tikrai norite ištrinti šį įrašą?')) {
                     const url = itemType === 'CONTRACTS' 
-                        ? `/inventory/api/contracts/${operationId}/delete/`
+                        ? `/inventory/api/contracts/${itemId}/delete/`
                         : `/inventory/api/operations/${operationId}/delete/`;
                     
                     fetch(url, {

@@ -16,7 +16,7 @@ def dashboard(request):
         family=family,
         recipient=request.user,
         is_read=False
-    ).order_by('-created_at')[:5]
+    ).order_by('-created_at')
 
     # Get smart devices for the family
     smart_devices = SmartDevice.objects.filter(family=family)

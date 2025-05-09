@@ -105,7 +105,7 @@ class Notification(models.Model):
         null=True,
         blank=True)
     notification_type = models.CharField(
-        max_length=20, choices=NOTIFICATION_TYPES)
+        max_length=20, choices=NOTIFICATION_TYPES, default='general')
     title = models.CharField(max_length=100)
     message = models.TextField(default='')
     is_read = models.BooleanField(default=False)

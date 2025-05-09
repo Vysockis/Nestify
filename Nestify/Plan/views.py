@@ -138,6 +138,7 @@ def plans(request):
         "image": request.build_absolute_uri(plan.image.url) if plan.image else None,
         "date_formatted": plan.datetime.strftime('%Y-%m-%d %H:%M'),
         "datetime": plan.datetime,
+        "plan_type": plan.plan_type,
         "members": [{
             "id": member.user.pk,
             "name": member.user.user.first_name

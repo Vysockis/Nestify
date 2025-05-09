@@ -149,6 +149,9 @@ def delete_item(request, item_id):
     item = get_object_or_404(Item, id=item_id, family=request.user.getFamily())
 
     if request.method == 'POST':
+        # Delete all operations for this item first
+        ItemOperation.objects.filter(item=item).delete()
+        # Then delete the item itself
         item.delete()
         return redirect('inventory:items')
 
@@ -256,22 +259,17 @@ def api_items(request):
 
     # Filtruoti pagal tipą, jei nurodyta
     item_type = request.GET.get('type')
-    if item_type and item_type in [
-            ItemType.FOOD,
-            ItemType.MEDICINE,
-            ItemType.CONTRACTS]:
+    if item_type and item_type in [ItemType.FOOD, ItemType.MEDICINE, ItemType.CONTRACTS]:
         base_items = Item.objects.filter(family=family, item_type=item_type)
     else:
         base_items = Item.objects.filter(family=family)
 
     # If user is a kid, exclude contracts
-    if request.user.familymember_set.first(
-    ) and request.user.familymember_set.first().kid:
+    if request.user.familymember_set.first() and request.user.familymember_set.first().kid:
         base_items = base_items.exclude(item_type=ItemType.CONTRACTS)
 
     # Gauti visas operacijas
-    operations = ItemOperation.objects.filter(
-        item__in=base_items).order_by('-exp_date')
+    operations = ItemOperation.objects.filter(item__in=base_items).order_by('-exp_date')
 
     items_data = []
     today = timezone.now().date()
@@ -280,6 +278,7 @@ def api_items(request):
         days_until_expiry = (exp_date - today).days if exp_date else None
         items_data.append({
             'id': op.id,
+            'item_id': op.item.id,
             'name': op.item.name,
             'type': op.item.get_item_type_display(),
             'type_value': op.item.item_type,

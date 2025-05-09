@@ -1,12 +1,48 @@
 document.addEventListener("DOMContentLoaded", function () {
+    // Get DOM elements
     const planContainer = document.getElementById("planContainer"); // Plan list container
+    if (!planContainer) {
+        console.error("Plan container element not found! ID: planContainer");
+        return; // Exit if essential element is missing
+    }
+    
     const planDisplay = document.getElementById("list"); // Main plan display container 
     const addPlanMemberBtn = document.getElementById("addPlanMemberBtn");
     const addPlanItemBtn = document.getElementById("addPlanItemBtn");
     const addPlanBtn = document.getElementById("addPlanBtn");
     const editDescriptionBtn = document.getElementById("editDescriptionBtn");
+    const planTypeFilter = document.getElementById("planTypeFilter"); // Add reference to the filter
+    
+    if (!planTypeFilter) {
+        console.warn("Plan type filter not found!");
+    }
+    
+    console.log("Essential DOM elements loaded:", {
+        planContainer: !!planContainer,
+        planDisplay: !!planDisplay,
+        planTypeFilter: !!planTypeFilter
+    });
 
     let plansData = []; // Global storage for fetched plans
+    let filteredPlansData = []; // Store filtered plans
+
+    // Get CSRF token for POST requests
+    let csrfToken = '';
+    
+    // Try to get CSRF token from meta tag
+    const metaToken = document.querySelector('meta[name="csrf-token"]');
+    if (metaToken) {
+        csrfToken = metaToken.getAttribute('content');
+    } 
+    // Fallback: try to get from cookies
+    else {
+        const tokenCookie = document.cookie.split('; ').find(row => row.startsWith('csrftoken='));
+        if (tokenCookie) {
+            csrfToken = tokenCookie.split('=')[1];
+        }
+    }
+    
+    console.log("CSRF Token loaded:", csrfToken ? "Yes" : "No");
 
     // Event listener for editing plan description
     editDescriptionBtn.addEventListener("click", function () {
@@ -47,6 +83,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
     addPlanBtn.addEventListener("click", function () {
         openAddPlanModal();
+    });
+
+    // Add event listener for the type filter dropdown
+    planTypeFilter.addEventListener("change", function() {
+        filterAndDisplayPlans();
     });
 
     async function openAddPlanItemModal(listId, planId) {
@@ -246,113 +287,152 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
     
+    // Function to filter and display plans based on selected type
+    function filterAndDisplayPlans() {
+        const selectedType = planTypeFilter.value;
+        
+        // Filter the plans data based on selected type
+        filteredPlansData = selectedType === "ALL" 
+            ? [...plansData] // Show all plans
+            : plansData.filter(plan => plan.plan_type === selectedType);
+        
+        // Clear existing content
+        planContainer.innerHTML = "";
+        
+        if (!filteredPlansData || filteredPlansData.length === 0) {
+            planContainer.innerHTML = "<p>Nėra planų pagal pasirinktą tipą.</p>";
+            return;
+        }
+        
+        // Get planId from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlPlanId = urlParams.get("planId");
+        
+        let foundPlan = null;
+        
+        // Display filtered plans
+        filteredPlansData.forEach((plan) => {
+            const listElement = document.createElement("li");
+            listElement.classList.add(
+                "list-group-item",
+                "d-flex",
+                "justify-content-between",
+                "align-items-center",
+                "toggle-plan"
+            );
+            listElement.setAttribute("data-toggle", `plan-${plan.id}`);
+            
+            // Create text container for name and date
+            const textContainer = document.createElement("div");
+            textContainer.classList.add("plan-text-container");
+            
+            // Create name span
+            const nameSpan = document.createElement("div");
+            nameSpan.classList.add("plan-name");
+            nameSpan.textContent = plan.name;
+            
+            // Create date span
+            const dateSpan = document.createElement("div");
+            dateSpan.classList.add("plan-date");
+            dateSpan.textContent = plan.date_formatted;
+            
+            // Append name and date to container
+            textContainer.appendChild(nameSpan);
+            textContainer.appendChild(dateSpan);
+            listElement.appendChild(textContainer);
+            
+            // Create delete button
+            const deleteBtn = document.createElement("button");
+            deleteBtn.classList.add("btn", "btn-sm", "btn-outline-danger");
+            deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+            // Hide delete button for kid users
+            if (window.isKid) {
+                deleteBtn.style.display = 'none';
+            }
+            deleteBtn.addEventListener("click", function(event) {
+                event.stopPropagation(); // Prevent plan item click
+                if (confirm("Ar tikrai norite ištrinti šį planą?")) {
+                    fetch("../plan/api/plan/", {
+                        method: "DELETE",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-CSRFToken": csrfToken
+                        },
+                        body: JSON.stringify({ plan_id: plan.id })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            fetchPlanList(); // Refresh the list
+                        } else {
+                            alert("Klaida: " + JSON.stringify(data.error));
+                        }
+                    })
+                    .catch(error => console.error("Klaida trinant planą:", error));
+                }
+            });
+            
+            listElement.appendChild(deleteBtn);
+            planContainer.appendChild(listElement);
+
+            // Check if this plan is the one from the URL
+            if (urlPlanId && plan.id.toString() === urlPlanId) {
+                foundPlan = plan;
+                listElement.classList.add("active"); // Mark as active
+            }
+        });
+
+        // Add toggle functionality to plan items
+        addToggleFunctionality();
+
+        // If a valid planId was found, update the display accordingly
+        if (foundPlan) {
+            updatePlanDisplay(foundPlan);
+        } else if (filteredPlansData.length > 0) {
+            // Set the first plan as active by default if no specific plan is selected
+            const firstItem = planContainer.querySelector(".toggle-plan");
+            if (firstItem) {
+                firstItem.classList.add("active");
+                updatePlanDisplay(filteredPlansData[0]);
+            }
+        }
+    }
 
     // Fetch list of plans from the API
     function fetchPlanList() {
+        // Įsitikinti, kad turime CSRF token
+        if (!csrfToken) {
+            const tokenMeta = document.querySelector('meta[name="csrf-token"]');
+            if (tokenMeta) {
+                csrfToken = tokenMeta.getAttribute('content');
+            }
+        }
+        
         fetch("api/plans/")  // Adjust this Django API URL as needed
-            .then(response => response.json())
-            .then(data => {
-                planContainer.innerHTML = ""; // Clear existing content
-    
-                if (data.plan_list.length === 0) {
-                    planContainer.innerHTML = "<p>Nėra planų.</p>";
-                    return;
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok ' + response.statusText);
                 }
-    
-                plansData = data.plan_list; // Save plans for later reference
-    
-                // Get planId from URL
-                const urlParams = new URLSearchParams(window.location.search);
-                const urlPlanId = urlParams.get("planId"); // Get planId from URL query params
-    
-                let foundPlan = null;
-    
-                data.plan_list.forEach((plan) => {
-                    const listElement = document.createElement("li");
-                    listElement.classList.add(
-                        "list-group-item",
-                        "d-flex",
-                        "justify-content-between",
-                        "align-items-center",
-                        "toggle-plan"
-                    );
-                    listElement.setAttribute("data-toggle", `plan-${plan.id}`);
+                return response.json();
+            })
+            .then(data => {
+                if (data && data.plan_list) {
+                    plansData = data.plan_list; // Save plans for later reference
                     
-                    // Create text container for name and date
-                    const textContainer = document.createElement("div");
-                    textContainer.classList.add("plan-text-container");
+                    // Log the data to debug
+                    console.log("Loaded plans:", plansData);
                     
-                    // Create name span
-                    const nameSpan = document.createElement("div");
-                    nameSpan.classList.add("plan-name");
-                    nameSpan.textContent = plan.name;
-                    
-                    // Create date span
-                    const dateSpan = document.createElement("div");
-                    dateSpan.classList.add("plan-date");
-                    dateSpan.textContent = plan.date_formatted;
-                    
-                    // Append name and date to container
-                    textContainer.appendChild(nameSpan);
-                    textContainer.appendChild(dateSpan);
-                    listElement.appendChild(textContainer);
-                    
-                    // Create delete button
-                    const deleteBtn = document.createElement("button");
-                    deleteBtn.classList.add("btn", "btn-sm", "btn-outline-danger");
-                    deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
-                    // Hide delete button for kid users
-                    if (window.isKid) {
-                        deleteBtn.style.display = 'none';
-                    }
-                    deleteBtn.addEventListener("click", function(event) {
-                        event.stopPropagation(); // Prevent plan item click
-                        if (confirm("Ar tikrai norite ištrinti šį planą?")) {
-                            fetch("../plan/api/plan/", {
-                                method: "DELETE",
-                                headers: {
-                                    "Content-Type": "application/json",
-                                    "X-CSRFToken": csrfToken
-                                },
-                                body: JSON.stringify({ plan_id: plan.id })
-                            })
-                            .then(response => response.json())
-                            .then(data => {
-                                if (data.success) {
-                                    fetchPlanList(); // Refresh the list
-                                } else {
-                                    alert("Klaida: " + JSON.stringify(data.error));
-                                }
-                            })
-                            .catch(error => console.error("Klaida trinant planą:", error));
-                        }
-                    });
-                    
-                    listElement.appendChild(deleteBtn);
-                    planContainer.appendChild(listElement);
-    
-                    // Check if this plan is the one from the URL
-                    if (urlPlanId && plan.id.toString() === urlPlanId) {
-                        foundPlan = plan;
-                        listElement.classList.add("active"); // Mark as active
-                    }
-                });
-    
-                addToggleFunctionality(); // Attach click events to list items
-    
-                // If a valid planId was found, update the display accordingly
-                if (foundPlan) {
-                    updatePlanDisplay(foundPlan);
+                    // Update the plan type dropdown to include all plan types that exist in the data
+                    filterAndDisplayPlans();
                 } else {
-                    // Set the first plan as active by default (if no URL param exists)
-                    const firstItem = planContainer.querySelector(".toggle-plan");
-                    if (firstItem) {
-                        firstItem.classList.add("active");
-                        updatePlanDisplay(plansData[0]);
-                    }
+                    console.error("Invalid data format received:", data);
+                    planContainer.innerHTML = "<p>Klaida gaunant planus.</p>";
                 }
             })
-            .catch(error => console.error("Klaida gaunant planus:", error));
+            .catch(error => {
+                console.error("Klaida gaunant planus:", error);
+                planContainer.innerHTML = "<p>Klaida gaunant planus.</p>";
+            });
     }
     
 
@@ -375,28 +455,44 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Update the main plan display with selected plan details
     function updatePlanDisplay(plan) {
-        if (!planDisplay) return;
-        if (!plan) return;
+        if (!planDisplay) {
+            console.error("Plan display element not found");
+            return;
+        }
+        if (!plan) {
+            console.error("Plan data is empty");
+            return;
+        }
+
+        console.log("Updating plan display with:", plan);
 
         const imageDiv = planDisplay.querySelector(".plans-image-content");
         if (imageDiv) {
             imageDiv.style.backgroundImage = plan.image ? `url('${plan.image}')` : 'none';
+        } else {
+            console.warn("Image div not found in plan display");
         }
 
         const nameEl = planDisplay.querySelector(".plans-image-text");
         if (nameEl) {
             nameEl.textContent = plan.name;
+        } else {
+            console.warn("Name element not found in plan display");
         }
 
         const descriptionEl = planDisplay.querySelector("#planDescription");
         if (descriptionEl) {
-            descriptionEl.innerHTML = plan.description.replace(/\n/g, "<br>");
+            descriptionEl.innerHTML = plan.description ? plan.description.replace(/\n/g, "<br>") : '';
+        } else {
+            console.warn("Description element not found in plan display");
         }
 
         if (addPlanItemBtn) {
             addPlanItemBtn.dataset.listId = plan.listId;
-            addPlanMemberBtn.dataset.planId = plan.id;
-            editDescriptionBtn.dataset.planId = plan.id;
+            if (addPlanMemberBtn) addPlanMemberBtn.dataset.planId = plan.id;
+            if (editDescriptionBtn) editDescriptionBtn.dataset.planId = plan.id;
+        } else {
+            console.warn("Action buttons not found");
         }
 
         updateListItems(plan);

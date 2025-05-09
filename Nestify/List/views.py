@@ -237,7 +237,12 @@ def list(request):
             return JsonResponse({"error": str(e)}, status=400)
     if request.method == "POST":
         try:
-            data = json.loads(request.body)
+            # Handle both JSON and form data
+            if request.content_type and 'multipart/form-data' in request.content_type:
+                data = request.POST.dict()
+            else:
+                data = json.loads(request.body)
+            
             image_file = request.FILES.get("image")
 
             # Check if a recipe with the same name already exists

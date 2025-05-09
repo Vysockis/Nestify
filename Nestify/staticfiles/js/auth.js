@@ -14,9 +14,27 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Password validation messages
+    // Password validation
     const passwordInputs = document.querySelectorAll('input[type="password"]');
     passwordInputs.forEach(input => {
+        input.addEventListener('input', function() {
+            const password = this.value;
+            const hasUpperCase = /[A-Z]/.test(password);
+            const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+            const isLongEnough = password.length >= 8;
+
+            let errorMessage = '';
+            if (!isLongEnough) {
+                errorMessage = 'Slaptažodis turi būti bent 8 simbolių ilgio';
+            } else if (!hasUpperCase) {
+                errorMessage = 'Slaptažodis turi turėti bent vieną didžiąją raidę';
+            } else if (!hasSpecialChar) {
+                errorMessage = 'Slaptažodis turi turėti bent vieną specialų simbolį';
+            }
+
+            this.setCustomValidity(errorMessage);
+        });
+
         input.addEventListener('invalid', function() {
             if (this.validity.valueMissing) {
                 this.setCustomValidity('Slaptažodis yra privalomas');
@@ -27,4 +45,4 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
-}); 
+});
