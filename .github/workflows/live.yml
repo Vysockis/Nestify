@@ -36,13 +36,6 @@ jobs:
             },
             "site": {
                 "url": "http://0.0.0.0:5000"
-            },
-            "database": {
-                "name": "nestify_db",
-                "user": "postgres",
-                "password": "admin",
-                "host": "localhost",
-                "port": "5432"
             }
           } ' > Nestify/config.json
 

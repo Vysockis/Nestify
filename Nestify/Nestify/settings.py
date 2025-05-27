@@ -102,12 +102,12 @@ WSGI_APPLICATION = 'Nestify.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config['database']['name'],
-        'USER': config['database']['user'],
-        'PASSWORD': config['database']['password'],
-        'HOST': config['database']['host'],
-        'PORT': config['database']['port'],
+        'ENGINE': config.get('database', {}).get('engine', 'django.db.backends.sqlite3'),
+        'NAME': config.get('database', {}).get('name', BASE_DIR / 'db.sqlite3'),
+        'USER': config.get('database', {}).get('user', ''),
+        'PASSWORD': config.get('database', {}).get('password', ''),
+        'HOST': config.get('database', {}).get('host', ''),
+        'PORT': config.get('database', {}).get('port', ''),
     }
 }
 
