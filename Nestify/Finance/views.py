@@ -94,11 +94,7 @@ def scan_receipt(request):
             return JsonResponse(
                 {"error": "No receipt image provided"}, status=400)
 
-        print(
-            f"Receipt image found: {
-                receipt_image.name}, size: {
-                receipt_image.size} bytes, content type: {
-                receipt_image.content_type}")
+        print(f"Receipt image found: {receipt_image.name}, size: {receipt_image.size} bytes, content type: {receipt_image.content_type}")  # type: ignore
 
         # Process image data
         print("Reading image data...")
