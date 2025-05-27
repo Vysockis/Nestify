@@ -2,16 +2,17 @@ import os
 import time
 import schedule
 import threading
+import tempfile
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 from Inventory.models import ItemOperation
 from Family.models import Notification, FamilySettings
 
-# Define locks for thread-safe task execution
 task_locks = {
     "run_notification_task_safely": threading.Lock(),
 }
 
+TEMP_DIR = tempfile.gettempdir()
 
 class Command(BaseCommand):
     help = 'Run notification scheduled tasks'
@@ -37,32 +38,27 @@ class Command(BaseCommand):
         except KeyboardInterrupt:
             self.stdout.write(self.style.SUCCESS(
                 "Stopping notification scheduler..."))
-            # Clean up the flag file
-            flag_file = '/tmp/django_scheduler_started.flag' if os.name != 'nt' else 'django_scheduler_started.flag'
+            flag_file = os.path.join(TEMP_DIR, 'django_scheduler_started.flag')
             try:
                 if os.path.exists(flag_file):
                     os.remove(flag_file)
-            except Exception:
-                pass
+            except Exception as e:
+                self.stdout.write(self.style.ERROR(f"Error removing flag file: {e}"))
 
     def ensure_single_instance(self):
         """
         Creates a PID file so that only one instance of this command can run at a time.
         Adjust for your environment if checking /proc/<pid> is not reliable.
         """
-        lock_file = '/tmp/django_task_scheduler.lock' if os.name != 'nt' else 'django_task_scheduler.lock'
+        lock_file = os.path.join(TEMP_DIR, 'django_task_scheduler.lock')
         try:
             if os.path.exists(lock_file):
-                # If the file exists, check if the process is alive
                 with open(lock_file, 'r') as f:
                     pid = int(f.read())
-                # On Unix-based systems, /proc/<pid> will exist if process is
-                # alive
                 if os.name != 'nt' and os.path.exists(f"/proc/{pid}"):
                     return False
                 else:
                     os.remove(lock_file)
-            # Create or overwrite the lock file with the current process ID
             with open(lock_file, 'w') as f:
                 f.write(str(os.getpid()))
             return True
@@ -94,7 +90,6 @@ class Command(BaseCommand):
         """
         today = timezone.now().date()
 
-        # Get all items with expiration dates
         items = ItemOperation.objects.filter(exp_date__isnull=False)
 
         for item in items:
@@ -102,14 +97,12 @@ class Command(BaseCommand):
             settings = FamilySettings.get_or_create_settings(family)
             recipients = settings.get_notification_recipients('inventory')
 
-            if not recipients:  # Skip if no recipients based on settings
+            if not recipients:
                 continue
 
             days_until_expiry = (item.exp_date - today).days
 
-            # Skip if already expired
             if days_until_expiry < 0:
-                # Check if we already notified about this expired item
                 if not Notification.objects.filter(
                     family=family,
                     notification_type='inventory_expired',
@@ -124,7 +117,6 @@ class Command(BaseCommand):
                             message=f'{item.item.name} ({item.qty} vnt.) galiojimas baigėsi.',
                             related_object_id=item.id)
 
-            # Check for items expiring in 3 days
             elif days_until_expiry <= 3 and days_until_expiry > 1:
                 if not Notification.objects.filter(
                     family=family,
@@ -140,7 +132,6 @@ class Command(BaseCommand):
                             message=f'{item.item.name} ({item.qty} vnt.) galiojimo laikas baigsis po {days_until_expiry} dienų.',
                             related_object_id=item.id)
 
-            # Check for items expiring in 1 day
             elif days_until_expiry == 1:
                 if not Notification.objects.filter(
                     family=family,

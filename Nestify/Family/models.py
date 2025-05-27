@@ -1,5 +1,4 @@
-import random
-import string
+import secrets
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
@@ -72,11 +71,8 @@ class FamilyCode(models.Model):
     def generate_unique_code(self):
         """Generate a unique 6-character alphanumeric code."""
         while True:
-            code = ''.join(
-                random.choices(
-                    string.ascii_uppercase +
-                    string.digits,
-                    k=6))
+            # Generate 3 bytes (6 hex characters) and convert to uppercase
+            code = secrets.token_hex(3).upper()
             if not FamilyCode.objects.filter(code=code).exists():
                 return code
 
