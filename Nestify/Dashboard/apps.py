@@ -3,11 +3,13 @@ import threading
 from django.core.management import call_command
 import sys
 import os
+import tempfile
 
+TEMP_DIR = tempfile.gettempdir()
 
 def is_scheduler_running():
     """Check if scheduler is already running using a file-based flag"""
-    flag_file = '/tmp/django_scheduler_started.flag' if os.name != 'nt' else 'django_scheduler_started.flag'
+    flag_file = os.path.join(TEMP_DIR, 'django_scheduler_started.flag')
     try:
         if os.path.exists(flag_file):
             with open(flag_file, 'r') as f:
@@ -18,18 +20,20 @@ def is_scheduler_running():
             else:
                 os.remove(flag_file)
         return False
-    except Exception:
+    except Exception as e:
+        print(f"Error checking scheduler status: {e}")
         return False
 
 
 def mark_scheduler_running():
     """Mark scheduler as running using a file-based flag"""
-    flag_file = '/tmp/django_scheduler_started.flag' if os.name != 'nt' else 'django_scheduler_started.flag'
+    flag_file = os.path.join(TEMP_DIR, 'django_scheduler_started.flag')
     try:
         with open(flag_file, 'w') as f:
             f.write(str(os.getpid()))
         return True
-    except Exception:
+    except Exception as e:
+        print(f"Error marking scheduler as running: {e}")
         return False
 
 
