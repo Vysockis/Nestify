@@ -28,16 +28,16 @@ jobs:
          
       - name: Run migrations
         run: |
-          python manage.py makemigrations
-          python manage.py migrate
+          python Nestify/manage.py makemigrations
+          python Nestify/manage.py migrate
           
       - name: Check project
         run: |
-          python manage.py check
+          python Nestify/manage.py check
           
       - name: Run Django tests
         run: |
-          python manage.py test
+          python Nestify/manage.py test
           
       - name: Check for security issues
         run: |
