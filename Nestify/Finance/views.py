@@ -194,11 +194,31 @@ def scan_receipt(request):
             lines = text.split('\n')
             print(f"Receipt contains {len(lines)} lines of text")
 
-            # LIDL-specific patterns
-            if store_name == "LIDL" or "LIDL" in text:
-                print("Using LIDL-specific parsing patterns")
-                # Try to find the total amount first (LIDL format)
-                total_pattern = r"(Tarpinė suma|Iš viso|Suma|Galutinė suma|PVM mokėtojo kodas)[:\s]*.*?(\d+[.,]\d{2})"
+            # Store-specific patterns
+            if store_name:
+                print(f"Using {store_name}-specific parsing patterns")
+                
+                # LIDL patterns
+                if store_name == "LIDL":
+                    total_pattern = r"(Tarpinė suma|Iš viso|Suma|Galutinė suma|PVM mokėtojo kodas)[:\s]*.*?(\d+[.,]\d{2})"
+                    item_pattern = r'([A-Za-zĄČĘĖĮŠŲŪŽąčęėįšųūž0-9\.\s\-\"\']+?)[\s]+?(\d+[.,]\d{2})[\s]*([A-Z])?'
+                
+                # MAXIMA patterns
+                elif store_name == "MAXIMA":
+                    total_pattern = r"(Viso|Suma|Mokėti)[:\s]*.*?(\d+[.,]\d{2})"
+                    item_pattern = r'([A-Za-zĄČĘĖĮŠŲŪŽąčęėįšųūž0-9\.\s\-\"\']+?)[\s]+(\d+[.,]\d{2})'
+                
+                # IKI patterns
+                elif store_name == "IKI":
+                    total_pattern = r"(Viso|Suma|Mokėti)[:\s]*.*?(\d+[.,]\d{2})"
+                    item_pattern = r'([A-Za-zĄČĘĖĮŠŲŪŽąčęėįšųūž0-9\.\s\-\"\']+?)[\s]+(\d+[.,]\d{2})'
+                
+                # RIMI patterns
+                elif store_name == "RIMI":
+                    total_pattern = r"(Viso|Suma|Mokėti)[:\s]*.*?(\d+[.,]\d{2})"
+                    item_pattern = r'([A-Za-zĄČĘĖĮŠŲŪŽąčęėįšųūž0-9\.\s\-\"\']+?)[\s]+(\d+[.,]\d{2})'
+
+                # Try to find the total amount
                 for line in lines:
                     total_match = re.search(total_pattern, line, re.IGNORECASE)
                     if total_match:
@@ -210,142 +230,38 @@ def scan_receipt(request):
                         except ValueError as e:
                             print(f"Error parsing total amount: {e}")
 
-                # For LIDL receipts, items often have a price with an 'A' or
-                # other letter after it
-                lidl_item_pattern = r'([A-Za-zĄČĘĖĮŠŲŪŽąčęėįšųūž0-9\.\s\-\"\']+?)[\s]+?(\d+[.,]\d{2})[\s]*([A-Z])?'
-
-                # Print all lines for debugging
-                print("All receipt lines for debugging:")
-                for i, line in enumerate(lines):
-                    print(f"Line {i}: {line}")
-
+                # Process items
                 for line in lines:
-                    # Try to catch items with prices
-                    lidl_match = re.search(lidl_item_pattern, line)
-                    if lidl_match:
-                        name = lidl_match.group(1).strip()
-                        price = float(lidl_match.group(2).replace(',', '.'))
-
-                        # Remove product codes (numbers) from the beginning of
-                        # item names
-                        name = re.sub(r'^\d+\s+', '', name)
-
-                        # Skip non-items
-                        skip_words = ['suma', 'viso', 'mokėtojo',
-                                      'kvitas', 'grąža', 'PVM', 'Mokėti']
-                        if any(word.lower() in name.lower()
-                               for word in skip_words):
-                            continue
-
-                        # Skip items that are just numbers or very short codes
-                        if re.match(r'^\d+$', name) or len(name.strip()) <= 3:
-                            print(
-                                f"Skipping numeric code or short item: {name}")
-                            continue
-
-                        items.append({
-                            'name': name,
-                            'price': price,
-                            'quantity': 1
-                        })
-                        print(f"Found item: {name} - {price}")
-
-            # Additional pass specifically to find items with "padažas" (sauce)
-            # if not already found
-            pomidor_pattern = r'([A-Za-zĄČĘĖĮŠŲŪŽąčęėįšųūž\s]+padažas\s*[A-Za-zĄČĘĖĮŠŲŪŽąčęėįšųūž\s\"\']*)[^\d]*(\d+[.,]\d{2})'
-            for line in lines:
-                # Check if line contains "padažas" or similar words
-                if "padaž" in line.lower():
-                    print(f"Found sauce line: {line}")
-
-                    pomidor_match = re.search(
-                        pomidor_pattern, line, re.IGNORECASE)
-                    if pomidor_match:
-                        name = pomidor_match.group(1).strip()
-                        price = float(pomidor_match.group(2).replace(',', '.'))
-
-                        # Remove product codes
-                        name = re.sub(r'^\d+\s+', '', name)
-
-                        # Check if this item is already in our list
-                        if not any(item['name'] == name for item in items):
-                            items.append({
-                                'name': name,
-                                'price': price,
-                                'quantity': 1
-                            })
-                            print(f"Found sauce item: {name} - {price}")
-
-            # Generic patterns for other stores or as fallback
-            if not items or total_amount == 0:
-                print("Using generic parsing patterns for items and total")
-                # Try to find the total amount as the largest number
-                amount_pattern = r'(\d+[.,]\d{2})(\s*EUR|\s*€)?'
-                amounts = []
-                for line in lines:
-                    for match in re.finditer(
-                            amount_pattern, line, re.IGNORECASE):
+                    item_match = re.search(item_pattern, line, re.IGNORECASE)
+                    if item_match:
                         try:
-                            amt_str = match.group(1).replace(',', '.')
-                            amount = float(amt_str)
-                            amounts.append(amount)
+                            name = item_match.group(1).strip()
+                            price = float(item_match.group(2).replace(',', '.'))
+
+                            # Remove product codes (numbers) from the beginning of item names
+                            name = re.sub(r'^\d+\s+', '', name)
+
+                            # Skip items that are likely not actual products
+                            skip_words = ['suma', 'viso', 'mokėtojo', 'kvitas', 'grąža', 'PVM', 'Mokėti']
+                            if any(word.lower() in name.lower() for word in skip_words):
+                                continue
+
+                            # Skip items that are just numbers or very short codes
+                            if re.match(r'^\d+$', name) or len(name.strip()) <= 3:
+                                print(f"Skipping numeric code or short item: {name}")
+                                continue
+
+                            # Check if this item is already in our list
+                            if not any(item['name'] == name for item in items):
+                                items.append({
+                                    'name': name,
+                                    'price': price,
+                                    'quantity': 1
+                                })
+                                print(f"Found item: {name} - {price}")
                         except ValueError as e:
-                            print(f"Error parsing amount: {e}")
+                            print(f"Error parsing item: {e}")
 
-                if amounts:
-                    # The largest amount is likely the total
-                    total_amount = max(amounts)
-                    print(f"Using largest amount as total: {total_amount}")
-
-                # Generic item pattern
-                for i, line in enumerate(lines):
-                    # Skip header and footer lines
-                    if i > 3 and i < len(lines) - 3:
-                        # Match pattern: item name followed by price
-                        item_match = re.search(
-                            r'([a-zA-ZąčęėįšųūžĄČĘĖĮŠŲŪŽ0-9\.\s\-]+?)[\s]+(\d+[.,]\d{2})', line)
-                        if item_match:
-                            try:
-                                name = item_match.group(1).strip()
-                                price = float(
-                                    item_match.group(2).replace(
-                                        ',', '.'))
-
-                                # Remove product codes (numbers) from the
-                                # beginning of item names
-                                name = re.sub(r'^\d+\s+', '', name)
-
-                                # Skip items that are likely not actual
-                                # products
-                                skip_words = [
-                                    'suma', 'viso', 'mokėtojo', 'kvitas', 'grąža', 'PVM', 'Mokėti']
-                                if any(word.lower() in name.lower()
-                                       for word in skip_words):
-                                    continue
-
-                                # Skip items that are just numbers or very
-                                # short codes
-                                if re.match(
-                                        r'^\d+$',
-                                        name) or len(
-                                        name.strip()) <= 3:
-                                    print(
-                                        f"Skipping numeric code or short item: {name}")
-                                    continue
-
-                                # Check if this item is already in our list
-                                if not any(
-                                        item['name'] == name for item in items):
-                                    items.append({
-                                        'name': name,
-                                        'price': price,
-                                        'quantity': 1
-                                    })
-                                    print(f"Found item: {name} - {price}")
-                            except ValueError as e:
-                                print(f"Error parsing item: {e}")
-
-            # If no items were found, fallback to test data for demo purposes
             if not items and total_amount == 0:
                 print("WARNING: Could not extract items or total. Returning error.")
                 return JsonResponse({
@@ -362,8 +278,7 @@ def scan_receipt(request):
                     'price': total_amount,
                     'quantity': 1
                 })
-                print(
-                    f"Created generic item with total amount: {total_amount}")
+                print(f"Created generic item with total amount: {total_amount}")
 
             # If we have no total but have items, sum up the items
             if total_amount == 0 and items:
@@ -390,7 +305,6 @@ def scan_receipt(request):
                         f"Updating total to include VAT. Old: {total_amount}, New: {items_total}")
                     total_amount = items_total
 
-            # Try to find the category based on items or store
             category_id = None
             try:
                 # Default to "Maistas" category if available
