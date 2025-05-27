@@ -398,10 +398,7 @@ def scan_receipt(request):
                     name__icontains='Maist').first()
                 if food_category:
                     category_id = food_category.pk
-                    print(
-                        f"Using food category: {
-                            food_category.name}, id: {
-                            food_category.pk}")
+                    print(f"Using food category: {food_category.name}, id: {food_category.pk}")
             except Exception as e:
                 print(f"Error finding category: {str(e)}")
 

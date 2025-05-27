@@ -99,12 +99,10 @@ def get_family_list(request):
 
     def format_item_name(item, list_type):
         if list_type == ListType.GROCERY.name:
-            return f"{f"{item.qty}x" if item.qty and item.qty !=
-                      1 else ""} {item.name}"
+            return f"{f'{item.qty}x' if item.qty and item.qty != 1 else ''} {item.name}"
         elif list_type == ListType.TASK.name:
             points_text = f" - {int(item.amount)}💎" if item.amount and item.amount > 0 else ""
-            user_text = f"{
-                item.assigned_to.first_name}: " if item.assigned_to else ""
+            user_text = f"{item.assigned_to.first_name}: " if item.assigned_to else ""
             text = f"{user_text}{item.name}{points_text}"
             return text
         elif list_type == ListType.MEAL.name:
@@ -161,17 +159,11 @@ def item(request):
 
                 # Create notification for each recipient
                 for recipient in recipients:
-                    # Different message based on whether recipient is the
-                    # assigned user
+                    # Different message based on whether recipient is the assigned user
                     if recipient == assigned_to:
-                        message = f'Jums priskirta nauja užduotis: {
-                            data.get("name")} ({
-                            list_obj.name})'
+                        message = f'Jums priskirta nauja užduotis: {data.get("name")} ({list_obj.name})'
                     else:
-                        message = f'{
-                            assigned_to.first_name} priskirta nauja užduotis: {
-                            data.get("name")} ({
-                            list_obj.name})'
+                        message = f'{assigned_to.first_name} priskirta nauja užduotis: {data.get("name")} ({list_obj.name})'
 
                     Notification.create_notification(
                         family=list_obj.family,

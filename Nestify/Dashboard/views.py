@@ -85,27 +85,17 @@ def format_time_difference_in(dt1, dt2):
         if is_future:
             return f"{prefix} {lietuviskai(days, ('dienos', 'dienų'), True)}"
         else:
-            return f"{prefix} {
-                lietuviskai(
-                    days, ('dieną', 'dienas', 'dienų'))}"
+            return f"{prefix} {lietuviskai(days, ('dieną', 'dienas', 'dienų'))}"
     elif hours > 0:
         if is_future:
-            return f"{prefix} {
-                lietuviskai(
-                    hours, ('valandos', 'valandų'), True)}"
+            return f"{prefix} {lietuviskai(hours, ('valandos', 'valandų'), True)}"
         else:
-            return f"{prefix} {
-                lietuviskai(
-                    hours, ('valandą', 'valandas', 'valandų'))}"
+            return f"{prefix} {lietuviskai(hours, ('valandą', 'valandas', 'valandų'))}"
     elif minutes > 0:
         if is_future:
-            return f"{prefix} {
-                lietuviskai(
-                    minutes, ('minutės', 'minučių'), True)}"
+            return f"{prefix} {lietuviskai(minutes, ('minutės', 'minučių'), True)}"
         else:
-            return f"{prefix} {
-                lietuviskai(
-                    minutes, ('minutę', 'minutes', 'minučių'))}"
+            return f"{prefix} {lietuviskai(minutes, ('minutę', 'minutes', 'minučių'))}"
     return "ką tik"
 
 

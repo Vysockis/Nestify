@@ -120,11 +120,8 @@ class Command(BaseCommand):
                             family=family,
                             recipient=recipient,
                             notification_type='inventory_expired',
-                            title=f'Produktas pasibaigė: {
-                                item.item.name}',
-                            message=f'{
-                                item.item.name} ({
-                                item.qty} vnt.) galiojimas baigėsi.',
+                            title=f'Produktas pasibaigė: {item.item.name}',
+                            message=f'{item.item.name} ({item.qty} vnt.) galiojimas baigėsi.',
                             related_object_id=item.id)
 
             # Check for items expiring in 3 days
@@ -139,11 +136,8 @@ class Command(BaseCommand):
                             family=family,
                             recipient=recipient,
                             notification_type='inventory_expiring',
-                            title=f'Produktas baigiasi: {
-                                item.item.name}',
-                            message=f'{
-                                item.item.name} ({
-                                item.qty} vnt.) galiojimo laikas baigsis po {days_until_expiry} dienų.',
+                            title=f'Produktas baigiasi: {item.item.name}',
+                            message=f'{item.item.name} ({item.qty} vnt.) galiojimo laikas baigsis po {days_until_expiry} dienų.',
                             related_object_id=item.id)
 
             # Check for items expiring in 1 day
@@ -158,11 +152,8 @@ class Command(BaseCommand):
                             family=family,
                             recipient=recipient,
                             notification_type='inventory_expiring',
-                            title=f'Produktas baigiasi: {
-                                item.item.name}',
-                            message=f'{
-                                item.item.name} ({
-                                item.qty} vnt.) galiojimo laikas baigsis rytoj.',
+                            title=f'Produktas baigiasi: {item.item.name}',
+                            message=f'{item.item.name} ({item.qty} vnt.) galiojimo laikas baigsis rytoj.',
                             related_object_id=item.id)
                     self.stdout.write(self.style.WARNING(
                         f"Created 1-day notification for {item.item.name}"))
