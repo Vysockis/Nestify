@@ -1,0 +1,63 @@
+image: python:3.11
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.pip-cache"
+
+cache:
+  paths:
+    - .pip-cache
+    - venv/
+
+stages:
+  - qa
+  - test
+  - security
+
+qa:
+  stage: qa
+  script:
+    - python -m pip install --upgrade pip
+    - pip install -r requirements.txt
+    - pip install flake8
+    - flake8 . --count --select=F --ignore=W293,E303,W291,W391,E302,E501,E305,W292,W504,F401 --show-source --statistics --max-complexity=10 --max-line-length=127
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "dev"
+    - if: $CI_COMMIT_BRANCH == "dev"
+
+test:
+  stage: test
+  script:
+    - python -m pip install --upgrade pip
+    - pip install -r requirements.txt
+    - |
+      echo '{
+        "django": {
+            "secret_key": "test-key",
+            "debug": true,
+            "allowed_hosts": ["localhost"]
+        },
+        "stripe": {
+            "secret_key": "sk_test_51RICCBIxMSEn1DMFF97vaRvDnLm0RCa64qw9cZ0sYRsm92keiqBo4uRkMXnSzgN3mlQSXXyA50KwRy9wfoV0qObi00Ma0aIELE",
+            "publishable_key": "pk_test_51RICCBIxMSEn1DMFxplEAXs0m0ioCbP0R1lBlclzSWjR8jXU6gMl6V6NxkVTMnffXAmeWqcki2hneW9kF6kO25Mg00onuBMWDh",
+            "webhook_secret": "whsec_GLKuxqBvqWqwclzeZNxjIFRtT9fQW80t"
+        },
+        "site": {
+            "url": "http://0.0.0.0:5000"
+        }
+      }' > Nestify/config.json
+    - python Nestify/manage.py makemigrations
+    - python Nestify/manage.py migrate
+    - python Nestify/manage.py check
+    - python Nestify/manage.py test
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"
+
+security:
+  stage: security
+  script:
+    - pip install bandit
+    - bandit -r . -x ./venv,./tests,./migrations
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main" 
