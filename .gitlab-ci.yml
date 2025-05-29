@@ -30,21 +30,21 @@ test:
     - python -m pip install --upgrade pip
     - pip install -r requirements.txt
     - |
-      echo '{
-        "django": {
-            "secret_key": "test-key",
-            "debug": true,
-            "allowed_hosts": ["localhost"]
+      echo "{
+        \"django\": {
+            \"secret_key\": \"test-key\",
+            \"debug\": true,
+            \"allowed_hosts\": [\"localhost\"]
         },
-        "stripe": {
-            "secret_key": "sk_test_51RICCBIxMSEn1DMFF97vaRvDnLm0RCa64qw9cZ0sYRsm92keiqBo4uRkMXnSzgN3mlQSXXyA50KwRy9wfoV0qObi00Ma0aIELE",
-            "publishable_key": "pk_test_51RICCBIxMSEn1DMFxplEAXs0m0ioCbP0R1lBlclzSWjR8jXU6gMl6V6NxkVTMnffXAmeWqcki2hneW9kF6kO25Mg00onuBMWDh",
-            "webhook_secret": "whsec_GLKuxqBvqWqwclzeZNxjIFRtT9fQW80t"
+        \"stripe\": {
+            \"secret_key\": \"sk_test_51RICCBIxMSEn1DMFF97vaRvDnLm0RCa64qw9cZ0sYRsm92keiqBo4uRkMXnSzgN3mlQSXXyA50KwRy9wfoV0qObi00Ma0aIELE\",
+            \"publishable_key\": \"pk_test_51RICCBIxMSEn1DMFxplEAXs0m0ioCbP0R1lBlclzSWjR8jXU6gMl6V6NxkVTMnffXAmeWqcki2hneW9kF6kO25Mg00onuBMWDh\",
+            \"webhook_secret\": \"whsec_GLKuxqBvqWqwclzeZNxjIFRtT9fQW80t\"
         },
-        "site": {
-            "url": "http://0.0.0.0:5000"
+        \"site\": {
+            \"url\": \"http://0.0.0.0:5000\"
         }
-      }' > Nestify/config.json
+      }" > Nestify/config.json
     - python Nestify/manage.py makemigrations
     - python Nestify/manage.py migrate
     - python Nestify/manage.py check
